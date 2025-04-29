@@ -345,141 +345,266 @@ body {
      /* Could add count later: content: attr(data-athlete-count); */
 }
 
-/* Workout Card */
+/* Workout Card - Enhanced Modern Design */
 .workout-card {
-    /* Remove direct padding/bg from outer card for flip */
-    /* background-color: var(--card-background); */
-    /* backdrop-filter: blur(var(--glass-blur)); */
-    /* -webkit-backdrop-filter: blur(var(--glass-blur)); */
-    /* border: 1px solid rgba(204, 209, 217, 0.1); */
     border: none;
     background-color: transparent;
-    border-radius: 6px;
-    /* padding: 0.6rem 0.8rem; */
-    margin-top: 0.3rem;
+    border-radius: 8px;
+    margin-top: 0.5rem;
     cursor: grab;
-    position: relative; /* For positioning */
-    perspective: 1000px; /* Vanishing point for 3D flip */
-    min-height: 60px; /* Ensure space for basic card content */
-    /* Remove transitions from outer card */
-    /* transition: ...; */
-    /* will-change: transform; */
-}
-
-.card-inner {
     position: relative;
-    width: 100%;
-    height: 100%;
-    text-align: left;
-    transition: transform 0.6s;
-    transform-style: preserve-3d;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    border-radius: 6px; /* Apply radius here */
+    perspective: 1000px;
+    min-height: 65px;
+    transition: transform 0.2s ease;
 }
 
-.workout-card .is-flipped {
-    transform: rotateY(180deg);
+.workout-card:hover {
+    transform: translateY(-2px);
+}
+
+.workout-card:active {
+    cursor: grabbing;
 }
 
 .card-face {
     position: absolute;
     width: 100%;
     height: 100%;
-    -webkit-backface-visibility: hidden; /* Safari */
+    -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    border-radius: 6px; /* Apply radius here */
-    padding: 0.6rem 0.8rem;
-    background-color: var(--card-background);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    background: linear-gradient(135deg, var(--card-background), rgba(45, 48, 58, 0.7));
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
-    border: 1px solid rgba(204, 209, 217, 0.1);
-    display: flex; /* Use flex for content layout */
-    /* REMOVED flex-direction: column; */
-    /* REMOVED justify-content: space-between; /* Push actions to bottom */ 
-    /* NEW flex properties */
-    flex-direction: row; 
-    align-items: flex-start; /* Align items top */
-    gap: 0.5rem; /* Space between badge and main content */
+    border: 1px solid rgba(204, 209, 217, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
 }
 
 .card-front {
-    /* Styles for front */
     color: var(--text-color);
-    /* Override collapsed padding - adjust as needed */
-    padding: 0.4rem 0.6rem;
 }
 
-.card-back {
-    /* Styles for back */
-    color: var(--text-color);
-    transform: rotateY(180deg);
-     background-color: rgba(50, 52, 60, 0.9); /* Slightly different bg for back */
+.exercise-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 0.4rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.card-back ul {
-    list-style: none;
-    padding: 0;
-    font-size: 0.8rem;
-    margin: 0.5rem 0;
-}
-.card-back ul li {
-    margin-bottom: 0.2rem;
-}
-.card-back p {
-     font-size: 0.8rem;
+.exercise-details {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+    color: var(--cool-steel);
 }
 
-.card-actions {
-    /* Keep actions positioned, maybe adjust margin */
-    /* margin-top: 0.5rem; */ /* Removed, using absolute positioning? */
-    position: absolute; /* Position actions at the bottom right */
-    bottom: 4px;
-    right: 6px;
-    /* display: flex; */ /* Already flex */
-    /* justify-content: flex-end; */
-    /* gap: 0.3rem; */
-}
-
-.card-action-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: var(--text-color);
-    border-radius: 4px;
+.sets-reps {
+    font-weight: 500;
     padding: 2px 6px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    line-height: 1;
-    transition: background-color 0.2s, color 0.2s;
-}
-
-.card-action-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
     color: white;
 }
 
-.close-back-btn {
+.load {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    background-color: rgba(var(--accent-rgb), 0.15);
+    border-radius: 4px;
+    color: var(--accent-color);
+}
+
+.card-actions {
     position: absolute;
-    top: 5px;
-    right: 5px;
-    font-size: 1.1rem;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
 }
 
-/* Prevent hover effect on outer card when flipped */
-.workout-card:hover .card-inner:not(.is-flipped) {
-     /* Apply hover effect to inner if needed, or keep it simple */
-     /* transform: translateY(-4px); */
+.workout-card:hover .card-actions {
+    opacity: 1;
 }
 
-.workout-card:active {
-    cursor: grabbing;
-    /* Apply active styles to inner card? */
-    /* transform: scale(1.05); */
+.card-action-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: white;
+    border-radius: 4px;
+    padding: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    line-height: 1;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
 }
 
-/* Style for selected card/phase */
-.workout-card.selected, .phase-bar.selected {
-     box-shadow: 0 0 0 2px var(--accent-color);
-     /* filter: brightness(1.1); */
+.card-action-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* Superset Container - Enhanced Design */
+.superset-container {
+    background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.05), rgba(var(--primary-rgb), 0.1));
+    border: 1px dashed var(--primary-color);
+    border-radius: 10px;
+    padding: 12px;
+    margin: 15px 0;
+    position: relative;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.superset-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(var(--border-rgb), 0.3);
+}
+
+.superset-label {
+    background: linear-gradient(90deg, var(--primary-color), rgba(var(--primary-rgb), 0.8));
+    color: white;
+    font-size: 0.85em;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 6px rgba(var(--primary-rgb), 0.3);
+}
+
+.superset-controls {
+    display: flex;
+    gap: 6px;
+}
+
+.superset-edit-btn, .superset-remove-btn {
+    background-color: transparent;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 0.9em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.superset-edit-btn:hover {
+    background-color: rgba(var(--primary-rgb), 0.2);
+    color: white;
+}
+
+.superset-remove-btn:hover {
+    background-color: rgba(var(--warning-rgb), 0.2);
+    color: var(--warning-color);
+}
+
+.superset-container .workout-card {
+    margin: 8px 0;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.superset-container .workout-card.in-superset .card-face {
+    border-left: 3px solid var(--primary-color);
+}
+
+/* Context Menu for Superset Creation */
+.context-menu {
+    position: absolute;
+    background: var(--deep-slate);
+    border: 1px solid rgba(204, 209, 217, 0.2);
+    border-radius: 6px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    padding: 8px 0;
+    min-width: 180px;
+    z-index: 1000;
+}
+
+.context-menu-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+}
+
+.context-menu-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.context-menu-item .icon {
+    font-size: 1rem;
+    color: var(--accent-color);
+}
+
+/* Multi-select indicator for workout cards */
+.workout-card.selected {
+    box-shadow: 0 0 0 2px var(--accent-color);
+}
+
+.multi-select-toolbar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--deep-slate);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 10px 16px;
+    display: flex;
+    gap: 12px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s;
+}
+
+.multi-select-toolbar.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.multi-select-action {
+    padding: 6px 12px;
+    background: rgba(var(--accent-rgb), 0.15);
+    color: var(--accent-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.multi-select-action:hover {
+    background: rgba(var(--accent-rgb), 0.25);
+}
+
+.multi-select-action .icon {
+    font-size: 1rem;
 }
 
 /* --- Inspector Panel --- */
@@ -3322,4 +3447,116 @@ body.show-hub #back-to-hub-btn {
 
 .superset-container .workout-card {
   margin: 5px 0;
+}
+
+/* Progression Modal Styling */
+.progression-modal-content {
+    max-width: 600px;
+    width: 95%;
+}
+
+.progression-modal-content h4 {
+    color: white;
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.exercise-header {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(204, 209, 217, 0.1);
+}
+
+.progression-path {
+    margin-top: 2rem;
+}
+
+.progression-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+}
+
+.progression-options {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.progression-loading {
+    text-align: center;
+    color: var(--text-color);
+    padding: 20px;
+    font-style: italic;
+}
+
+.progression-option {
+    background: linear-gradient(135deg, rgba(45, 48, 58, 0.5), rgba(35, 38, 48, 0.8));
+    border: 1px solid rgba(204, 209, 217, 0.1);
+    border-radius: 8px;
+    padding: 16px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.progression-option:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    border-color: rgba(var(--accent-rgb), 0.3);
+}
+
+.progression-option-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.progression-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: white;
+}
+
+.progression-difficulty {
+    font-size: 0.85em;
+    color: var(--secondary-text-color);
+    background-color: rgba(var(--success-rgb), 0.1);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.progression-description {
+    font-size: 0.9em;
+    color: var(--text-color);
+    margin: 8px 0 16px;
+    line-height: 1.4;
+}
+
+.swap-button {
+    background: linear-gradient(90deg, var(--success-color), rgba(var(--success-rgb), 0.8));
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    align-self: flex-end;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(var(--success-rgb), 0.2);
+}
+
+.swap-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(var(--success-rgb), 0.3);
 }

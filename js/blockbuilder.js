@@ -2839,15 +2839,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // First handle the selection state
         handleSelection(cardElement, isShiftKey);
         
-        // Make sure we correctly identify this as an exercise for the inspector context
-        syncSelectedContext('exercise');
+        // Update the selected context
+        const { selectedElement, selectedElements } = getSelectionState();
+        selectedContext.type = 'exercise';
+        selectedContext.elements = new Set(selectedElements);
+        
+        // Update multi-select toolbar visibility
+        updateMultiSelectToolbarVisibility();
         
         // Update ForgeAssist context to ensure it has the latest selection
-        const { selectedElement, selectedElements } = getSelectionState();
         ForgeAssist.updateContext(selectedElement, selectedElements);
         
         // Open inspector based on selection count
-        if (selectedContext.elements.size === 1) {
+        if (selectedContext.elements.size === 1 && !isShiftKey) {
             // Single selection - show exercise details
             updateInspectorForSelection(); // Ensure details are updated before opening
             openInspector(cardElement);
@@ -3111,5 +3115,594 @@ document.addEventListener('DOMContentLoaded', () => {
         if (exerciseDetailModal) exerciseDetailModal.classList.add('is-visible');
     }
     // <<< END Central function >>>
+
+    /**
+     * Creates a superset container and adds the selected exercise cards to it
+     * @param {Array} exerciseCards - Array of workout card DOM elements to group into a superset
+     * @returns {HTMLElement} The superset container element 
+     */
+    function createSuperset(exerciseCards) {
+        if (!exerciseCards || exerciseCards.length < 2) {
+            console.error('At least 2 exercise cards are required to create a superset');
+            showToast('Select at least 2 exercises to create a superset', 'error');
+            return null;
+        }
+
+        // Create the superset container
+        const supersetContainer = document.createElement('div');
+        supersetContainer.className = 'superset-container';
+        supersetContainer.id = `superset-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        
+        // Create the header with label and controls
+        const supersetHeader = document.createElement('div');
+        supersetHeader.className = 'superset-header';
+        supersetHeader.innerHTML = `
+            <div class="superset-label">Superset</div>
+            <div class="superset-controls">
+                <button class="superset-edit-btn" title="Edit Superset">✏️</button>
+                <button class="superset-remove-btn" title="Break Superset">❌</button>
+            </div>
+        `;
+        
+        supersetContainer.appendChild(supersetHeader);
+        
+        // Get the parent element (day cell) of the first card
+        const parentCell = exerciseCards[0].closest('.day-cell');
+        if (!parentCell) {
+            console.error('Parent day cell not found for exercise cards');
+            return null;
+        }
+        
+        // Remove cards from their current location and add to the superset container
+        exerciseCards.forEach(card => {
+            // If card is already in a superset, remove it from that superset first
+            const existingSuperset = card.closest('.superset-container');
+            if (existingSuperset) {
+                // If this is the only card in the superset, remove the entire superset
+                const cardsInExistingSuperset = existingSuperset.querySelectorAll('.workout-card');
+                if (cardsInExistingSuperset.length <= 2) {
+                    // Move the other card out of the superset before removing it
+                    Array.from(cardsInExistingSuperset).forEach(c => {
+                        if (c !== card) {
+                            existingSuperset.parentNode.insertBefore(c, existingSuperset);
+                        }
+                    });
+                    existingSuperset.remove();
+                } else {
+                    // Just remove this card from the existing superset
+                    existingSuperset.removeChild(card);
+                }
+            } else if (card.parentNode) {
+                card.parentNode.removeChild(card);
+            }
+            
+            // Add card to new superset container
+            supersetContainer.appendChild(card);
+            
+            // Update the card styling for superset
+            card.classList.add('in-superset');
+        });
+        
+        // Add event listeners to the superset controls
+        supersetContainer.querySelector('.superset-edit-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Open inspector for superset editing
+            // This will need to be implemented as part of the inspector functionality
+            showToast('Superset editing coming soon!', 'info');
+        });
+        
+        supersetContainer.querySelector('.superset-remove-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            breakSuperset(supersetContainer);
+        });
+        
+        // Insert the superset container into the day cell
+        parentCell.appendChild(supersetContainer);
+        
+        // Trigger updates
+        triggerSaveState();
+        triggerAnalyticsUpdate(workCanvas);
+        
+        showToast('Superset created', 'success');
+        return supersetContainer;
+    }
+
+    /**
+     * Breaks a superset, removing the container and returning individual exercise cards to the day cell
+     * @param {HTMLElement} supersetContainer - The superset container element to break
+     */
+    function breakSuperset(supersetContainer) {
+        if (!supersetContainer || !supersetContainer.classList.contains('superset-container')) {
+            console.error('Invalid superset container provided');
+            return;
+        }
+        
+        const parentCell = supersetContainer.closest('.day-cell');
+        if (!parentCell) {
+            console.error('Parent day cell not found for superset');
+            return;
+        }
+        
+        // Get all workout cards in the superset
+        const exerciseCards = Array.from(supersetContainer.querySelectorAll('.workout-card'));
+        
+        // Move cards back to day cell and remove superset container
+        exerciseCards.forEach(card => {
+            card.classList.remove('in-superset');
+            parentCell.appendChild(card);
+        });
+        
+        supersetContainer.remove();
+        
+        // Trigger updates
+        triggerSaveState();
+        triggerAnalyticsUpdate(workCanvas);
+        
+        showToast('Superset removed', 'success');
+    }
+
+    // Add context menu and multi-select toolbar elements
+    let contextMenu = null;
+    let multiSelectToolbar = null;
+    
+    // Initialize the context menu for workout cards
+    function initializeContextMenu() {
+        // Create context menu element if it doesn't exist
+        if (!contextMenu) {
+            contextMenu = document.createElement('div');
+            contextMenu.className = 'context-menu';
+            contextMenu.style.display = 'none';
+            document.body.appendChild(contextMenu);
+            
+            // Close menu on document click
+            document.addEventListener('click', (e) => {
+                if (!contextMenu.contains(e.target)) {
+                    contextMenu.style.display = 'none';
+                }
+            });
+        }
+    }
+    
+    // Show context menu for workout card
+    function showContextMenu(x, y, items) {
+        if (!contextMenu) {
+            initializeContextMenu();
+        }
+        
+        // Clear previous items
+        contextMenu.innerHTML = '';
+        
+        // Add menu items
+        items.forEach(item => {
+            const menuItem = document.createElement('div');
+            menuItem.className = 'context-menu-item';
+            menuItem.innerHTML = `<span class="icon">${item.icon}</span> ${item.label}`;
+            menuItem.addEventListener('click', () => {
+                contextMenu.style.display = 'none';
+                item.action();
+            });
+            contextMenu.appendChild(menuItem);
+        });
+        
+        // Position menu
+        contextMenu.style.left = `${x}px`;
+        contextMenu.style.top = `${y}px`;
+        contextMenu.style.display = 'block';
+        
+        // Ensure menu is within viewport
+        const rect = contextMenu.getBoundingClientRect();
+        if (rect.right > window.innerWidth) {
+            contextMenu.style.left = `${window.innerWidth - rect.width - 5}px`;
+        }
+        if (rect.bottom > window.innerHeight) {
+            contextMenu.style.top = `${y - rect.height}px`;
+        }
+    }
+    
+    // Initialize multi-select toolbar
+    function initializeMultiSelectToolbar() {
+        if (!multiSelectToolbar) {
+            multiSelectToolbar = document.createElement('div');
+            multiSelectToolbar.className = 'multi-select-toolbar';
+            multiSelectToolbar.innerHTML = `
+                <button class="multi-select-action" id="create-superset-btn">
+                    <span class="icon">⚡</span> Create Superset
+                </button>
+                <button class="multi-select-action" id="delete-selected-btn">
+                    <span class="icon">🗑️</span> Delete Selected
+                </button>
+            `;
+            document.body.appendChild(multiSelectToolbar);
+            
+            // Add event listeners
+            document.getElementById('create-superset-btn').addEventListener('click', () => {
+                const selectedCards = Array.from(selectedContext.elements);
+                if (selectedCards.length >= 2) {
+                    createSuperset(selectedCards);
+                    // Clear selection after creating superset
+                    clearSelectionStyles();
+                    selectedContext = { type: 'none', elements: new Set(), modelId: null, dayId: null };
+                    updateMultiSelectToolbarVisibility();
+                }
+            });
+            
+            document.getElementById('delete-selected-btn').addEventListener('click', () => {
+                const selectedCards = Array.from(selectedContext.elements);
+                selectedCards.forEach(card => {
+                    card.remove();
+                });
+                // Clear selection after deleting
+                clearSelectionStyles();
+                selectedContext = { type: 'none', elements: new Set(), modelId: null, dayId: null };
+                updateMultiSelectToolbarVisibility();
+                triggerSaveState();
+                triggerAnalyticsUpdate(workCanvas);
+                showToast(`Deleted ${selectedCards.length} exercises`, 'success');
+            });
+        }
+    }
+    
+    // Update toolbar visibility based on selection
+    function updateMultiSelectToolbarVisibility() {
+        if (!multiSelectToolbar) {
+            initializeMultiSelectToolbar();
+        }
+        
+        if (selectedContext.type === 'exercise' && selectedContext.elements.size >= 2) {
+            multiSelectToolbar.classList.add('active');
+        } else {
+            multiSelectToolbar.classList.remove('active');
+        }
+    }
+    
+    // Enhance the handleCardClick function to support multi-select and context menu
+    function handleCardClick(cardElement, isShiftKey) {
+        // Original selection handling logic
+        handleSelection(cardElement, isShiftKey);
+        
+        // Update the selected context
+        const { selectedElement, selectedElements } = getSelectionState();
+        selectedContext.type = 'exercise';
+        selectedContext.elements = new Set(selectedElements);
+        
+        // Update multi-select toolbar visibility
+        updateMultiSelectToolbarVisibility();
+        
+        // If it's a single card selection, open inspector
+        if (selectedContext.elements.size === 1 && !isShiftKey) {
+            openInspector(cardElement);
+        } else if (selectedContext.elements.size > 1) {
+            openMultiSelectInspector();
+        }
+    }
+    
+    // Add context menu to workout cards via right-click
+    function attachContextMenuToCards() {
+        // Use event delegation on workCanvas
+        workCanvas.addEventListener('contextmenu', (e) => {
+            // Check if right-click happened on a workout card
+            const card = e.target.closest('.workout-card');
+            if (card) {
+                e.preventDefault(); // Prevent default context menu
+                
+                // Add this card to selection if not already selected
+                if (!selectedContext.elements.has(card)) {
+                    handleCardClick(card, false);
+                }
+                
+                const menuItems = [
+                    {
+                        icon: '⚡',
+                        label: 'Create Superset',
+                        action: () => {
+                            if (selectedContext.elements.size >= 2) {
+                                createSuperset(Array.from(selectedContext.elements));
+                                clearSelectionStyles();
+                                selectedContext = { type: 'none', elements: new Set(), modelId: null, dayId: null };
+                                updateMultiSelectToolbarVisibility();
+                            } else {
+                                showToast('Select at least 2 exercises to create a superset', 'warning');
+                            }
+                        }
+                    },
+                    {
+                        icon: '📋',
+                        label: 'Duplicate',
+                        action: () => {
+                            const clone = card.cloneNode(true);
+                            clone.id = `workout-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+                            // Add event listeners to the cloned card
+                            clone.querySelector('.delete-btn').addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                clone.remove();
+                                triggerSaveState();
+                                triggerAnalyticsUpdate(workCanvas);
+                            });
+                            
+                            clone.querySelector('.edit-btn').addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                handleSelection(clone, false);
+                                openInspector(clone);
+                            });
+                            
+                            clone.addEventListener('click', (e) => {
+                                if (e.target.closest('.edit-btn') || e.target.closest('.delete-btn')) return;
+                                handleCardClick(clone, e.shiftKey);
+                            });
+                            
+                            // Insert after original card
+                            card.parentNode.insertBefore(clone, card.nextSibling);
+                            triggerSaveState();
+                            triggerAnalyticsUpdate(workCanvas);
+                            showToast('Exercise duplicated', 'success');
+                        }
+                    },
+                    {
+                        icon: '🔄',
+                        label: 'Find Progression',
+                        action: () => {
+                            showProgressionModal(card);
+                        }
+                    },
+                    {
+                        icon: '🗑️',
+                        label: 'Delete',
+                        action: () => {
+                            card.remove();
+                            triggerSaveState();
+                            triggerAnalyticsUpdate(workCanvas);
+                            showToast('Exercise deleted', 'success');
+                        }
+                    }
+                ];
+                
+                showContextMenu(e.pageX, e.pageY, menuItems);
+            }
+        });
+    }
+    
+    // Call initialization functions
+    initializeContextMenu();
+    initializeMultiSelectToolbar();
+    
+    // Attach context menu to workout cards when calendar is loaded
+    attachContextMenuToCards();
+
+    // Show progression options for an exercise card
+    function showProgressionModal(exerciseCard) {
+        // Create modal if it doesn't exist
+        let progressionModal = document.getElementById('progression-modal');
+        if (!progressionModal) {
+            progressionModal = document.createElement('div');
+            progressionModal.id = 'progression-modal';
+            progressionModal.className = 'modal-overlay';
+            
+            // Create modal content
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content progression-modal-content';
+            
+            // Add close button
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'modal-close-btn';
+            closeBtn.innerHTML = '&times;';
+            closeBtn.addEventListener('click', () => {
+                progressionModal.classList.remove('is-visible');
+            });
+            
+            modalContent.appendChild(closeBtn);
+            progressionModal.appendChild(modalContent);
+            document.body.appendChild(progressionModal);
+        }
+        
+        // Get the modal content element
+        const modalContent = progressionModal.querySelector('.progression-modal-content');
+        
+        // Get exercise details
+        const exerciseName = exerciseCard.querySelector('.exercise-name').textContent;
+        const exerciseId = exerciseCard.dataset.exerciseId || '';
+        
+        // Populate modal content
+        modalContent.innerHTML = `
+            <button class="modal-close-btn">&times;</button>
+            <h4>Exercise Progressions</h4>
+            <div class="exercise-header">${exerciseName}</div>
+            
+            <div class="progression-path">
+                <div class="progression-title">Choose a Progression Path</div>
+                <div id="progression-options" class="progression-options">
+                    <div class="progression-loading">Loading progression options...</div>
+                </div>
+            </div>
+        `;
+        
+        // Add event listener to close button
+        modalContent.querySelector('.modal-close-btn').addEventListener('click', () => {
+            progressionModal.classList.remove('is-visible');
+        });
+        
+        // Show the modal
+        progressionModal.classList.add('is-visible');
+        
+        // Mock load progression options (would be replaced with actual data)
+        setTimeout(() => {
+            const progressionOptions = modalContent.querySelector('#progression-options');
+            
+            // Example progression path based on basic bodyweight progressions
+            const mockProgressions = [
+                {
+                    id: 'easier_variation',
+                    name: 'Easier Variation',
+                    difficulty: 'Beginner',
+                    description: 'A simpler version of this exercise with reduced range of motion or leverage.'
+                },
+                {
+                    id: 'harder_variation',
+                    name: 'Harder Variation',
+                    difficulty: 'Advanced',
+                    description: 'A more challenging version with increased range of motion or leverage.'
+                },
+                {
+                    id: 'weighted_variation',
+                    name: 'Add Weight',
+                    difficulty: 'Intermediate',
+                    description: 'Same exercise pattern with added external resistance.'
+                }
+            ];
+            
+            // Generate HTML for progression options
+            progressionOptions.innerHTML = mockProgressions.map(progression => `
+                <div class="progression-option" data-id="${progression.id}">
+                    <div class="progression-option-header">
+                        <div class="progression-name">${progression.name}</div>
+                        <div class="progression-difficulty">${progression.difficulty}</div>
+                    </div>
+                    <div class="progression-description">${progression.description}</div>
+                    <button class="swap-button" data-id="${progression.id}">Swap Exercise</button>
+                </div>
+            `).join('');
+            
+            // Add event listeners to swap buttons
+            progressionOptions.querySelectorAll('.swap-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const progressionId = e.target.dataset.id;
+                    const progressionName = mockProgressions.find(p => p.id === progressionId).name;
+                    
+                    // Update the exercise card with the new progression
+                    exerciseCard.querySelector('.exercise-name').textContent = `${exerciseName} (${progressionName})`;
+                    
+                    // Close the modal
+                    progressionModal.classList.remove('is-visible');
+                    
+                    // Show success toast
+                    showToast(`Exercise progressed to: ${progressionName}`, 'success');
+                    
+                    // Trigger save state and analytics update
+                    triggerSaveState();
+                    triggerAnalyticsUpdate(workCanvas);
+                });
+            });
+        }, 500); // Simulate loading delay
+    }
+
+    // Update context menu to use the new progression modal
+    function showContextMenu(x, y, items) {
+        if (!contextMenu) {
+            initializeContextMenu();
+        }
+        
+        // Clear previous items
+        contextMenu.innerHTML = '';
+        
+        // Add menu items
+        items.forEach(item => {
+            const menuItem = document.createElement('div');
+            menuItem.className = 'context-menu-item';
+            menuItem.innerHTML = `<span class="icon">${item.icon}</span> ${item.label}`;
+            menuItem.addEventListener('click', () => {
+                contextMenu.style.display = 'none';
+                item.action();
+            });
+            contextMenu.appendChild(menuItem);
+        });
+        
+        // Position menu
+        contextMenu.style.left = `${x}px`;
+        contextMenu.style.top = `${y}px`;
+        contextMenu.style.display = 'block';
+        
+        // Ensure menu is within viewport
+        const rect = contextMenu.getBoundingClientRect();
+        if (rect.right > window.innerWidth) {
+            contextMenu.style.left = `${window.innerWidth - rect.width - 5}px`;
+        }
+        if (rect.bottom > window.innerHeight) {
+            contextMenu.style.top = `${y - rect.height}px`;
+        }
+    }
+
+    // Update context menu handler for cards to include progression
+    function attachContextMenuToCards() {
+        // Use event delegation on workCanvas
+        workCanvas.addEventListener('contextmenu', (e) => {
+            // Check if right-click happened on a workout card
+            const card = e.target.closest('.workout-card');
+            if (card) {
+                e.preventDefault(); // Prevent default context menu
+                
+                // Add this card to selection if not already selected
+                if (!selectedContext.elements.has(card)) {
+                    handleCardClick(card, false);
+                }
+                
+                const menuItems = [
+                    {
+                        icon: '⚡',
+                        label: 'Create Superset',
+                        action: () => {
+                            if (selectedContext.elements.size >= 2) {
+                                createSuperset(Array.from(selectedContext.elements));
+                                clearSelectionStyles();
+                                selectedContext = { type: 'none', elements: new Set(), modelId: null, dayId: null };
+                                updateMultiSelectToolbarVisibility();
+                            } else {
+                                showToast('Select at least 2 exercises to create a superset', 'warning');
+                            }
+                        }
+                    },
+                    {
+                        icon: '📋',
+                        label: 'Duplicate',
+                        action: () => {
+                            const clone = card.cloneNode(true);
+                            clone.id = `workout-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+                            // Add event listeners to the cloned card
+                            clone.querySelector('.delete-btn').addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                clone.remove();
+                                triggerSaveState();
+                                triggerAnalyticsUpdate(workCanvas);
+                            });
+                            
+                            clone.querySelector('.edit-btn').addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                handleSelection(clone, false);
+                                openInspector(clone);
+                            });
+                            
+                            clone.addEventListener('click', (e) => {
+                                if (e.target.closest('.edit-btn') || e.target.closest('.delete-btn')) return;
+                                handleCardClick(clone, e.shiftKey);
+                            });
+                            
+                            // Insert after original card
+                            card.parentNode.insertBefore(clone, card.nextSibling);
+                            triggerSaveState();
+                            triggerAnalyticsUpdate(workCanvas);
+                            showToast('Exercise duplicated', 'success');
+                        }
+                    },
+                    {
+                        icon: '🔄',
+                        label: 'Find Progression',
+                        action: () => {
+                            showProgressionModal(card);
+                        }
+                    },
+                    {
+                        icon: '🗑️',
+                        label: 'Delete',
+                        action: () => {
+                            card.remove();
+                            triggerSaveState();
+                            triggerAnalyticsUpdate(workCanvas);
+                            showToast('Exercise deleted', 'success');
+                        }
+                    }
+                ];
+                
+                showContextMenu(e.pageX, e.pageY, menuItems);
+            }
+        });
+    }
 
 }); // End DOMContentLoaded 
