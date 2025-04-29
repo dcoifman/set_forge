@@ -1168,8 +1168,17 @@ function _calculateTriphasicDay(modelInstance, weekIndex, dayOfWeek, isDeloadWee
 
     if (triphasicStructureEntry && triphasicStructureEntry.mainExercise) {
         const exerciseName = triphasicStructureEntry.mainExercise;
-        // Define exerciseId based on the exercise name to fix the ReferenceError
-        const exerciseId = scope.library?.find(ex => ex.name === exerciseName)?.id || `ex_${exerciseName.toLowerCase().replace(/\s+/g, '')}`;
+        // Robustly define exerciseId with fallbacks
+        let exerciseId;
+        if (scope && Array.isArray(scope.library)) {
+            const found = scope.library.find(ex => ex.name === exerciseName);
+            exerciseId = found ? found.id : `ex_${exerciseName.toLowerCase().replace(/\s+/g, '')}`;
+        } else if (modelInstance.library && Array.isArray(modelInstance.library)) {
+            const found = modelInstance.library.find(ex => ex.name === exerciseName);
+            exerciseId = found ? found.id : `ex_${exerciseName.toLowerCase().replace(/\s+/g, '')}`;
+        } else {
+            exerciseId = `ex_${exerciseName.toLowerCase().replace(/\s+/g, '')}`;
+        }
         let sets = triphasicStructureEntry.sets || 3;
 
         if (triphasicStructureEntry.applyModel === true) {
@@ -1276,7 +1285,7 @@ function _calculateTriphasicDay(modelInstance, weekIndex, dayOfWeek, isDeloadWee
             if (isDeloadWeek && params.deloadMethod === 'reduceVolume') {
                  sets = Math.max(1, Math.round(sets * 0.6));
              }
-            exercises.push({ exerciseName: exerciseName, sets: sets, reps: '5', loadType: 'rpe', loadValue: 7, detailsString: `${sets}x5 @ RPE 7`, load: 150, rest: '90s' });
+            exercises.push({ exerciseName: exerciseName, id: exerciseId, sets: sets, reps: '5', loadType: 'rpe', loadValue: 7, detailsString: `${sets}x5 @ RPE 7`, load: 150, rest: '90s' });
         }
 
          // --- Generate Assistance Exercises --- (Similar to linear)
@@ -1342,10 +1351,18 @@ function _calculateTriphasicDay(modelInstance, weekIndex, dayOfWeek, isDeloadWee
                      }
                      // --- End Flywheel Modification ---
 
-                    // Define assistanceExerciseId to fix the ReferenceError
+                    // Robustly define assistanceExerciseId with fallbacks
                     const assistanceExerciseName = assistEx.name || 'Assistance Exercise';
-                    const assistanceExerciseId = scope.library?.find(ex => ex.name === assistanceExerciseName)?.id || 
-                        `ex_${assistanceExerciseName.toLowerCase().replace(/\s+/g, '')}`;
+                    let assistanceExerciseId;
+                    if (scope && Array.isArray(scope.library)) {
+                        const found = scope.library.find(ex => ex.name === assistanceExerciseName);
+                        assistanceExerciseId = found ? found.id : `ex_${assistanceExerciseName.toLowerCase().replace(/\s+/g, '')}`;
+                    } else if (modelInstance.library && Array.isArray(modelInstance.library)) {
+                        const found = modelInstance.library.find(ex => ex.name === assistanceExerciseName);
+                        assistanceExerciseId = found ? found.id : `ex_${assistanceExerciseName.toLowerCase().replace(/\s+/g, '')}`;
+                    } else {
+                        assistanceExerciseId = `ex_${assistanceExerciseName.toLowerCase().replace(/\s+/g, '')}`;
+                    }
 
                     exercises.push({
                         exerciseName: assistEx.name || 'Assistance Exercise',
