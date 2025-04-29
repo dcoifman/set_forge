@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block Builder - SetForge</title>
+    <link rel="stylesheet" href="style.css?v=1.1">
+    <link rel="stylesheet" href="blockbuilder.css">
+    <link rel="stylesheet" href="css/forgeassist_education.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="main-nav container">
+            <a href="index.html" class="logo-container">
+                <img src="assets/logo.png" alt="SetForge Logo" class="logo">
+                <span class="logo-text">SetForge</span>
+            </a>
+             <!-- Simplified nav for builder context -->
+            <div class="builder-nav">
+                 <a href="index.html" class="nav-link">Home</a>
+                 <span class="nav-separator">|</span>
+                 <!-- Back to Hub button (initially hidden) -->
+                 <button id="back-to-hub-btn" class="nav-link" style="display: none; background: none; border: none; cursor: pointer; padding: 0; font-size: inherit;">&larr; Builder Hub</button> 
+                 <span class="nav-current">Block Builder</span>
+                 <!-- Add Save/Export buttons later -->
+                 <span class="nav-separator">|</span>
+                 <button id="open-fa-education-btn" class="nav-link" style="background: none; border: none; cursor: pointer; padding: 0; font-size: inherit; color: var(--accent-color);">Learn ForgeAssist <span class="emoji">💡</span></button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Builder Hub View (Visible by default) -->
+    <div id="block-builder-hub" class="hub-container">
+        <h1>Block Builder</h1>
+        <p class="hub-subtitle">Start planning your next training cycle.</p>
+
+        <div class="hub-actions">
+            <button class="hub-action-card" id="hub-create-new">
+                <span class="hub-action-icon">&#x2795;</span> <!-- Plus Icon -->
+                <h2>Create New Block</h2>
+                <p>Start with a blank canvas.</p>
+            </button>
+            <button class="hub-action-card" id="hub-browse-templates">
+                <span class="hub-action-icon">&#x1F4C1;</span> <!-- Folder Icon -->
+                <h2>Use a Template</h2>
+                <p>Browse pre-built programs.</p>
+            </button>
+        </div>
+
+        <div class="recent-blocks">
+            <h3>Recent Blocks</h3>
+            <div id="recent-blocks-list">
+                <p>Your recently edited blocks will appear here.</p>
+                <!-- Recent block cards will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <main class="block-builder-container">
+        <div class="phase-ribbon" id="phase-ribbon">
+            <!-- Phase bars will be generated here -->
+            <div class="phase-bar phase-accum" style="width: 25%;" data-phase="accum">
+                <span class="phase-bar-label">Accumulation</span>
+                <div class="phase-resize-handle"></div>
+            </div>
+            <div class="phase-bar phase-intens" style="width: 40%;" data-phase="intens">
+                 <span class="phase-bar-label">Intensification</span>
+                 <div class="phase-resize-handle"></div>
+            </div>
+            <div class="phase-bar phase-peak" style="width: 25%;" data-phase="peak">
+                 <span class="phase-bar-label">Peak</span>
+                 <div class="phase-resize-handle"></div>
+            </div>
+            <div class="phase-bar phase-taper" style="width: 10%;" data-phase="taper">
+                 <span class="phase-bar-label">Taper</span>
+                 <!-- No handle on the last one -->
+            </div>
+        </div>
+
+        <div class="work-canvas-wrapper">
+            <div class="work-canvas" id="work-canvas">
+                <!-- Calendar Grid Structure -->
+                <!-- Week Headers -->
+                <div class="calendar-header">Mon</div>
+                <div class="calendar-header">Tue</div>
+                <div class="calendar-header">Wed</div>
+                <div class="calendar-header">Thu</div>
+                <div class="calendar-header">Fri</div>
+                <div class="calendar-header">Sat</div>
+                <div class="calendar-header">Sun</div>
+
+                <!-- Week 1 Cells -->
+                <div class="week-label" data-week="1">Wk 1</div>
+                <div class="day-cell session-slot" data-week="1" data-day="Mon"></div>
+                <div class="day-cell session-slot" data-week="1" data-day="Tue"></div>
+                <div class="day-cell session-slot" data-week="1" data-day="Wed"></div>
+                <div class="day-cell session-slot" data-week="1" data-day="Thu"></div>
+                <div class="day-cell session-slot" data-week="1" data-day="Fri"></div>
+                <div class="day-cell session-slot" data-week="1" data-day="Sat"></div>
+                <div class="day-cell session-slot" data-week="1" data-day="Sun"></div>
+
+                 <!-- Week 2 Cells -->
+                 <div class="week-label" data-week="2">Wk 2</div>
+                <div class="day-cell session-slot" data-week="2" data-day="Mon"></div>
+                <div class="day-cell session-slot" data-week="2" data-day="Tue"></div>
+                <div class="day-cell session-slot" data-week="2" data-day="Wed"></div>
+                <div class="day-cell session-slot" data-week="2" data-day="Thu"></div>
+                <div class="day-cell session-slot" data-week="2" data-day="Fri"></div>
+                <div class="day-cell session-slot" data-week="2" data-day="Sat"></div>
+                <div class="day-cell session-slot" data-week="2" data-day="Sun"></div>
+                
+                 <!-- Week 3 Cells -->
+                 <div class="week-label" data-week="3">Wk 3</div>
+                <div class="day-cell session-slot" data-week="3" data-day="Mon"></div>
+                <div class="day-cell session-slot" data-week="3" data-day="Tue"></div>
+                <div class="day-cell session-slot" data-week="3" data-day="Wed"></div>
+                <div class="day-cell session-slot" data-week="3" data-day="Thu"></div>
+                <div class="day-cell session-slot" data-week="3" data-day="Fri"></div>
+                <div class="day-cell session-slot" data-week="3" data-day="Sat"></div>
+                <div class="day-cell session-slot" data-week="3" data-day="Sun"></div>
+
+                 <!-- Week 4 Cells -->
+                 <div class="week-label" data-week="4">Wk 4</div>
+                <div class="day-cell session-slot" data-week="4" data-day="Mon"></div>
+                <div class="day-cell session-slot" data-week="4" data-day="Tue"></div>
+                <div class="day-cell session-slot" data-week="4" data-day="Wed"></div>
+                <div class="day-cell session-slot" data-week="4" data-day="Thu"></div>
+                <div class="day-cell session-slot" data-week="4" data-day="Fri"></div>
+                <div class="day-cell session-slot" data-week="4" data-day="Sat"></div>
+                <div class="day-cell session-slot" data-week="4" data-day="Sun"></div>
+                
+                 <!-- Week 5 Cells -->
+                 <div class="week-label" data-week="5">Wk 5</div>
+                <div class="day-cell session-slot" data-week="5" data-day="Mon"></div>
+                <div class="day-cell session-slot" data-week="5" data-day="Tue"></div>
+                <div class="day-cell session-slot" data-week="5" data-day="Wed"></div>
+                <div class="day-cell session-slot" data-week="5" data-day="Thu"></div>
+                <div class="day-cell session-slot" data-week="5" data-day="Fri"></div>
+                <div class="day-cell session-slot" data-week="5" data-day="Sat"></div>
+                <div class="day-cell session-slot" data-week="5" data-day="Sun"></div>
+
+                 <!-- Week 6 Cells -->
+                 <div class="week-label" data-week="6">Wk 6</div>
+                <div class="day-cell session-slot" data-week="6" data-day="Mon"></div>
+                <div class="day-cell session-slot" data-week="6" data-day="Tue"></div>
+                <div class="day-cell session-slot" data-week="6" data-day="Wed"></div>
+                <div class="day-cell session-slot" data-week="6" data-day="Thu"></div>
+                <div class="day-cell session-slot" data-week="6" data-day="Fri"></div>
+                <div class="day-cell session-slot" data-week="6" data-day="Sat"></div>
+                <div class="day-cell session-slot" data-week="6" data-day="Sun"></div>
+                
+                 <!-- Add more weeks as needed -->
+                <!-- Week 7 Cells -->
+                 <div class="week-label" data-week="7">Wk 7</div>
+                <div class="day-cell session-slot" data-week="7" data-day="Mon"></div>
+                <div class="day-cell session-slot" data-week="7" data-day="Tue"></div>
+                <div class="day-cell session-slot" data-week="7" data-day="Wed"></div>
+                <div class="day-cell session-slot" data-week="7" data-day="Thu"></div>
+                <div class="day-cell session-slot" data-week="7" data-day="Fri"></div>
+                <div class="day-cell session-slot" data-week="7" data-day="Sat"></div>
+                <div class="day-cell session-slot" data-week="7" data-day="Sun"></div>
+
+                <!-- Week 8 Cells -->
+                 <div class="week-label" data-week="8">Wk 8</div>
+                <div class="day-cell session-slot" data-week="8" data-day="Mon"></div>
+                <div class="day-cell session-slot" data-week="8" data-day="Tue"></div>
+                <div class="day-cell session-slot" data-week="8" data-day="Wed"></div>
+                <div class="day-cell session-slot" data-week="8" data-day="Thu"></div>
+                <div class="day-cell session-slot" data-week="8" data-day="Fri"></div>
+                <div class="day-cell session-slot" data-week="8" data-day="Sat"></div>
+                <div class="day-cell session-slot" data-week="8" data-day="Sun"></div>
+
+            </div>
+        </div>
+
+        <aside class="inspector-panel" id="inspector-panel">
+            <button class="inspector-close-btn" id="inspector-close-btn">&times;</button>
+            <h2 id="inspector-title">Inspector</h2>
+            <div class="inspector-tabs">
+                <!-- Standard Tabs -->
+                <button class="tab-link" data-tab="library">Library</button>
+                <button class="tab-link active" data-tab="details">Details</button>
+                <button class="tab-link" data-tab="assist">ForgeAssist™</button>
+                <button class="tab-link" data-tab="adaptive">Adaptive</button>
+                <button class="tab-link" data-tab="analytics">Analytics</button>
+                <button class="tab-link" data-tab="settings">Settings</button>
+                <!-- Model-Specific Tabs (Initially hidden via JS/CSS if needed) -->
+                <button class="tab-link model-tab" data-tab="model-status" style="display: none;">Status & Exercises</button>
+                <button class="tab-link model-tab" data-tab="model-config" style="display: none;">Configuration</button>
+                <button class="tab-link model-tab" data-tab="model-sim" style="display: none;">Simulation</button>
+            </div>
+            <!-- Add this div for focus messages -->
+            <div id="inspector-focus-message" class="inspector-focus-message" style="display: none; padding: 5px 10px; background-color: var(--accent-color-light); color: var(--text-color); margin: 5px 0; border-radius: 4px; font-size: 0.9em;"></div>
+            <div class="inspector-content">
+                <!-- Standard Tab Content -->
+                <div id="library" class="tab-content">
+                    <div class="library-controls">
+                        <input type="search" id="inspector-search" class="inspector-search library-controls__search" placeholder="Search exercises...">
+                        <div class="library-controls__row">
+                            <div class="library-controls__group filter-sort-controls">
+                                <select id="library-filter-category" class="library-select" title="Filter by Category">
+                                    <option value="">All Categories</option>
+                                    <!-- Options added dynamically -->
+                                </select>
+                                <select id="library-filter-equipment" class="library-select" title="Filter by Equipment">
+                                    <option value="">All Equipment</option>
+                                     <!-- Options added dynamically -->
+                                </select>
+                                <select id="library-sort" class="library-select" title="Sort Exercises">
+                                    <option value="frequency">Most Used</option>
+                                    <option value="nameAsc">Name (A-Z)</option>
+                                    <option value="nameDesc">Name (Z-A)</option>
+                                    <option value="category">Category</option>
+                                </select>
+                                <button id="library-toggle-favorites" class="library-toggle-btn" title="Show Favorites Only">⭐</button>
+                            </div>
+                            <div class="library-controls__group view-add-controls">
+                                <div class="view-mode-buttons">
+                                    <button id="view-mode-standard" class="library-toggle-btn active" title="Standard View">☰</button>
+                                    <button id="view-mode-compact" class="library-toggle-btn" title="Compact View">📄</button>
+                                </div>
+                                <div class="add-import-export-buttons">
+                                   <input type="file" id="import-exercises-input" accept=".json" style="display: none;">
+                                   <label for="import-exercises-input" id="import-exercises-label" class="cta-button secondary-cta" title="Import User Exercises">Import</label>
+                                   <button id="export-exercises-btn" class="cta-button secondary-cta" title="Export User Exercises">Export</button>
+                                   <button id="add-exercise-btn" class="cta-button tertiary-cta">+ Add Exercise</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="exercise-list-container view-standard"> <!-- Default view -->
+                        <ul class="exercise-list">
+                             <!-- Populated by JS -->
+                             <p>Loading library...</p>
+                        </ul>
+                    </div>
+                </div>
+                <div id="details" class="tab-content active">
+                    <!-- Content populated by JS based on selection -->
+                    <p>Select an item on the canvas to see details.</p>
+                </div>
+                <div id="assist" class="tab-content">
+                    <!-- Content populated by JS -->
+                    <p>Select an item to see relevant ForgeAssist™ actions.</p>
+                </div>
+                <div id="adaptive" class="tab-content">
+                    <!-- Content populated by JS -->
+                    <p>Select an exercise, day, or phase to see adaptive training options.</p>
+                </div>
+                 <div id="analytics" class="tab-content">
+                    <h4>Block Analytics</h4>
+                    <p>Load Distribution, Volume Trends, etc.</p>
+                     <canvas id="load-chart" style="max-height: 200px; margin-bottom: 1rem;"></canvas>
+                     <canvas id="volume-chart" style="max-height: 200px;"></canvas>
+                     <p><small>Analytics features are under development.</small></p>
+                </div>
+                <div id="settings" class="tab-content">
+                     <!-- Content moved from direct elements to here -->
+                     <h4>Block Settings</h4>
+                     <div class="form-group">
+                         <label for="block-name">Block Name</label>
+                         <input type="text" id="block-name" placeholder="e.g., Hypertrophy Phase 1">
+                     </div>
+                     <h5>Training History (Optional)</h5>
+                     <p><small>Provide recent RPEs to help ForgeAssist calibrate fatigue.</small></p>
+                     <div class="form-group">
+                         <label for="prev-planned-rpe">Avg Planned RPE (Last Block)</label>
+                         <input type="number" id="prev-planned-rpe" step="0.5" min="1" max="10" placeholder="e.g., 7.5">
+                     </div>
+                     <div class="form-group">
+                         <label for="prev-actual-rpe">Avg Actual RPE (Last Block)</label>
+                         <input type="number" id="prev-actual-rpe" step="0.5" min="1" max="10" placeholder="e.g., 8.0">
+                     </div>
+                     <hr>
+                     <button id="save-settings-btn" class="cta-button primary-cta">Save Settings</button>
+                     <button id="save-template-btn" class="cta-button secondary-cta" style="margin-top: 10px;">Save as Template</button>
+                </div>
+                <!-- Model-Specific Tab Content -->
+                <div id="model-status-content" class="tab-content">
+                    <!-- Populated by JS when model context is selected -->
+                </div>
+                 <div id="model-config-content" class="tab-content">
+                    <!-- Populated by JS when model context is selected -->
+                </div>
+                 <div id="model-sim-content" class="tab-content">
+                    <!-- Populated by JS when model context is selected -->
+                </div>
+            </div>
+        </aside>
+
+        <footer class="timeline-footer" id="timeline-footer">
+            <div class="footer-gauges">
+                <div class="gauge" id="acwr-gauge">
+                    <span class="gauge-label">ACWR</span>
+                    <span class="gauge-value">1.1</span>
+                    <div class="gauge-bar-bg"><div class="gauge-bar acwr-ok" style="width: 60%;"></div></div>
+                </div>
+                <div class="gauge" id="monotony-gauge">
+                    <span class="gauge-label">Monotony</span>
+                    <span class="gauge-value">1.4</span>
+                    <div class="gauge-bar-bg"><div class="gauge-bar monotony-ok" style="width: 40%;"></div></div>
+                </div>
+                <div class="gauge" id="strain-gauge">
+                    <span class="gauge-label">Strain</span>
+                    <span class="gauge-value">2800</span>
+                    <div class="gauge-bar-bg"><div class="gauge-bar strain-ok" style="width: 50%;"></div></div>
+                </div>
+                <div class="gauge" id="heatmap-mini">
+                     <span class="gauge-label">Load Heatmap</span>
+                     <div class="heatmap-placeholder"></div>
+                </div>
+            </div>
+             <div class="footer-controls">
+                <!-- Zoom, Undo/Redo etc. can go here -->
+                 <label class="footer-toggle">
+                     <input type="checkbox" id="multi-athlete-toggle"> Multi-Athlete View
+                 </label>
+                 <button id="commit-block-btn" title="Commit Version" class="footer-control-btn">Commit</button>
+                 <button id="versions-btn" title="View Versions" class="footer-control-btn">Versions</button>
+                 <button id="mobile-preview-btn" title="Mobile Preview">&#128241;</button>
+                 <button title="Undo (coming soon)" disabled>&#8634;</button>
+                 <button title="Redo (coming soon)" disabled>&#8635;</button>
+            </div>
+        </footer>
+    </main>
+
+    <!-- Mobile Preview Modal -->
+    <div id="mobile-preview-modal" class="modal-overlay">
+        <div class="modal-content mobile-preview-content">
+             <button class="modal-close-btn" id="mobile-preview-close-btn">&times;</button>
+             <h4>Mobile Preview (Simulated)</h4>
+             <div class="mobile-preview-frame">
+                 <div class="mobile-screen">
+                     <div class="mobile-header">SetForge Athlete</div>
+                     <div class="mobile-body" id="mobile-preview-body">
+                         <p>Select a day/week to preview.</p>
+                         <!-- Content will be populated here -->
+                     </div>
+                 </div>
+             </div>
+         </div>
+    </div>
+
+    <!-- New Block Options Modal -->
+    <div id="new-block-options-modal" class="modal-overlay">
+        <div class="modal-content new-block-options-content">
+             <button class="modal-close-btn" id="new-block-options-close-btn">&times;</button>
+             <h4>New Block Options</h4>
+             <p>Configure the basic structure of your new training block.</p>
+             <div class="form-group">
+                 <label for="new-block-weeks">Number of Weeks:</label>
+                 <input type="number" id="new-block-weeks" value="8" min="1" max="52" step="1">
+             </div>
+             <div class="form-group">
+                 <label for="new-block-model">Periodization Model:</label>
+                 <select id="new-block-model">
+                     <option value="blank" selected>Blank Canvas</option>
+                     <option value="linear">Linear Progression (Simple)</option>
+                     <option value="wave">Wave Loading (3-Week Waves)</option>
+                     <option value="triphasic">Triphasic Structure</option>
+                     <!-- Add more models later -->
+                     <option value="dupAuto">Daily Undulating (Auto-Reg)</option>
+                     <option value="apre">APRE (Auto-Reg Progressive Resistance)</option>
+                     <option value="microdose">Microdosing</option>
+                  </select>
+              </div>
+              <div class="form-group">
+                  <label for="new-block-sessions">Sessions per Week:</label>
+                  <select id="new-block-sessions">
+                      <option value="2">2 Sessions</option>
+                      <option value="3" selected>3 Sessions</option>
+                      <option value="4">4 Sessions</option>
+                      <option value="5">5 Sessions</option>
+                      <option value="6">6 Sessions</option>
+                      <option value="7">7 Sessions</option>
+                  </select>
+              </div>
+               <div class="form-group">
+                  <label for="new-block-name-modal">Block Name (Optional):</label>
+                  <input type="text" id="new-block-name-modal" placeholder="e.g., Off-Season Hypertrophy">
+              </div>
+               <!-- Add structure templates later if desired -->
+               <button id="create-block-from-options-btn" class="cta-button primary-cta">Create Block</button>
+          </div>
+     </div>
+
+    <!-- Versions Modal -->
+    <div id="versions-modal" class="modal-overlay">
+        <div class="modal-content versions-content">
+             <button class="modal-close-btn" id="versions-close-btn">&times;</button>
+             <h4>Block Versions</h4>
+             <div id="versions-list">
+                 <p>No versions committed yet.</p>
+                 <!-- Version history will be populated here -->
+             </div>
+         </div>
+    </div>
+
+    <!-- Exercise Add/Edit Modal -->
+    <div id="exercise-modal" class="modal-overlay">
+        <div class="modal-content exercise-modal-content">
+            <button class="modal-close-btn" id="exercise-modal-close-btn">&times;</button>
+            <h4 id="exercise-modal-title">Add Custom Exercise</h4>
+            <form id="exercise-modal-form">
+               <input type="hidden" id="exercise-modal-id"> 
+                <div class="form-group">
+                    <label for="exercise-modal-name">Name *</label>
+                    <input type="text" id="exercise-modal-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="exercise-modal-category">Category</label>
+                    <input type="text" id="exercise-modal-category" placeholder="e.g., Upper Body, Core">
+                </div>
+                <div class="form-group">
+                   <label for="exercise-modal-muscles">Primary Muscles</label>
+                   <input type="text" id="exercise-modal-muscles" placeholder="Comma-separated, e.g., Chest, Triceps">
+                </div>
+                <div class="form-group">
+                   <label for="exercise-modal-equipment">Equipment Needed</label>
+                   <input type="text" id="exercise-modal-equipment" placeholder="Comma-separated, e.g., Barbell, Bench">
+                </div>
+                <div class="form-group">
+                   <label for="exercise-modal-tags">Tags</label>
+                   <input type="text" id="exercise-modal-tags" placeholder="Comma-separated, e.g., compound, push">
+                </div>
+                <div class="form-group">
+                   <label for="exercise-modal-difficulty">Difficulty</label>
+                   <select id="exercise-modal-difficulty">
+                       <option value="">N/A</option>
+                       <option value="Beginner">Beginner</option>
+                       <option value="Intermediate">Intermediate</option>
+                       <option value="Advanced">Advanced</option>
+                   </select>
+                </div>
+                <div class="form-group">
+                    <label for="exercise-modal-description">Description</label>
+                    <textarea id="exercise-modal-description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="exercise-modal-video">Video URL (Optional)</label>
+                    <input type="url" id="exercise-modal-video" placeholder="https://...">
+                </div>
+                <button type="submit" id="exercise-modal-save-btn" class="cta-button primary-cta">Save Exercise</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- <<< NEW: Exercise Detail Modal >>> -->
+    <div id="exercise-detail-modal" class="modal-overlay">
+        <div class="modal-content exercise-detail-modal-content">
+            <button class="modal-close-btn" id="exercise-detail-close-btn">&times;</button>
+            
+            <!-- Video Hero Section -->
+            <div class="exercise-hero-section">
+                <div id="exercise-video-container">
+                    <!-- Video iframe will be inserted here by JS -->
+                    <div class="video-placeholder">
+                        <div class="video-icon-placeholder">
+                            <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="1.5"/>
+                                <path d="M15.5 12L10 16V8L15.5 12Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <p>No video available</p>
+                    </div>
+                </div>
+                <h2 id="exercise-detail-title" class="exercise-title">Exercise Details</h2>
+            </div>
+            
+            <div class="exercise-detail-body">
+                <!-- Left Column for Exercise Info -->
+                <div class="detail-column-left">
+                    <div class="detail-section library-info">
+                        <h5>Exercise Information</h5>
+                        <p><strong>Category:</strong> <span id="detail-library-category">-</span></p>
+                        <p><strong>Description:</strong> <span id="detail-library-description">-</span></p>
+                        <p><strong>Primary Muscles:</strong> <span id="detail-library-muscles">-</span></p>
+                        <p><strong>Equipment:</strong> <span id="detail-library-equipment">-</span></p>
+                        <p><strong>Difficulty:</strong> <span id="detail-library-difficulty">-</span></p>
+                    </div>
+                </div>
+
+                <!-- Right Column for Current Specs -->
+                <div class="detail-column-right">
+                    <div class="detail-section current-specs">
+                        <h5>Current Workout Specs</h5>
+                        <p><strong>Sets:</strong> <span id="detail-current-sets">-</span></p>
+                        <p><strong>Reps:</strong> <span id="detail-current-reps">-</span></p>
+                        <p><strong>Load:</strong> <span id="detail-current-load-type">-</span> <span id="detail-current-load-value">-</span></p>
+                        <p><strong>Rest:</strong> <span id="detail-current-rest">-</span></p>
+                        <p><strong>Notes:</strong> <span id="detail-current-notes">-</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="exercise-detail-footer">
+                <button id="detail-modal-edit-btn" class="cta-button secondary-cta">Edit in Inspector</button>
+                <button id="detail-modal-swap-btn" class="cta-button tertiary-cta">Suggest Swap</button>
+            </div>
+        </div>
+    </div>
+    <!-- <<< End Exercise Detail Modal >>> -->
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div> 
+
+    <!-- ForgeAssist Education Modal -->
+    <div id="fa-education-modal" class="fa-modal">
+        <!-- Modal content -->
+        <div class="fa-modal-content">
+            <div class="fa-modal-header">
+                <span class="fa-close-btn">&times;</span>
+                <h2>ForgeAssist Education Center</h2>
+            </div>
+            <div class="fa-modal-body">
+                <div class="fa-tabs">
+                    <button class="fa-tab-link active" data-tab="intro">Introduction</button>
+                    <button class="fa-tab-link" data-tab="scenario-acwr">Risk Detection</button>
+                    <button class="fa-tab-link" data-tab="scenario-monotony">Smart Suggestions</button>
+                    <button class="fa-tab-link" data-tab="scenario-contextual">Contextual Actions</button>
+                    <button class="fa-tab-link" data-tab="scenario-commands">Commands</button>
+                </div>
+
+                <div id="intro" class="fa-tab-content active">
+                    <h3>Welcome!</h3>
+                    <p>Meet ForgeAssist, your AI planning partner designed to help you build smarter, safer, and more effective training blocks.</p>
+                    <h4>Key Benefits:</h4>
+                    <ul>
+                        <li><span class="emoji">⏱️</span> Saves time automating tedious adjustments.</li>
+                        <li><span class="emoji">🛡️</span> Helps prevent injury by monitoring workload risks (like ACWR).</li>
+                        <li><span class="emoji">💡</span> Optimizes plans by suggesting load variations and exercise swaps.</li>
+                        <li><span class="emoji">🤖</span> Adapts to changes like missed sessions.</li>
+                    </ul>
+                    <h4>How it Works:</h4>
+                    <p>ForgeAssist monitors your block's analytics in real-time, understands natural language commands, and provides contextual actions right where you need them. Explore the tabs to see it in action!</p>
+                </div>
+
+                <div id="scenario-acwr" class="fa-tab-content">
+                    <h3>Scenario: Proactive Risk Detection (High ACWR)</h3>
+                    <p>ForgeAssist constantly monitors the Acute:Chronic Workload Ratio (ACWR). If it gets too high (typically > 1.5), injury risk increases significantly.</p>
+                    <div class="fa-simulation-area">
+                        <div class="fa-sim-controls">
+                            <button data-action="trigger-acwr">Trigger High ACWR Scenario</button>
+                        </div>
+                        <div class="fa-sim-block" data-sim-layout="grid">
+                             <!-- Simple 2-week x 7-day grid -->
+                            <div class="fa-sim-grid">
+                                <div class="fa-sim-week-label">Wk 1</div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="mon"><div class="fa-sim-load high"></div></div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="tue"><div class="fa-sim-load med"></div></div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="wed"><div class="fa-sim-load high"></div></div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="thu"><div class="fa-sim-load med"></div></div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="fri"><div class="fa-sim-load high"></div></div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="sat"></div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="sun"></div>
+                                <div class="fa-sim-week-label">Wk 2</div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="mon"><div class="fa-sim-load high"></div></div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="tue"><div class="fa-sim-load high"></div></div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="wed"><div class="fa-sim-load high"></div></div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="thu"><div class="fa-sim-load high"></div></div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="fri"><div class="fa-sim-load high"></div></div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="sat"></div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="sun"></div>
+                            </div>
+                             <div class="fa-sim-gauge" data-gauge="acwr" data-state="normal">ACWR: 1.20</div>
+                        </div>
+                        <div class="fa-sim-output">
+                            <p>(ForgeAssist Output Area)</p>
+                        </div>
+                    </div>
+                    <p class="takeaway"><strong>Takeaway:</strong> ForgeAssist automatically flags risks based on established sports science principles and suggests specific fixes.</p>
+                </div>
+
+                <div id="scenario-monotony" class="fa-tab-content">
+                    <h3>Scenario: Smart Suggestions (High Monotony)</h3>
+                    <p>High training monotony (doing similar loads every day) can lead to accommodation and burnout. ForgeAssist suggests ways to vary the stimulus.</p>
+                     <div class="fa-simulation-area">
+                        <div class="fa-sim-controls">
+                            <button data-action="trigger-monotony">Trigger High Monotony Scenario</button>
+                        </div>
+                        <div class="fa-sim-block" data-sim-layout="grid">
+                             <!-- Simple 2-week x 7-day grid -->
+                             <div class="fa-sim-grid">
+                                <div class="fa-sim-week-label">Wk 1</div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="mon"><div class="fa-sim-load med"></div></div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="tue"><div class="fa-sim-load med"></div></div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="wed"><div class="fa-sim-load med"></div></div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="thu"><div class="fa-sim-load med"></div></div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="fri"><div class="fa-sim-load med"></div></div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="sat"></div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="sun"></div>
+                                <div class="fa-sim-week-label">Wk 2</div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="mon"><div class="fa-sim-load med"></div></div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="tue"><div class="fa-sim-load med"></div></div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="wed"><div class="fa-sim-load med"></div></div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="thu"><div class="fa-sim-load med"></div></div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="fri"><div class="fa-sim-load med"></div></div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="sat"></div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="sun"></div>
+                            </div>
+                             <div class="fa-sim-gauge" data-gauge="monotony" data-state="normal">Monotony: 1.3</div>
+                        </div>
+                        <div class="fa-sim-output">
+                            <p>(ForgeAssist Output Area)</p>
+                        </div>
+                    </div>
+                     <p class="takeaway"><strong>Takeaway:</strong> ForgeAssist helps optimize load distribution for better adaptation and reduced staleness.</p>
+                </div>
+
+                <div id="scenario-contextual" class="fa-tab-content">
+                    <h3>Scenario: Contextual Actions</h3>
+                    <p>ForgeAssist provides relevant actions based on what you've selected in the block builder.</p>
+                     <div class="fa-simulation-area">
+                        <div class="fa-sim-controls">
+                             <p>Click on the simulated elements below:</p>
+                            <button class="fa-sim-clickable" data-type="workout-card">Workout Card (Simulated)</button>
+                            <button class="fa-sim-clickable" data-type="day-cell">Day Cell (Simulated)</button>
+                        </div>
+                        <div class="fa-sim-inspector">
+                            <h4>Simulated Inspector</h4>
+                             <div class="fa-sim-context-actions">
+                                (Contextual Actions Appear Here)
+                             </div>
+                        </div>
+                        <div class="fa-sim-output">
+                            <p>(ForgeAssist Output Area - e.g., swap suggestions)</p>
+                        </div>
+                    </div>
+                    <p class="takeaway"><strong>Takeaway:</strong> Get relevant help exactly when and where you need it, saving clicks and guesswork.</p>
+                </div>
+
+                <div id="scenario-commands" class="fa-tab-content">
+                    <h3>Scenario: Natural Language Commands</h3>
+                    <p>Make quick edits using simple, natural language commands.</p>
+                    <div class="fa-simulation-area">
+                        <div class="fa-sim-controls">
+                             <p>Click an example command:</p>
+                            <button class="fa-sim-command" data-command="clear week 3">clear week 3</button>
+                            <button class="fa-sim-command" data-command="shift mon wk 2 forward 1 day">shift mon wk 2 forward 1 day</button>
+                        </div>
+                         <div class="fa-sim-block" data-sim-layout="grid">
+                             <!-- Simple 2-week x 7-day grid -->
+                              <div class="fa-sim-grid">
+                                <div class="fa-sim-week-label">Wk 1</div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="mon"></div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="tue"><div class="fa-sim-load med"></div></div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="wed"></div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="thu"><div class="fa-sim-load med"></div></div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="fri"></div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="sat"></div>
+                                <div class="fa-sim-day-cell" data-week="1" data-day="sun"></div>
+                                <div class="fa-sim-week-label">Wk 2</div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="mon"><div class="fa-sim-load high"></div></div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="tue"></div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="wed"><div class="fa-sim-load high"></div></div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="thu"></div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="fri"><div class="fa-sim-load high"></div></div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="sat"></div>
+                                <div class="fa-sim-day-cell" data-week="2" data-day="sun"></div>
+                                <div class="fa-sim-week-label">Wk 3</div>
+                                <div class="fa-sim-day-cell" data-week="3" data-day="mon"><div class="fa-sim-load med"></div></div>
+                                <div class="fa-sim-day-cell" data-week="3" data-day="tue"></div>
+                                <div class="fa-sim-day-cell" data-week="3" data-day="wed"><div class="fa-sim-load med"></div></div>
+                                <div class="fa-sim-day-cell" data-week="3" data-day="thu"></div>
+                                <div class="fa-sim-day-cell" data-week="3" data-day="fri"><div class="fa-sim-load med"></div></div>
+                                <div class="fa-sim-day-cell" data-week="3" data-day="sat"></div>
+                                <div class="fa-sim-day-cell" data-week="3" data-day="sun"></div>
+                            </div>
+                        </div>
+                         <div class="fa-sim-output">
+                            <p>(ForgeAssist Output Area - Shows confirmation/result)</p>
+                        </div>
+                    </div>
+                     <p class="takeaway"><strong>Takeaway:</strong> Interact with your plan more fluidly using intuitive text commands.</p>
+                </div>
+
+            </div>
+            <div class="fa-modal-footer">
+                <button class="fa-close-btn">Close</button>
+            </div>
+        </div>
+    </div>
+    <!-- End ForgeAssist Education Modal -->
+
+    <!-- Scripts -->
+    <script type="module" src="js/forgeassist.js"></script>
+    <script type="module" src="js/adaptiveScheduler.js"></script>
+    <script type="module" src="js/periodizationModelManager.js"></script>
+    <script src="js/analytics/updates.js" type="module"></script>
+    <script src="js/blockbuilder.js" type="module"></script>
+    <script src="js/forgeassist_education.js"></script>
+</body>
+</html>
+ 

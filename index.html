@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SetForge - Forge Your Peak Performance</title>
+    <link rel="stylesheet" href="style.css?v=1.1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Favicon links - assuming logo.png is the base -->
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="apple-touch-icon" href="assets/logo.png">
+    <meta name="description" content="SetForge: The block-engineering tool that melds deep periodization science with modern, irresistible UX.">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="main-nav container">
+            <a href="index.html" class="logo-container">
+                <img src="assets/logo.png" alt="SetForge Logo" class="logo">
+                <span class="logo-text">SetForge</span>
+            </a>
+            <ul class="desktop-nav">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#block-builder">Block Builder</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="blockbuilder.html">Try Builder</a></li>
+            </ul>
+            <a href="blockbuilder.html" class="cta-button nav-cta desktop-nav">Try Block Builder</a>
+            <button class="mobile-nav-toggle" aria-label="Toggle Navigation">
+                <span class="hamburger-icon"></span>
+            </button>
+        </nav>
+        <div class="mobile-nav-container">
+            <ul>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#block-builder">Block Builder</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#contact">Contact</a></li>
+                 <li><a href="blockbuilder.html">Try Builder</a></li>
+            </ul>
+             <a href="blockbuilder.html" class="cta-button primary-cta large-cta">Try Block Builder</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero container" id="home">
+            <div class="hero-content">
+                <h1 class="hero-headline">Forge Elite Training Blocks, Effortlessly.</h1>
+                <p class="hero-subheadline">
+                    The intuitive, science-backed platform for S&C coaches who demand precision and hate spreadsheets.
+                </p>
+                <div class="hero-cta-group">
+                    <a href="blockbuilder.html" class="cta-button primary-cta large-cta">Start Building Now</a>
+                    <a href="#features" class="cta-button secondary-cta large-cta">Learn More</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <!-- Forging Animation SVG -->
+                <svg class="forging-visual" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="moltenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#FF703B;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#E65A2A;stop-opacity:1" />
+                        </linearGradient>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="3.5" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    <!-- Anvil Base -->
+                    <path d="M 50 300 L 350 300 L 320 350 L 80 350 Z" fill="#444857"/>
+                    <!-- Anvil Top -->
+                     <path d="M 80 250 L 320 250 Q 350 250 350 280 L 350 300 L 50 300 L 50 280 Q 50 250 80 250 Z" fill="#5C6275"/>
+                     <!-- Abstract "Metal" being forged -->
+                     <rect class="metal-bar" x="150" y="200" width="100" height="50" rx="5" ry="5" fill="url(#moltenGradient)" filter="url(#glow)"/>
+                     <!-- Hammer Head -->
+                     <rect class="hammer-head" x="175" y="80" width="50" height="80" rx="10" ry="10" fill="#CCD1D9"/>
+                     <!-- Hammer Handle -->
+                     <rect class="hammer-handle" x="195" y="160" width="10" height="80" fill="#8B4513"/>
+                     <!-- Sparks -->
+                     <g class="sparks">
+                        <circle cx="180" cy="200" r="3" fill="#FFD700"/>
+                        <circle cx="220" cy="195" r="2" fill="#FFA500"/>
+                        <circle cx="200" cy="210" r="4" fill="#FF8C61"/>
+                         <circle cx="235" cy="205" r="2.5" fill="#FFD700"/>
+                         <circle cx="165" cy="190" r="3" fill="#FFA500"/>
+                     </g>
+                </svg>
+            </div>
+        </section>
+
+        <section id="features" class="features-section">
+            <h2 class="section-title">The SetForge Advantage</h2>
+            <div class="features-grid">
+                <div class="feature-card" data-index="0">
+                    <div class="feature-icon">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18V3H3zm16 16H5V5h14v14z"/><path d="M7 12h4v4H7zm6 0h4v4h-4zm-6-6h4v4H7zm6 0h4v4h-4z"/></svg>
+                    </div>
+                    <h3>Coach Dashboard</h3>
+                    <p>At-a-glance athlete status, ACWR tracking, and actionable insights.</p>
+                </div>
+                <div class="feature-card" data-index="1">
+                   <div class="feature-icon">
+                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.4 7.3l-8.1 8.1-3.7-3.7c-.8-.8-2-.8-2.8 0s-.8 2 0 2.8l5.1 5.1c.4.4.9.6 1.4.6s1-.2 1.4-.6l9.5-9.5c.8-.8.8-2 0-2.8s-2-.8-2.8 0zM6 20h12v-2H6v2zm0-4h12v-2H6v2zm0-4h6v-2H6v2z"/></svg>
+                   </div>
+                    <h3>Intuitive Block Builder</h3>
+                    <p>Visually design programs with our wizard, templates, or simulator.</p>
+                </div>
+                <div class="feature-card" data-index="2">
+                    <div class="feature-icon">
+                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1H7c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2zm-5 20c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5zm3-4H9V5h6v12z"/></svg>
+                    </div>
+                    <h3>Seamless Athlete Hub</h3>
+                    <p>Mobile-first experience for easy logging, feedback, and learning.</p>
+                </div>
+                 <div class="feature-card" data-index="3">
+                    <div class="feature-icon">
+                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.4 11.6c.2.8.2 1.6 0 2.4l1.9 1.5c.1.1.2.3.1.5l-1.6 2.8c-.1.2-.3.3-.5.2l-2.3-.9c-.5.4-1 .7-1.6.9l-.4 2.5c0 .2-.2.4-.4.4h-3.2c-.2 0-.4-.2-.4-.4l-.4-2.5c-.6-.2-1.1-.5-1.6-.9l-2.3.9c-.2.1-.4 0-.5-.2l-1.6-2.8c-.1-.2 0-.4.1-.5l1.9-1.5c-.2-.8-.2-1.6 0-2.4L4 10.1c-.1-.1-.2-.3-.1-.5l1.6-2.8c.1-.2.3-.3.5-.2l2.3.9c.5-.4 1-.7 1.6-.9l.4-2.5c0-.2.2-.4.4-.4h3.2c.2 0 .4.2.4.4l.4 2.5c.6.2 1.1.5 1.6.9l2.3-.9c.2-.1.4 0 .5.2l1.6 2.8c.1.2 0 .4-.1.5l-1.9 1.5zM12 8.5c-1.9 0-3.5 1.6-3.5 3.5s1.6 3.5 3.5 3.5 3.5-1.6 3.5-3.5-1.6-3.5-3.5-3.5z"/></svg>
+                    </div>
+                    <h3>Adaptive Intelligence</h3>
+                    <p>Smart alerts and "What-If" scenarios handle missed sessions effortlessly.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Block Builder Showcase Section -->
+        <section id="block-builder-showcase" class="block-builder-showcase">
+            <div class="showcase-content">
+                <h2 class="section-title">Visually Engineer Training Blocks</h2>
+                <p class="section-subtitle">Effortlessly map out entire training cycles using our intuitive wizard or templates. SetForge intelligently adapts, allowing 'what-if' scenario planning and real-time adjustments to keep athletes on track.</p>
+                <!-- Animated Text Area -->
+                <div class="showcase-dynamic-text">
+                    <span class="dynamic-text-item is-active" data-state="initial">Plan your ideal cycle visually.</span>
+                    <span class="dynamic-text-item" data-state="disruption">Life happens? SetForge detects disruptions...</span>
+                    <span class="dynamic-text-item" data-state="adapted">...and instantly suggests smart adaptations.</span>
+                </div>
+            </div>
+            <div class="showcase-visual">
+                <svg class="timeline-visual" viewBox="0 0 800 300" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <!-- Define gradients or filters if needed -->
+                        <linearGradient id="phase1Gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#FF703B" />
+                            <stop offset="100%" stop-color="#E65A2A" />
+                        </linearGradient>
+                         <linearGradient id="phase2Gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#CCD1D9" />
+                            <stop offset="100%" stop-color="#AAB2BD" />
+                        </linearGradient>
+                         <linearGradient id="phase3Gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#6C7A89" />
+                            <stop offset="100%" stop-color="#4D5660" />
+                        </linearGradient>
+                         <filter id="blockGlow" x="-50%" y="-50%" width="200%" height="200%">
+                             <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                             <feMerge>
+                                 <feMergeNode in="coloredBlur"/>
+                                 <feMergeNode in="SourceGraphic"/>
+                             </feMerge>
+                         </filter>
+                    </defs>
+
+                    <!-- Timeline Axis -->
+                    <line class="timeline-axis" x1="50" y1="250" x2="750" y2="250" stroke="rgba(204, 209, 217, 0.3)" stroke-width="2"/>
+
+                    <!-- Week Markers -->
+                    <g class="week-markers">
+                        <text x="50" y="275" fill="var(--text-color)" font-size="12">Wk 1</text>
+                        <line x1="50" y1="245" x2="50" y2="255" stroke="rgba(204, 209, 217, 0.3)" stroke-width="1"/>
+                        
+                        <text x="150" y="275" fill="var(--text-color)" font-size="12">Wk 2</text>
+                        <line x1="150" y1="245" x2="150" y2="255" stroke="rgba(204, 209, 217, 0.3)" stroke-width="1"/>
+                        
+                        <text x="250" y="275" fill="var(--text-color)" font-size="12">Wk 3</text>
+                        <line x1="250" y1="245" x2="250" y2="255" stroke="rgba(204, 209, 217, 0.3)" stroke-width="1"/>
+                        
+                        <text x="350" y="275" fill="var(--text-color)" font-size="12">Wk 4</text>
+                         <line x1="350" y1="245" x2="350" y2="255" stroke="rgba(204, 209, 217, 0.3)" stroke-width="1"/>
+
+                        <text x="450" y="275" fill="var(--text-color)" font-size="12">Wk 5</text>
+                        <line x1="450" y1="245" x2="450" y2="255" stroke="rgba(204, 209, 217, 0.3)" stroke-width="1"/>
+                        
+                        <text x="550" y="275" fill="var(--text-color)" font-size="12">Wk 6</text>
+                        <line x1="550" y1="245" x2="550" y2="255" stroke="rgba(204, 209, 217, 0.3)" stroke-width="1"/>
+                        
+                        <text x="650" y="275" fill="var(--text-color)" font-size="12">Wk 7</text>
+                        <line x1="650" y1="245" x2="650" y2="255" stroke="rgba(204, 209, 217, 0.3)" stroke-width="1"/>
+                        
+                        <text x="750" y="275" fill="var(--text-color)" font-size="12">Wk 8</text>
+                         <line x1="750" y1="245" x2="750" y2="255" stroke="rgba(204, 209, 217, 0.3)" stroke-width="1"/>
+                    </g>
+
+                    <!-- Phase Blocks -->
+                    <g class="phase-blocks">
+                        <g class="phase-block-group">
+                            <rect id="phase1" class="phase-block" x="50" y="180" width="200" height="60" rx="8" ry="8" fill="url(#phase1Gradient)" data-label="Accumulation" />
+                            <!-- Phase 1 Label -->
+                            <text class="phase-label phase1-label" x="150" y="160" text-anchor="middle" fill="white" font-size="14">Accumulation</text>
+                        </g>
+                        
+                        <g class="phase-block-group">
+                            <rect id="phase2" class="phase-block" x="250" y="180" width="300" height="60" rx="8" ry="8" fill="url(#phase2Gradient)" data-label="Intensification" />
+                            <!-- Phase 2 Label -->
+                            <text class="phase-label phase2-label" x="400" y="160" text-anchor="middle" fill="white" font-size="14">Intensification</text>
+                        </g>
+                        
+                         <g class="phase-block-group">
+                            <rect id="phase3" class="phase-block" x="550" y="180" width="200" height="60" rx="8" ry="8" fill="url(#phase3Gradient)" data-label="Realization" />
+                            <!-- Phase 3 Label -->
+                            <text class="phase-label phase3-label" x="650" y="160" text-anchor="middle" fill="white" font-size="14">Realization</text>
+                        </g>
+                    </g>
+
+                     <!-- Disruption Indicator (initially hidden) -->
+                     <g class="disruption-indicator" opacity="0" transform="translate(350, 210)">
+                        <path d="M12 5.99L19.53 19H4.47L12 5.99M12 2L1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z" fill="#FFEB3B"/> <!-- Warning Icon -->
+                     </g>
+
+                </svg>
+            </div>
+            <div class="showcase-cta">
+                <button class="cta-button secondary-cta builder-cta" onclick="document.getElementById('features').scrollIntoView({behavior: 'smooth'});">Learn More About the Builder</button>
+            </div>
+        </section>
+        <!-- End Block Builder Showcase Section -->
+
+        <section id="how-it-works" class="how-it-works-section">
+             <h2 class="section-title">From Science to Sweat, Simplified</h2>
+             <!-- Visual Storyboard / Step-by-step guide -->
+             <div class="steps-container">
+                 <div class="step-card" data-index="0">
+                     <h4>1. Build Blocks Visually</h4>
+                     <p>Use templates or the wizard. See periodization unfold in real-time.</p>
+                     <!-- Placeholder for mini-visual -->
+                 </div>
+                 <div class="step-card" data-index="1">
+                     <h4>2. Assign & Monitor</h4>
+                     <p>Track athlete load, readiness, and progress from one dashboard.</p>
+                      <!-- Placeholder for mini-visual -->
+                 </div>
+                 <div class="step-card" data-index="2">
+                     <h4>3. Athletes Engage Easily</h4>
+                     <p>Log sessions, give feedback, and learn via the mobile hub.</p>
+                      <!-- Placeholder for mini-visual -->
+                 </div>
+                 <div class="step-card" data-index="3">
+                     <h4>4. Adapt Intelligently</h4>
+                     <p>Handle disruptions with smart suggestions and automated adjustments.</p>
+                      <!-- Placeholder for mini-visual -->
+                 </div>
+             </div>
+        </section>
+
+         <!-- Pricing Section -->
+        <section id="pricing" class="pricing-section">
+            <h2 class="section-title">Simple, Powerful Pricing</h2>
+            <div class="pricing-grid">
+                <!-- Example Plan -->
+                <div class="pricing-card">
+                    <h3>Coach Pro</h3>
+                    <p class="price">$49<span class="price-term">/month</span></p>
+                    <ul>
+                        <li>Up to 50 Athletes</li>
+                        <li>Full Block Builder</li>
+                        <li>Analytics Dashboard</li>
+                        <li>Mobile Athlete Hub</li>
+                        <li>Email Support</li>
+                    </ul>
+                    <button class="cta-button primary-cta">Choose Plan</button>
+                </div>
+                 <!-- Add more plans as needed -->
+                 <div class="pricing-card recommended">
+                    <h3>Performance Team</h3>
+                     <p class="price">$99<span class="price-term">/month</span></p>
+                    <ul>
+                        <li>Up to 150 Athletes</li>
+                        <li>All Pro Features +</li>
+                        <li>What-If Simulator</li>
+                        <li>Advanced Reporting</li>
+                        <li>Priority Support</li>
+                    </ul>
+                    <button class="cta-button primary-cta">Choose Plan</button>
+                </div>
+                 <div class="pricing-card">
+                    <h3>Enterprise</h3>
+                     <p class="price">Custom<span class="price-term"></span></p>
+                    <ul>
+                        <li>Unlimited Athletes</li>
+                        <li>All Team Features +</li>
+                        <li>Custom Branding</li>
+                        <li>API Access</li>
+                        <li>Dedicated Account Manager</li>
+                    </ul>
+                    <button class="cta-button secondary-cta">Contact Sales</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="contact-section">
+             <h2 class="section-title">Get In Touch</h2>
+             <p>Have questions or want a demo? Reach out!</p>
+             <form class="contact-form">
+                 <div class="form-group">
+                     <label for="name">Name</label>
+                     <input type="text" id="name" name="name" required>
+                 </div>
+                  <div class="form-group">
+                     <label for="email">Email</label>
+                     <input type="email" id="email" name="email" required>
+                 </div>
+                  <div class="form-group">
+                     <label for="message">Message</label>
+                     <textarea id="message" name="message" rows="5" required></textarea>
+                 </div>
+                 <button type="submit" class="cta-button primary-cta">Send Message</button>
+             </form>
+        </section>
+
+        <section class="cta-section">
+            <h2 class="section-title">Ready to Engineer Better Results?</h2>
+            <p>Stop wrestling spreadsheets. Start forging champions.</p>
+            <button class="cta-button primary-cta large-cta">Join the Beta</button>
+        </section>
+
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                 <img src="assets/logo.png" alt="SetForge Logo" class="logo-small">
+                 <span>SetForge</span>
+            </div>
+            <nav class="footer-nav">
+                <a href="#about">About</a>
+                <a href="#careers">Careers</a>
+                <a href="#privacy">Privacy Policy</a>
+                <a href="#terms">Terms of Service</a>
+            </nav>
+            <div class="social-links">
+                <!-- Placeholder for social media icons -->
+                <a href="#" aria-label="Twitter">TW</a> <!-- Replace with SVG icon -->
+                <a href="#" aria-label="LinkedIn">LI</a> <!-- Replace with SVG icon -->
+            </div>
+        </div>
+        <p class="copyright">&copy; <span id="current-year"></span> SetForge. All rights reserved.</p>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

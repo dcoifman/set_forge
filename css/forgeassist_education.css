@@ -1,0 +1,629 @@
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200'); /* Add Material Icons */
+
+/* Base Modal Styling */
+.fa-modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1001; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0, 0, 0, 0.6); /* Black w/ opacity */
+    backdrop-filter: blur(5px); /* Frosted glass effect */
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Modal Content Box */
+.fa-modal-content {
+    background-color: var(--background-color-dark); /* Slightly darker bg */
+    color: var(--text-color-light);
+    margin: 5% auto; /* Centered */
+    padding: 0; /* Remove padding, handle internally */
+    border: 1px solid var(--border-color);
+    border-radius: 12px; /* More rounded corners */
+    width: 90%; /* Responsive width */
+    max-width: 800px; /* Max width */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* Deeper shadow */
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh; /* Limit height */
+    overflow: hidden; /* Prevent content spilling */
+    animation: slideIn 0.4s ease-out;
+}
+
+/* Modal Header */
+.fa-modal-header {
+    padding: 20px 30px;
+    background-color: var(--background-color-medium); /* Header background */
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 12px 12px 0 0; /* Match top corners */
+}
+
+.fa-modal-header h2 {
+    margin: 0;
+    font-size: 1.5em;
+    font-weight: 700;
+    color: var(--text-color-heading);
+}
+
+/* Close Button */
+.fa-close-btn {
+    color: var(--text-color-secondary);
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+    background: none;
+    border: none;
+    padding: 0 5px;
+    line-height: 1; /* Ensure alignment */
+}
+
+.fa-close-btn:hover,
+.fa-close-btn:focus {
+    color: var(--accent-color);
+    text-decoration: none;
+    transform: scale(1.1);
+}
+
+/* Modal Body - Handles scrolling */
+.fa-modal-body {
+    padding: 25px 30px;
+    flex-grow: 1;
+    overflow-y: auto; /* Enable vertical scroll */
+    background-color: var(--background-color-light); /* Slightly lighter for content area */
+    position: relative; /* Needed for absolute positioning of tab content */
+    overflow-x: hidden; /* Hide horizontal overflow during tab slide */
+}
+
+/* Tabs Container */
+.fa-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 25px;
+    gap: 5px; /* Space between tabs */
+}
+
+/* Tab Links */
+.fa-tab-link {
+    background-color: transparent;
+    border: none;
+    border-bottom: 3px solid transparent; /* Underline indicator */
+    outline: none;
+    cursor: pointer;
+    padding: 12px 18px;
+    transition: all 0.3s ease;
+    font-size: 1em;
+    color: var(--text-color-secondary);
+    font-weight: 500;
+}
+
+.fa-tab-link:hover {
+    color: var(--accent-color-light);
+    border-bottom-color: var(--accent-color-light-translucent); /* Subtle hover */
+}
+
+.fa-tab-link.active {
+    color: var(--accent-color);
+    border-bottom-color: var(--accent-color); /* Active underline */
+    font-weight: 700;
+}
+
+/* Tab Content */
+.fa-tab-content {
+    display: none; /* Hidden by default */
+    position: absolute; /* For slide transition */
+    width: calc(100% - 60px); /* Match body padding */
+    left: 30px;
+    top: 100px; /* Adjust based on tab height etc. */
+    opacity: 0;
+    animation-duration: 0.5s;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: forwards;
+}
+
+.fa-tab-content.active {
+    display: block; /* Show active content */
+    position: relative; /* Reset position for active */
+    left: 0;
+    top: 0;
+    width: 100%;
+    opacity: 1;
+    animation-name: contentFadeIn; /* Keep original fade for initial load */
+}
+
+.fa-tab-content.slide-in {
+     display: block;
+     position: relative;
+     animation-name: slideInRight;
+}
+
+.fa-tab-content.slide-out {
+     display: block;
+     position: absolute; /* Keep it in flow but allow it to move out */
+     animation-name: slideOutLeft;
+}
+
+.fa-tab-content h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--text-color-heading);
+    font-size: 1.3em;
+    font-weight: 600;
+}
+
+.fa-tab-content p {
+    line-height: 1.6;
+    margin-bottom: 15px;
+    color: var(--text-color-medium); /* Slightly softer text */
+}
+
+.fa-tab-content ul {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 15px;
+    overflow: hidden; /* Contain animated emojis */
+}
+
+.fa-tab-content li {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-color-medium);
+}
+
+.fa-tab-content li .emoji {
+    font-size: 1.2em;
+    color: var(--accent-color);
+    display: inline-block; /* Needed for animation */
+    animation: popIn 0.5s ease-out 0.2s backwards; /* Staggered pop-in */
+}
+
+/* Intro specific emoji animation delays */
+#intro li:nth-child(1) .emoji { animation-delay: 0.3s; }
+#intro li:nth-child(2) .emoji { animation-delay: 0.4s; }
+#intro li:nth-child(3) .emoji { animation-delay: 0.5s; }
+#intro li:nth-child(4) .emoji { animation-delay: 0.6s; }
+
+/* Simulation Area */
+.fa-simulation-area {
+    background-color: var(--background-color-medium); /* Distinct background */
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: relative; /* For absolute positioning of connector line */
+}
+
+.fa-sim-controls {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.fa-sim-controls p {
+    margin: 0;
+    font-style: italic;
+    color: var(--text-color-secondary);
+}
+
+/* Simulation Buttons */
+.fa-simulation-area button {
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; /* Added transform and shadow */
+    font-weight: 500;
+    outline: none; /* Remove default focus outline if adding custom */
+}
+
+.fa-simulation-area button:hover {
+    background-color: var(--accent-color-dark);
+    transform: translateY(-2px) scale(1.02); /* Lift and slightly enlarge */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.fa-simulation-area button:active {
+    transform: translateY(0px) scale(0.98); /* Press down */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Specific Simulation button styles */
+.fa-sim-clickable,
+.fa-sim-command {
+    background-color: var(--button-secondary-bg);
+    color: var(--button-secondary-text);
+}
+.fa-sim-clickable:hover,
+.fa-sim-command:hover {
+    background-color: var(--button-secondary-hover-bg);
+}
+
+/* Highlight effect for clicked elements */
+.fa-sim-element-highlight {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+    box-shadow: 0 0 10px var(--accent-color-translucent);
+    transition: outline 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+}
+
+/* Simulation Block/Grid/Inspector */
+.fa-sim-block {
+    background-color: var(--background-color-light);
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color-light);
+    margin-bottom: 15px;
+    overflow: hidden; /* Prevent content overflow during animations */
+}
+
+.fa-sim-grid {
+    display: grid;
+    grid-template-columns: auto repeat(7, 1fr); /* Week label + 7 days */
+    gap: 5px;
+    margin-bottom: 10px;
+    font-size: 0.9em;
+    position: relative; /* Needed for absolute positioned day content */
+}
+
+.fa-sim-week-label {
+    grid-column: 1 / 2;
+    font-weight: bold;
+    text-align: right;
+    padding-right: 10px;
+    color: var(--text-color-secondary);
+    align-self: center;
+}
+
+.fa-sim-day-cell {
+    background-color: var(--background-color-medium);
+    border: 1px solid var(--border-color-light);
+    border-radius: 4px;
+    min-height: 50px; /* Increased height for visual movement */
+    display: flex;
+    flex-direction: column; /* Stack content and load */
+    justify-content: flex-start; /* Align content top */
+    align-items: center;
+    padding: 4px;
+    position: relative; /* For positioning content wrapper */
+    overflow: hidden; /* Hide overflowing content during swap */
+    transition: background-color 0.3s ease; /* Transition for cleared state */
+}
+
+/* Content wrapper for animation */
+.fa-sim-day-content {
+    width: 100%;
+    height: 100%;
+    transition: transform 0.5s ease-in-out, opacity 0.3s ease-in-out;
+    position: relative; /* Or absolute if needed for complex swaps */
+    z-index: 2;
+    text-align: center; /* Center potential text */
+    font-size: 0.8em;
+    color: var(--text-color-secondary);
+    /* Ensure it doesn't shrink */
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* State for day swapping animation */
+.fa-sim-day-content.swapping {
+    position: absolute; /* Allow absolute positioning during swap */
+    background: var(--background-color-medium); /* Maintain bg during move */
+    border-radius: 4px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* State for clearing animation */
+.fa-sim-day-content.clearing {
+    animation: fadeOutWipe 0.4s ease-out forwards;
+}
+
+/* State for visually cleared day */
+.fa-sim-day-cell.cleared {
+     background-color: var(--background-color-light); /* Make visually distinct */
+}
+.fa-sim-day-cell.cleared .fa-sim-day-content:not(.clearing) {
+     opacity: 0; /* Hide content immediately if not animating */
+}
+.fa-sim-day-cell.cleared .fa-sim-load {
+     opacity: 0; /* Hide load bar */
+}
+
+/* Rest day indicator */
+.fa-rest-day-indicator {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: var(--accent-color-light);
+    opacity: 0;
+    animation: popIn 0.3s 0.3s ease-out forwards; /* Pop in after fade out */
+}
+
+/* Highlight for swapped cells */
+.fa-sim-day-cell.highlight-swap {
+    background-color: var(--accent-color-translucent);
+}
+
+/* Simulated Load indicators */
+.fa-sim-load {
+    width: 70%;
+    height: 10px; /* Default height */
+    border-radius: 5px;
+    transition: height 0.5s ease-in-out, opacity 0.3s ease; /* Animate height */
+    margin-top: auto; /* Push to bottom */
+    flex-shrink: 0; /* Prevent shrinking */
+}
+
+/* Class for reduced load animation */
+.fa-sim-load.reduced {
+    height: 4px; /* Target height for reduction */
+}
+
+.fa-sim-load.low { background-color: #66bb6a; } /* Green */
+.fa-sim-load.med { background-color: #ffee58; } /* Yellow */
+.fa-sim-load.high { background-color: #ef5350; } /* Red */
+
+/* Simulated Gauge - Updated for Visual Gauge */
+.fa-sim-gauge-container {
+    width: 150px; /* Adjust size as needed */
+    height: 75px; /* Half circle */
+    position: relative;
+    margin: 15px auto 10px auto; /* Center it */
+    overflow: hidden;
+}
+
+.fa-sim-gauge-bg {
+    width: 100%;
+    height: 100%;
+    border-radius: 150px 150px 0 0; /* Half circle shape */
+    background: linear-gradient(to right, #66bb6a, #ffee58, #ef5350); /* Green-Yellow-Red */
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.fa-sim-gauge-mask {
+     width: 140px; /* Slightly smaller */
+     height: 70px;
+     border-radius: 140px 140px 0 0;
+     background: var(--background-color-light); /* Match block bg */
+     position: absolute;
+     top: 5px; /* Center the mask */
+     left: 5px;
+     z-index: 1;
+}
+
+.fa-sim-gauge-needle {
+    width: 3px;
+    height: 65px; /* Length of needle */
+    background-color: var(--text-color-medium);
+    position: absolute;
+    bottom: 5px; /* Pivot point at the bottom center */
+    left: calc(50% - 1.5px);
+    transform-origin: bottom center;
+    transform: rotate(-90deg); /* Start at far left */
+    transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Bouncy transition */
+    z-index: 2;
+}
+
+.fa-sim-gauge-value {
+     position: absolute;
+     bottom: 5px;
+     left: 50%;
+     transform: translateX(-50%);
+     font-weight: bold;
+     font-size: 0.9em;
+     color: var(--text-color-heading);
+     z-index: 3;
+}
+
+/* Gauge States (applied to container) */
+.fa-sim-gauge-container[data-state="normal"] .fa-sim-gauge-needle { transform: rotate(-45deg); } /* ~25% */
+.fa-sim-gauge-container[data-state="warning"] .fa-sim-gauge-needle { transform: rotate(0deg); } /* ~50% */
+.fa-sim-gauge-container[data-state="danger"] .fa-sim-gauge-needle { transform: rotate(60deg); } /* ~85% */
+
+/* Old Gauge Style - hide */
+.fa-sim-gauge { display: none; }
+
+.fa-sim-inspector {
+    background-color: var(--background-color-darker);
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 15px;
+    min-height: 80px; /* Ensure space for context actions */
+}
+
+.fa-sim-inspector h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: var(--text-color-light);
+}
+
+.fa-sim-context-actions {
+    color: var(--text-color-secondary);
+    font-style: italic;
+    min-height: 2em; /* Placeholder space */
+}
+
+/* Simulation Output Area */
+.fa-sim-output {
+    background-color: var(--background-color-darker);
+    border: 1px dashed var(--accent-color-light-translucent); /* Dashed border */
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 15px;
+    font-family: 'Courier New', Courier, monospace; /* Monospace font */
+    font-size: 0.95em;
+    color: var(--accent-color-light);
+    min-height: 60px; /* Ensure space for toasts */
+}
+
+.fa-sim-output p {
+    margin: 0;
+    white-space: pre-wrap; /* Preserve line breaks */
+}
+
+/* Simulated Toast Styling */
+.fa-sim-toast {
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: contentFadeIn 0.4s ease-out forwards;
+}
+.fa-sim-toast.info { background-color: rgba(51, 181, 229, 0.2); border-left: 4px solid #33b5e5; color: #a7d7e8; }
+.fa-sim-toast.success { background-color: rgba(0, 191, 111, 0.2); border-left: 4px solid #00bf6f; color: #99e6c9; }
+.fa-sim-toast.warning { background-color: rgba(255, 187, 51, 0.2); border-left: 4px solid #ffbb33; color: #ffdd99; }
+.fa-sim-toast.error { background-color: rgba(255, 68, 68, 0.2); border-left: 4px solid #ff4444; color: #ffb3b3; }
+
+/* Toast Icons */
+.fa-sim-toast .toast-icon {
+    font-family: 'Material Symbols Outlined'; /* Use Material Icons */
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    animation: popIn 0.4s 0.1s ease-out backwards; /* Animate icon slightly */
+}
+.fa-sim-toast.info .toast-icon::before { content: 'info'; color: #33b5e5; }
+.fa-sim-toast.success .toast-icon::before { content: 'check_circle'; color: #00bf6f; }
+.fa-sim-toast.warning .toast-icon::before { content: 'warning'; color: #ffbb33; }
+.fa-sim-toast.error .toast-icon::before { content: 'error'; color: #ff4444; }
+
+.fa-sim-toast strong {
+    color: inherit; /* Inherit color from toast type */
+    font-weight: 600;
+}
+
+.fa-sim-toast button {
+    margin-left: auto; /* Push buttons to the right if needed */
+    padding: 4px 10px;
+    font-size: 0.9em;
+}
+.fa-sim-toast button.primary-cta { background-color: var(--accent-color); color: white; }
+.fa-sim-toast button.secondary-cta { background-color: var(--button-secondary-bg); color: var(--button-secondary-text); }
+.fa-sim-toast button:hover {
+    transform: scale(1.05); /* Simpler hover for small buttons */
+    box-shadow: none;
+}
+
+/* Takeaway Section */
+.takeaway {
+    background-color: var(--accent-color-translucent);
+    border-left: 4px solid var(--accent-color);
+    padding: 15px;
+    margin-top: 25px;
+    border-radius: 0 6px 6px 0;
+    color: var(--text-color-medium); /* Adjust if needed */
+}
+
+.takeaway strong {
+    color: var(--accent-color);
+}
+
+/* Modal Footer */
+.fa-modal-footer {
+    padding: 15px 30px;
+    background-color: var(--background-color-medium); /* Match header */
+    border-top: 1px solid var(--border-color);
+    text-align: right;
+    border-radius: 0 0 12px 12px; /* Match bottom corners */
+}
+
+.fa-modal-footer button {
+    background-color: var(--button-secondary-bg);
+    color: var(--button-secondary-text);
+    border: 1px solid var(--border-color);
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease; /* Added transform */
+    font-weight: 500;
+}
+
+.fa-modal-footer button:hover {
+    background-color: var(--button-secondary-hover-bg);
+    transform: translateY(-1px); /* Slight lift */
+}
+.fa-modal-footer button:active {
+    transform: translateY(0px); /* Press down */
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes contentFadeIn {
+     from { opacity: 0; transform: translateY(10px); }
+     to { opacity: 1; transform: translateY(0); }
+}
+
+/* New Tab Sliding Animations */
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(50px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideOutLeft {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(-50px); }
+}
+
+/* Pop In Animation */
+@keyframes popIn {
+    0% { opacity: 0; transform: scale(0.5); }
+    80% { opacity: 1; transform: scale(1.05); }
+    100% { opacity: 1; transform: scale(1.0); }
+}
+
+/* Connector Line Drawing Animation */
+@keyframes drawLine {
+    to { stroke-dashoffset: 0; }
+}
+
+/* Load Bar Shrink Animation (using transition now) */
+
+/* Day Clearing Animation */
+@keyframes fadeOutWipe {
+    from { opacity: 1; transform: scaleY(1); transform-origin: top; }
+    to { opacity: 0; transform: scaleY(0); transform-origin: top; }
+}
+
+/* Simple Pulse */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+} 

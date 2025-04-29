@@ -1,0 +1,1772 @@
+:root {
+    --deep-slate: #1B1C22;
+    --molten-orange: #FF703B;
+    --cool-steel: #CCD1D9;
+    --background-color: var(--deep-slate);
+    --text-color: var(--cool-steel);
+    --accent-color: var(--molten-orange);
+    --background-color-dark: #16171C;        /* Slightly darker than deep-slate */
+    --background-color-medium: #282A32;      /* Mid-tone dark grey */
+    --background-color-light: #3A3C44;       /* Lighter dark grey */
+    --text-color-light: #E0E4EB;            /* Slightly lighter than cool-steel */
+    --text-color-medium: #A0A5AF;           /* Greyer text */
+    --text-color-secondary: #7A808A;         /* Dimmer grey text */
+    --text-color-heading: #FFFFFF;           /* White for headings */
+    --border-color: #4A4C54;              /* Subtle border */
+    --border-color-light: #5A5C64;         /* Lighter subtle border */
+    --accent-color-light: #FF8A5C;          /* Lighter orange */
+    --accent-color-dark: #E0602B;           /* Darker orange */
+    --accent-color-translucent: rgba(255, 112, 59, 0.15); /* Orange with alpha */
+    --button-secondary-bg: #4A4C54;         /* Medium background for secondary buttons */
+    --button-secondary-text: var(--text-color-light); /* Light text for secondary buttons */
+    --button-secondary-hover-bg: #5A5C64;    /* Hover background for secondary buttons */
+    --card-background: rgba(40, 42, 50, 0.6); /* Slightly lighter than deep slate with opacity */
+    --glass-blur: 10px;
+    --font-primary: 'Inter', sans-serif;
+    --transition-speed: 300ms;
+    --transition-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Spring-like timing */
+    --animation-timing: ease-in-out;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: var(--font-primary);
+    line-height: 1.6;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+    color: var(--accent-color);
+    text-decoration: none;
+    transition: color var(--transition-speed) var(--animation-timing);
+}
+
+a:hover,
+a:focus {
+    color: white;
+}
+
+h1, h2, h3, h4 {
+    line-height: 1.2;
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+h1 {
+    font-size: clamp(2.5rem, 6vw, 4.5rem); /* Responsive font size */
+}
+
+h2 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    text-align: center;
+    margin-bottom: 3rem;
+    color: white;
+}
+
+section {
+    padding: clamp(4rem, 10vw, 8rem) 5%; /* Responsive padding */
+    overflow: hidden; /* Contain animations */
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* --- Header & Nav --- */
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: rgba(27, 28, 34, 0.8);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    padding: 1rem 5%;
+    border-bottom: 1px solid rgba(204, 209, 217, 0.1);
+}
+
+.main-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.logo {
+    height: 40px;
+    width: auto;
+}
+
+.logo-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+}
+
+.main-nav ul {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+}
+
+.main-nav ul a {
+    color: var(--text-color);
+    font-weight: 500;
+    position: relative;
+    padding-bottom: 0.25rem;
+}
+
+.main-nav ul a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--accent-color);
+    transition: width var(--transition-speed) var(--animation-timing);
+}
+
+.main-nav ul a:hover::after,
+.main-nav ul a:focus::after {
+    width: 100%;
+}
+
+/* --- Mobile Nav Toggle --- */
+.mobile-nav-toggle {
+    display: none; /* Hidden by default */
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    z-index: 101; /* Above header background */
+}
+
+.hamburger-icon {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background-color: var(--text-color);
+    position: relative;
+    transition: background-color var(--transition-speed) var(--animation-timing);
+}
+
+.hamburger-icon::before,
+.hamburger-icon::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: var(--text-color);
+    transition: transform var(--transition-speed) var(--transition-spring), top var(--transition-speed) var(--transition-spring);
+}
+
+.hamburger-icon::before {
+    top: -8px;
+}
+
+.hamburger-icon::after {
+    top: 8px;
+}
+
+/* Mobile Nav Active State (Toggled via JS) */
+.mobile-nav-active .hamburger-icon {
+    background-color: transparent; /* Middle bar fades out */
+}
+
+.mobile-nav-active .hamburger-icon::before {
+    transform: rotate(45deg);
+    top: 0;
+}
+
+.mobile-nav-active .hamburger-icon::after {
+    transform: rotate(-45deg);
+    top: 0;
+}
+
+/* --- Mobile Nav Container --- */
+.mobile-nav-container {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(27, 28, 34, 0.95);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    z-index: 99; /* Below header toggle, above content */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity var(--transition-speed) var(--animation-timing), transform var(--transition-speed) var(--transition-spring);
+    pointer-events: none;
+}
+
+.mobile-nav-active .mobile-nav-container {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.mobile-nav-container ul {
+    list-style: none;
+    text-align: center;
+}
+
+.mobile-nav-container ul li {
+    margin: 2rem 0;
+}
+
+.mobile-nav-container ul a {
+    font-size: 1.5rem;
+    color: white;
+    font-weight: 700;
+}
+
+.mobile-nav-container .cta-button {
+    margin-top: 2rem;
+}
+
+/* --- Buttons --- */
+.cta-button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s var(--transition-spring), background-color var(--transition-speed) var(--animation-timing), box-shadow var(--transition-speed) var(--animation-timing);
+    font-size: 1rem;
+    will-change: transform; /* Optimize animation */
+}
+
+.cta-button:hover {
+    transform: translateY(-4px) scale(1.03); /* Enhanced hover */
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25);
+}
+
+.cta-button:active {
+    transform: translateY(-1px) scale(0.98);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.primary-cta {
+    background-color: var(--accent-color);
+    color: var(--deep-slate);
+}
+
+.primary-cta:hover {
+    background-color: #ff8c61; /* Lighter orange */
+}
+
+.secondary-cta {
+    background-color: transparent;
+    color: var(--accent-color);
+    border: 2px solid var(--accent-color);
+}
+
+.secondary-cta:hover {
+    background-color: rgba(255, 112, 59, 0.1);
+}
+
+.nav-cta {
+    background-color: var(--accent-color);
+    color: var(--deep-slate);
+}
+
+.large-cta {
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+}
+
+/* --- Hero Section --- */
+.hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 2rem;
+    min-height: calc(100vh - 80px); /* Adjust based on header height */
+    padding-top: 2rem; /* Add padding to avoid overlap with sticky header */
+}
+
+.hero-content {
+    animation: fadeInSlideUp 1s var(--animation-timing) forwards;
+    opacity: 0;
+}
+
+.hero-headline {
+    color: white;
+    margin-bottom: 1rem;
+}
+
+.hero-subheadline {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    max-width: 500px;
+    color: var(--text-color);
+}
+
+.hero-cta-group {
+    display: flex;
+    gap: 1rem;
+}
+
+.hero-visual {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 1000px; /* Keep for potential 3D effects */
+    animation: fadeIn 1.5s 0.5s var(--animation-timing) forwards;
+    opacity: 0;
+}
+
+/* New SVG Visual Styles */
+.forging-visual {
+    width: clamp(250px, 50vw, 400px);
+    height: auto;
+    overflow: visible; /* Allow glow/sparks to extend */
+}
+
+.metal-bar {
+    animation: pulseGlow 2s ease-in-out infinite alternate;
+    transform-origin: center center;
+}
+
+.hammer-head,
+.hammer-handle {
+    transform-origin: 200px 160px; /* Approx top of handle */
+    animation: hammerStrike 1.5s ease-in-out infinite;
+}
+
+.hammer-handle {
+    animation-delay: 0s; /* Keep handle aligned with head */
+}
+
+.sparks circle {
+    opacity: 0;
+    animation: sparkFly 1.5s ease-out infinite;
+}
+
+/* Stagger spark animations */
+.sparks circle:nth-child(1) { animation-delay: 0.6s; }
+.sparks circle:nth-child(2) { animation-delay: 0.65s; }
+.sparks circle:nth-child(3) { animation-delay: 0.7s; }
+.sparks circle:nth-child(4) { animation-delay: 0.75s; }
+.sparks circle:nth-child(5) { animation-delay: 0.8s; }
+
+/* --- Features Section --- */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.feature-card {
+    background-color: var(--card-background);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-radius: 12px;
+    padding: 2rem;
+    border: 1px solid rgba(204, 209, 217, 0.1);
+    transition: transform var(--transition-speed) var(--animation-timing), box-shadow var(--transition-speed) var(--animation-timing);
+    opacity: 0;
+    transform: translateY(50px);
+    /* Animation applied by JS Intersection Observer */
+    /* Ensure is-visible class applies the final state */
+}
+
+.feature-card.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    /* Animation definition remains in @keyframes */
+}
+
+.feature-card h3 {
+    color: white;
+    margin-bottom: 0.5rem;
+}
+
+.feature-icon {
+    width: 60px; /* Slightly larger */
+    height: 60px;
+    background: linear-gradient(135deg, var(--accent-color), #e65a2a);
+    margin-bottom: 1.5rem;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white; /* Icon color */
+    box-shadow: 0 5px 15px rgba(255, 112, 59, 0.3);
+    transition: transform 0.2s var(--transition-spring);
+}
+
+.feature-card:hover .feature-icon {
+    transform: scale(1.1) rotate(-5deg);
+}
+
+.feature-icon svg {
+    width: 30px;
+    height: 30px;
+}
+
+/* --- Block Builder Showcase Section --- */
+.block-builder-showcase {
+    background: linear-gradient(to bottom, rgba(27, 28, 34, 0), rgba(34, 36, 43, 0.5) 30%, rgba(34, 36, 43, 0.5) 70%, rgba(27, 28, 34, 0));
+    padding-top: clamp(5rem, 12vw, 8rem);
+    padding-bottom: clamp(5rem, 12vw, 8rem);
+    text-align: center;
+    overflow: visible; /* Allow potential glows/shadows */
+}
+
+.showcase-content {
+    max-width: 800px;
+    margin: 0 auto 3rem auto;
+    position: relative; /* Needed for absolute positioning of text items */
+}
+
+.section-subtitle {
+    font-size: 1.15rem;
+    color: var(--text-color);
+    line-height: 1.7;
+    max-width: 650px;
+    margin: 1rem auto 0 auto;
+}
+
+/* Enhanced Dynamic Text Animations */
+.showcase-dynamic-text {
+    /* Ensure container has space for dynamic text */
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    min-height: 2.5em;
+    position: relative;
+    text-align: center;
+    overflow: hidden;
+}
+.showcase-dynamic-text::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+    transform: skewX(-20deg);
+    animation: shimmer 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.dynamic-text-item {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--accent-color);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+    /* Ensure above shimmer */
+    z-index: 2;
+}
+
+.dynamic-text-item.is-active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%) skewX(-20deg);
+    }
+    50% {
+        transform: translateX(0) skewX(-20deg);
+    }
+    100% {
+        transform: translateX(100%) skewX(-20deg);
+    }
+}
+
+.showcase-visual {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1rem;
+    /* background-color: rgba(0,0,0,0.1); Optional debugging bg */
+    /* border: 1px dashed grey; Optional debugging border */
+}
+
+.timeline-visual {
+    width: 100%;
+    height: auto;
+    display: block;
+    overflow: visible; /* Ensure animations aren't clipped */
+    /* Initial animation state (set via JS later) */
+    opacity: 0; 
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.block-builder-showcase.is-visible .timeline-visual {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Initial states for animated elements (before JS adds .is-visible) */
+.timeline-axis {
+    stroke-dasharray: 700;
+    stroke-dashoffset: 700;
+}
+
+.week-markers text,
+.week-markers line {
+    opacity: 0;
+}
+
+.phase-blocks .phase-block {
+    /* Styles for the rect itself */
+    opacity: 0; /* Handled by popIn animation */
+    pointer-events: auto; /* Rect needs pointer events for JS targeting if needed, but group hover is primary */
+}
+
+.phase-block-group {
+    /* Group acts as hover target */
+    cursor: pointer;
+}
+
+.phase-label {
+     opacity: 0;
+     pointer-events: none;
+     transition: opacity 0.3s ease-in-out;
+     fill: white; /* Ensure fill color */
+     font-weight: 500; /* Slightly bolder label */
+}
+
+/* Show label when GROUP is hovered/focused */
+.phase-block-group:hover .phase-label,
+.phase-block-group:focus .phase-label,
+.phase-block-group:focus-within .phase-label /* For keyboard nav */
+{
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Assembly Animations (Triggered when .is-visible is added by JS) */
+.block-builder-showcase.is-visible .timeline-axis {
+    animation: drawLine 1s ease-out 0.2s forwards;
+}
+
+.block-builder-showcase.is-visible .week-markers text,
+.block-builder-showcase.is-visible .week-markers line {
+    animation: fadeInSlideUp 0.5s ease-out forwards;
+}
+
+/* Stagger week marker animations */
+.block-builder-showcase.is-visible .week-markers > *:nth-child(odd) { animation-delay: 0.8s; } /* Text */
+.block-builder-showcase.is-visible .week-markers > *:nth-child(even) { animation-delay: 0.9s; } /* Line */
+.block-builder-showcase.is-visible .week-markers > *:nth-child(3), 
+.block-builder-showcase.is-visible .week-markers > *:nth-child(4) { animation-delay: 1.0s; }
+.block-builder-showcase.is-visible .week-markers > *:nth-child(5), 
+.block-builder-showcase.is-visible .week-markers > *:nth-child(6) { animation-delay: 1.1s; }
+.block-builder-showcase.is-visible .week-markers > *:nth-child(7), 
+.block-builder-showcase.is-visible .week-markers > *:nth-child(8) { animation-delay: 1.2s; }
+.block-builder-showcase.is-visible .week-markers > *:nth-child(9), 
+.block-builder-showcase.is-visible .week-markers > *:nth-child(10) { animation-delay: 1.3s; }
+.block-builder-showcase.is-visible .week-markers > *:nth-child(11), 
+.block-builder-showcase.is-visible .week-markers > *:nth-child(12) { animation-delay: 1.4s; }
+.block-builder-showcase.is-visible .week-markers > *:nth-child(13), 
+.block-builder-showcase.is-visible .week-markers > *:nth-child(14) { animation-delay: 1.5s; }
+.block-builder-showcase.is-visible .week-markers > *:nth-child(15), 
+.block-builder-showcase.is-visible .week-markers > *:nth-child(16) { animation-delay: 1.6s; }
+
+
+.block-builder-showcase.is-visible .phase-block {
+    animation: popIn 0.6s var(--transition-spring) forwards;
+}
+
+.block-builder-showcase.is-visible #phase1 { animation-delay: 1.2s; }
+.block-builder-showcase.is-visible #phase2 { animation-delay: 1.4s; }
+.block-builder-showcase.is-visible #phase3 { animation-delay: 1.6s; }
+
+/* Remove looping animation from the group */
+/*.block-builder-showcase.is-visible .phase-blocks {*/
+/*    animation: subtleBreathe 5s ease-in-out 3s infinite alternate; */
+/*}*/
+
+.block-builder-showcase.is-visible .disruption-indicator {
+     /* Keep this animation as is */
+     animation: disruptionPulse 10s ease-in-out 3s infinite alternate;
+}
+
+/* Hover Effect */
+.phase-block {
+     /* Transition applies to the rect */
+     transition: filter 0.3s ease-out, transform 0.3s var(--transition-spring), width 1.0s ease-in-out, x 1.0s ease-in-out;
+     will-change: transform, filter; 
+     transform-origin: bottom left; /* Keep origin */
+}
+
+.phase-block-group:hover .phase-block {
+    filter: brightness(1.2) url(#blockGlow);
+    transform: translateY(-5px) scaleY(1.02); /* Apply transform on hover */
+    /* Note: scaleY might conflict slightly with JS attribute changes, */
+    /* but separating target might be enough. If still jerky, remove scaleY from hover */
+}
+
+/* Keep attribute transitions on the rect elements */
+#phase1,
+#phase2,
+#phase3 {
+    transform-origin: bottom left;
+    transition: width 1.0s ease-in-out, x 1.0s ease-in-out;
+}
+
+.showcase-cta {
+    margin-top: 3rem;
+}
+
+.builder-cta {
+    /* Use existing secondary-cta styles, maybe slightly larger? */
+    padding: 0.8rem 1.8rem;
+    font-size: 1.05rem;
+}
+
+/* --- How It Works Section --- */
+.how-it-works-section {
+     background-color: #22242b; /* Slightly different background */
+}
+
+.steps-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.step-card {
+    background-color: var(--background-color); /* Back to main bg */
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid rgba(204, 209, 217, 0.1);
+    opacity: 0;
+    transform: translateY(50px);
+    /* Animation applied by JS */
+}
+
+.step-card.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.step-card h4 {
+    color: var(--accent-color);
+    margin-bottom: 0.75rem;
+}
+
+/* --- CTA Section --- */
+.cta-section {
+    text-align: center;
+    background: linear-gradient(rgba(27, 28, 34, 0.8), rgba(27, 28, 34, 0.8)), url('assets/background-placeholder.jpg'); /* Replace with actual image */
+    background-size: cover;
+    background-position: center;
+    border-radius: 15px;
+    margin: 4rem 5%; /* Add margin to stand out */
+    padding: 5rem 2rem;
+    animation: fadeIn 1.5s var(--animation-timing) forwards;
+    opacity: 0;
+    transform: translateY(50px);
+    /* Animation applied by JS */
+}
+
+.cta-section.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+     animation: cardFadeInUp 0.8s var(--animation-timing) forwards;
+}
+
+.cta-section h2 {
+    margin-bottom: 1rem;
+}
+
+.cta-section p {
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+/* --- Footer --- */
+.site-footer {
+    background-color: #111217; /* Even darker */
+    padding: 3rem 5% 1rem;
+    margin-top: 4rem;
+    border-top: 1px solid rgba(204, 209, 217, 0.1);
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    color: white;
+}
+
+.logo-small {
+    height: 25px;
+}
+
+.footer-nav {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.footer-nav a {
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.footer-nav a:hover {
+    color: white;
+}
+
+.social-links a {
+    /* Placeholder for social icons */
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    background-color: var(--text-color);
+    margin-left: 1rem;
+    border-radius: 4px;
+    opacity: 0.7;
+    transition: opacity var(--transition-speed) var(--animation-timing);
+}
+
+.social-links a:hover {
+    opacity: 1;
+}
+
+.copyright {
+    text-align: center;
+    font-size: 0.85rem;
+    color: rgba(204, 209, 217, 0.5);
+    margin-top: 2rem;
+    border-top: 1px solid rgba(204, 209, 217, 0.1);
+    padding-top: 1rem;
+}
+
+/* --- Animations --- */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes cardFadeInUp {
+     from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    /* Triggered by JS */
+}
+
+/* New SVG animations */
+@keyframes pulseGlow {
+    from {
+        transform: scale(1);
+        filter: url(#glow) brightness(1);
+    }
+    to {
+        transform: scale(1.05);
+        filter: url(#glow) brightness(1.2);
+    }
+}
+
+@keyframes hammerStrike {
+    0%, 10%, 100% {
+        transform: rotate(15deg) translateY(-40px);
+    }
+    40% {
+        transform: rotate(-5deg) translateY(10px); /* Strike down */
+    }
+    50% {
+        transform: rotate(-2deg) translateY(5px); /* Bounce up slightly */
+    }
+}
+
+@keyframes sparkFly {
+    0% {
+        opacity: 0;
+        transform: translate(0, 0) scale(0.5);
+    }
+    10% { /* Appear near impact */
+         opacity: 1;
+         transform: translate(0, 0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        /* Random outward movement */
+        transform: translate(calc(var(--spark-x, 0) * 50px), calc(var(--spark-y, 0) * -50px)) scale(0);
+    }
+}
+
+/* Add random directions for sparks - JS could enhance this further */
+.sparks circle:nth-child(1) { --spark-x: -0.8; --spark-y: 0.6; }
+.sparks circle:nth-child(2) { --spark-x: 1; --spark-y: 0.8; }
+.sparks circle:nth-child(3) { --spark-x: 0.2; --spark-y: 1; }
+.sparks circle:nth-child(4) { --spark-x: 1.2; --spark-y: 0.3; }
+.sparks circle:nth-child(5) { --spark-x: -1; --spark-y: 0.5; }
+
+/* --- Responsive Design --- */
+@media (max-width: 768px) {
+    .main-nav ul {
+        display: none; /* Implement mobile menu later */
+    }
+    .nav-cta {
+        display: none; /* Hide in nav on small screens, rely on hero */
+    }
+    .hero {
+        grid-template-columns: 1fr;
+        text-align: center;
+        min-height: auto;
+        padding-top: 4rem;
+    }
+    .hero-content {
+        order: 2;
+    }
+    .hero-visual {
+        order: 1;
+        margin-bottom: 2rem;
+        margin-top: 2rem; /* Add space above visual on mobile */
+    }
+    .hero-subheadline {
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .hero-cta-group {
+        justify-content: center;
+    }
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+    .steps-container {
+         grid-template-columns: 1fr;
+    }
+     .footer-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    .footer-nav {
+        justify-content: center;
+    }
+    .social-links {
+        margin-top: 1rem;
+    }
+    .desktop-nav {
+        display: none; /* Hide desktop nav items and button */
+    }
+    .mobile-nav-toggle {
+        display: block; /* Show hamburger */
+    }
+    .pricing-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Accessibility */
+*:focus-visible {
+    outline: 3px solid var(--accent-color);
+    outline-offset: 3px;
+    border-radius: 4px; /* Optional: makes outline smoother */
+}
+
+/* --- Pricing Section --- */
+.pricing-section {
+    background-color: #22242b; /* Keep distinct bg */
+    padding-top: clamp(5rem, 12vw, 10rem);
+    padding-bottom: clamp(5rem, 12vw, 10rem);
+}
+
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2.5rem; /* Increased gap */
+    align-items: stretch; 
+}
+
+.pricing-card {
+    background: linear-gradient(145deg, rgba(45, 48, 58, 0.7), rgba(35, 38, 48, 0.5)); /* Subtle gradient bg */
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-radius: 16px; /* Slightly more rounded */
+    padding: 3rem 2rem; /* Increased padding */
+    border: 1px solid rgba(204, 209, 217, 0.1);
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    transition: transform 0.2s var(--transition-spring), box-shadow var(--transition-speed) var(--animation-timing);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    overflow: hidden; /* Needed for ::before pseudo-element */
+}
+
+.pricing-card:hover {
+     transform: translateY(-12px) scale(1.02); /* Enhanced hover */
+     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+}
+
+.pricing-card.recommended {
+    border: 2px solid var(--accent-color);
+    transform: scale(1.05); /* Make it slightly larger by default */
+    z-index: 1; /* Ensure it's above others */
+    position: relative;
+}
+
+.pricing-card.recommended:hover {
+    transform: translateY(-12px) scale(1.07); /* Adjust hover scale */
+}
+
+.pricing-card.recommended::before {
+    content: 'Most Popular';
+    position: absolute;
+    top: 18px;
+    right: -40px;
+    background-color: var(--accent-color);
+    color: var(--deep-slate);
+    padding: 0.4rem 3rem;
+    transform: rotate(45deg);
+    font-size: 0.85rem;
+    font-weight: 700;
+    box-shadow: 0 4px 10px rgba(255, 112, 59, 0.3);
+}
+
+.pricing-card h3 {
+    color: white;
+    font-size: 1.75rem; /* Larger heading */
+    margin-bottom: 1.5rem; /* More space */
+}
+
+.pricing-card .price {
+    font-size: clamp(3rem, 8vw, 4rem); /* Much larger price */
+    font-weight: 700;
+    color: white;
+    margin-bottom: 0.5rem; /* Less space before term */
+    line-height: 1.1;
+}
+
+.pricing-card .price-term {
+    font-size: 1.1rem; /* Larger term */
+    font-weight: 400;
+    color: var(--text-color);
+    margin-left: 0.25rem;
+    display: block; /* Put term on new line */
+    margin-bottom: 2rem; /* Space after term */
+}
+
+.pricing-card ul {
+    list-style: none;
+    margin: 1.5rem 0;
+    flex-grow: 1; 
+    text-align: left; /* Align features left */
+    padding-left: 1rem; /* Indent features slightly */
+}
+
+.pricing-card ul li {
+    margin-bottom: 1rem; /* More space between features */
+    position: relative;
+    padding-left: 2rem; /* Space for icon */
+    display: flex; /* Align icon and text */
+    align-items: center;
+    font-size: 1rem;
+}
+
+.pricing-card ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    background-color: rgba(255, 112, 59, 0.2); /* Accent background */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* SVG Checkmark - encoded */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FF703B' width='12px' height='12px'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 12px 12px;
+}
+
+.pricing-card .cta-button {
+    margin-top: 2rem; /* More space above button */
+    width: 100%; /* Full width button */
+    padding: 1rem;
+    font-size: 1.1rem;
+}
+
+/* --- Contact Section --- */
+.contact-section {
+    background-color: var(--background-color); /* Back to main bg */
+    padding-top: clamp(5rem, 12vw, 10rem);
+    padding-bottom: clamp(6rem, 15vw, 12rem);
+}
+
+.contact-section p {
+    text-align: center;
+    margin-bottom: 3rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.contact-form {
+    max-width: 700px;
+    margin: 0 auto;
+    background: linear-gradient(145deg, rgba(40, 42, 50, 0.7), rgba(30, 32, 40, 0.6)); /* Slightly different gradient */
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    padding: clamp(2rem, 6vw, 3.5rem); /* More padding */
+    border-radius: 16px;
+    border: 1px solid rgba(204, 209, 217, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.form-group {
+    margin-bottom: 1.75rem; /* More space */
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.75rem; /* More space */
+    font-weight: 600; /* Bolder label */
+    color: white; /* Brighter label */
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 1rem 1.2rem; /* More padding */
+    border-radius: 8px; /* Slightly more rounded */
+    border: 1px solid rgba(204, 209, 217, 0.2);
+    background-color: rgba(27, 28, 34, 0.7); /* Darker input bg */
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 1rem;
+    transition: border-color var(--transition-speed) var(--animation-timing), box-shadow var(--transition-speed) var(--animation-timing);
+    line-height: 1.5; /* Ensure text isn't cramped */
+}
+
+.form-group textarea {
+    min-height: 120px; /* Ensure textarea has decent height */
+    resize: vertical;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(255, 112, 59, 0.4); /* Slightly stronger focus */
+}
+
+.contact-form button[type="submit"] {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    margin-top: 1rem; /* Add space above button */
+}
+
+/* --- Keyframe Animations --- */
+@keyframes drawLine {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes popIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.8);
+        transform-origin: bottom center;
+    }
+    70% {
+        opacity: 1;
+        transform: scale(1.05);
+         transform-origin: bottom center;
+    }
+    100% {
+         opacity: 1;
+        transform: scale(1);
+         transform-origin: bottom center;
+    }
+}
+
+@keyframes cardFadeInUp {
+     from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    /* Triggered by JS */
+}
+
+/* Apply popIn first to individual blocks */
+.block-builder-showcase.is-visible #phase1,
+.block-builder-showcase.is-visible #phase2,
+.block-builder-showcase.is-visible #phase3 {
+    animation: popIn 0.6s var(--transition-spring) forwards;
+    /* Looping animation removed - will be handled by JS */
+}
+
+/* Apply the variable animation to the group after a delay */
+/* .block-builder-showcase.is-visible .phase-blocks { */
+/*    animation: timelineLoop 10s ease-in-out 3s infinite; */
+/* } */
+
+/* Keyframes animating CSS Variables */
+/* @keyframes timelineLoop { ... } */
+
+/* Apply variables to the blocks - Use initial X attribute from HTML, apply transforms */
+#phase1 {
+  /* Keep transitions for JS changes */
+  transform-origin: bottom left;
+  transition: width 1.0s ease-in-out, x 1.0s ease-in-out; /* Slower transition */
+}
+#phase2 {
+   /* Keep transitions for JS changes */
+   transform-origin: bottom left;
+   transition: width 1.0s ease-in-out, x 1.0s ease-in-out; /* Slower transition */
+}
+#phase3 {
+  /* Keep transitions for JS changes */
+    transform-origin: bottom left;
+    transition: width 1.0s ease-in-out, x 1.0s ease-in-out; /* Slower transition */
+}
+
+
+@keyframes disruptionPulse {
+    /* Keep this timing: visible between 40% and 50% */
+     0%, 39%, 51%, 100% {
+        opacity: 0;
+         transform: translate(350px, 210px) scale(0.8);
+    }
+    40%, 50% {
+        opacity: 1;
+         transform: translate(350px, 210px) scale(1);
+    }
+}
+
+/* Animation to apply directly to the rects */
+@keyframes adjustTimeline {
+    0%, 10%, 100% {
+        /* Initial State */
+        animation-timing-function: ease-in-out;
+    }
+    50% {
+        /* Adjusted State */
+        animation-timing-function: ease-in-out;
+    }
+}
+
+/* Need to apply specific width/x changes via CSS vars or directly if simpler */
+/* Simpler approach: Animate the whole group slightly */
+@keyframes subtleShift {
+     0%, 100% {
+        transform: translateX(0);
+    }
+    50% {
+        transform: translateX(5px);
+    }
+}
+
+/* Let's refine adjustTimeline to be less complex for a demo */
+@keyframes adjustPhaseWidths {
+    0%, 100% {
+        #phase1 { width: 200; }
+        #phase2 { width: 300; transform: translateX(0);}
+        #phase3 { width: 200; transform: translateX(0); }
+    }
+    50% {
+         #phase1 { width: 150; }
+         /* Phase 2 needs to move left AND increase width */
+         #phase2 { width: 350; transform: translateX(-50px); } 
+         /* Phase 3 needs to move left */
+         #phase3 { width: 200; transform: translateX(-50px); }
+    }
+}
+
+.block-builder-showcase.is-visible .phase-blocks {
+    /* Apply the subtle breathing animation to the group after assembly */
+    animation: subtleBreathe 5s ease-in-out 3s infinite alternate;
+}
+
+@keyframes subtleBreathe {
+     0%, 100% {
+        transform: scaleY(1);
+     }
+     50% {
+         transform: scaleY(1.02);
+     }
+}
+
+@keyframes disruptionPulse {
+    0%, 39%, 51%, 100% {
+        opacity: 0;
+        transform: translate(350px, 210px) scale(0.8); /* Center of phase 2 */
+    }
+    40%, 50% {
+        opacity: 1;
+        transform: translate(350px, 210px) scale(1);
+    }
+     /* Correlate 40%-50% timeframe with the timeline adjustment pause/change */
+}
+
+/* Ensure the popIn animation is still applied to individual blocks */
+.block-builder-showcase.is-visible #phase1,
+.block-builder-showcase.is-visible #phase2,
+.block-builder-showcase.is-visible #phase3 {
+    animation: popIn 0.6s var(--transition-spring) forwards;
+    /* Note: The subtleBreathe animation is on the parent group '.phase-blocks' */
+}
+
+/* ========================
+   Inspector Panel - Library
+   ======================== */
+
+.library-controls {
+    display: flex;
+    flex-direction: column; /* Stack search on top */
+    gap: 0.8rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 0.8rem;
+}
+
+.library-controls__search {
+    width: 100%; /* Take full width */
+}
+
+.library-controls__row {
+    display: flex;
+    justify-content: flex-start; /* ADDED/CHANGED: Align to start */
+    align-items: center;
+    flex-wrap: wrap; /* ADDED: Allow wrapping */
+    gap: 0.8rem; /* ADJUSTED gap for wrapping */
+}
+
+.library-controls__group {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: nowrap; 
+}
+
+.filter-sort-controls {
+    min-width: 250px; 
+}
+
+.view-add-controls {
+    /* No specific justification needed now */
+}
+
+.view-mode-buttons,
+.add-import-export-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* Adjust inner gap */
+}
+
+.library-select {
+    max-width: 150px; 
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+}
+
+.library-toggle-btn,
+.library-controls__group .cta-button {
+    padding: 0.4rem 0.6rem; /* Consistent padding */
+    font-size: 0.85rem;
+    flex-shrink: 0; /* Prevent buttons shrinking */
+}
+
+.library-toggle-btn {
+     background: transparent;
+     border: 1px solid var(--border-color);
+     color: var(--text-color);
+     opacity: 0.7;
+     border-radius: 4px;
+}
+.library-toggle-btn.active {
+     background: var(--accent-color);
+     color: var(--bg-color);
+     border-color: var(--accent-color);
+     opacity: 1;
+}
+
+#import-exercises-label {
+    cursor: pointer;
+}
+
+.exercise-list-container {
+    /* Styles for the list container (view modes handled by JS) */
+    overflow-y: auto; /* Make list scrollable if needed */
+    flex-grow: 1; /* Allow list to take remaining space */
+    height: 400px; /* Example fixed height, adjust as needed */
+}
+
+/* ========================
+   Inspector Panel - Details
+   ======================== */
+
+.inspector-panel .tab-content {
+    /* ... existing code ... */
+}
+
+/* Style the Quick Add Feature in the Inspector */
+.quick-add-container {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(204, 209, 217, 0.1);
+}
+
+.quick-add-container label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+#quick-add-input {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border-radius: 4px;
+    border: 1px solid rgba(204, 209, 217, 0.2);
+    background-color: rgba(27, 28, 34, 0.7);
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    transition: border-color var(--transition-speed) var(--animation-timing), box-shadow var(--transition-speed) var(--animation-timing);
+}
+
+#quick-add-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(255, 112, 59, 0.3);
+}
+
+#quick-add-results {
+    max-height: 150px; /* Limit height */
+    overflow-y: auto;
+    background-color: rgba(27, 28, 34, 0.9);
+    border-radius: 4px;
+    border: 1px solid rgba(204, 209, 217, 0.1);
+    margin-top: 0.25rem;
+}
+
+.quick-add-result-item {
+    padding: 0.6rem 0.8rem;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(204, 209, 217, 0.05);
+    transition: background-color var(--transition-speed) var(--animation-timing);
+    font-size: 0.9rem;
+}
+
+.quick-add-result-item:last-child {
+    border-bottom: none;
+}
+
+.quick-add-result-item:hover {
+    background-color: rgba(255, 112, 59, 0.15);
+    color: white;
+}
+
+/* --- ForgeAssist Assist Tab Styles --- */
+#assist .tab-content {
+    display: flex; /* Use flexbox for layout */
+    flex-direction: column;
+    gap: 10px; /* Space between elements */
+    padding-top: 15px;
+}
+
+.assist-action-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Space between buttons */
+}
+
+.assist-action-btn {
+    width: 100%; /* Make buttons take full width */
+    text-align: left; /* Align text left */
+    padding: 8px 12px; /* Adjust padding */
+    font-size: 0.9rem;
+    background-color: var(--button-secondary-bg); /* Use a subtle background */
+    border: 1px solid var(--border-color);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.assist-action-btn:hover:not(:disabled) {
+    background-color: var(--hover-bg-color);
+    border-color: var(--primary-accent-color);
+}
+
+.assist-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: var(--button-secondary-bg); /* Keep background consistent when disabled */
+    border-color: var(--border-color);
+}
+
+#assist .tab-content p i {
+    color: var(--text-color-secondary); /* Style the 'no actions' text */
+    font-size: 0.9rem;
+}
+
+/* --- ForgeAssist Preview Highlighting --- */
+.forge-assist-preview-highlight {
+    outline: 2px dashed var(--accent-color) !important; /* Dashed outline in accent color */
+    outline-offset: 2px;
+    box-shadow: 0 0 10px rgba(255, 112, 59, 0.5); /* Optional subtle glow */
+    /* Ensure it overrides other styles if necessary */
+    background-color: rgba(255, 112, 59, 0.1); /* Slight background tint */
+}
+
+/* Swap Suggestion Toast Enhancements */
+.toast .swap-suggestion-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    padding: 0.3rem;
+    text-align: left;
+}
+
+.toast .swap-suggestion-container strong {
+    color: var(--primary-accent);
+    font-size: 1.1em;
+    margin-bottom: 0.2rem;
+}
+
+.toast .swap-suggestion-list {
+    display: flex;
+    flex-wrap: wrap; /* Allow buttons to wrap */
+    gap: 0.5rem;
+    justify-content: flex-start; /* Align buttons to the start */
+}
+
+.toast .swap-suggestion-btn {
+    flex-grow: 1; /* Allow buttons to grow */
+    flex-basis: auto; /* Reset basis */
+    min-width: 100px; /* Minimum width for readability */
+    font-size: 0.85rem; 
+    padding: 0.4rem 0.6rem;
+    text-align: center;
+    /* Use secondary styles, adjusted */
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(204, 209, 217, 0.2);
+}
+.toast .swap-suggestion-btn:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: var(--accent-color);
+}
+
+.toast .swap-suggestion-cancel-btn {
+    align-self: flex-end; /* Position cancel button to the right */
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
+    background-color: transparent;
+    border: none;
+    color: var(--text-color);
+    opacity: 0.7;
+    cursor: pointer;
+}
+.toast .swap-suggestion-cancel-btn:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
+/* --- End New Block Modal Specific --- */
+
+/* <<< Exercise Detail Modal Styles >>> */
+.exercise-detail-modal-content {
+    max-width: 900px;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 16px;
+    background-color: var(--deep-slate);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Hero Section with Video */
+.exercise-hero-section {
+    position: relative;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.2), var(--deep-slate));
+    overflow: hidden;
+}
+
+.exercise-title {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 1.5rem 2rem;
+    margin: 0;
+    color: white;
+    font-size: 1.8rem;
+    font-weight: 800;
+    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    z-index: 2;
+}
+
+/* Video Container */
+#exercise-video-container {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: #080808;
+    position: relative;
+    overflow: hidden;
+}
+
+#exercise-video-container iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: none;
+    position: relative;
+    z-index: 1;
+}
+
+.video-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 100%;
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+}
+
+.video-icon-placeholder {
+    margin-bottom: 1rem;
+    opacity: 0.6;
+}
+
+/* Main content area */
+.exercise-detail-body {
+    display: flex;
+    padding: 2rem;
+    gap: 2rem;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/* Column Styling */
+.detail-column-left {
+    flex: 3;
+}
+
+.detail-column-right {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Section Styling */
+.detail-section h5 {
+    color: var(--accent-color);
+    margin-bottom: 1.2rem;
+    font-size: 1.1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5rem;
+    letter-spacing: 0.5px;
+}
+
+.detail-section p {
+    margin-bottom: 0.9rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    display: flex;
+}
+
+.detail-section p strong {
+    color: var(--text-color-medium);
+    margin-right: 1em;
+    min-width: 140px;
+    display: inline-block;
+    font-weight: 700;
+    opacity: 0.9;
+}
+
+.detail-section span {
+    color: var(--text-color-light);
+    flex: 1;
+}
+
+/* Footer styling */
+.exercise-detail-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.8rem;
+    margin-top: 0;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background-color: rgba(0, 0, 0, 0.15);
+}
+
+.exercise-detail-footer .cta-button {
+    padding: 0.8rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease-in-out;
+}
+
+.exercise-detail-footer .cta-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Ensure the modal close button stands out */
+.exercise-detail-modal-content .modal-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.4rem;
+    cursor: pointer;
+    line-height: 1;
+    z-index: 10;
+    transition: all 0.2s ease;
+}
+
+.exercise-detail-modal-content .modal-close-btn:hover {
+    background: var(--accent-color);
+    transform: rotate(90deg);
+}
+
+/* Video Loading Animation */
+.video-loading-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.video-loading-animation {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    display: flex;
+    gap: 8px;
+}
+
+.video-loading-animation div {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--accent-color);
+    animation: video-loading 1.4s infinite ease-in-out both;
+}
+
+.video-loading-animation div:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.video-loading-animation div:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes video-loading {
+    0%, 80%, 100% { 
+        transform: scale(0);
+    }
+    40% { 
+        transform: scale(1);
+    }
+}
+
+/* <<< End Exercise Detail Modal Styles >>> */
+
+/* --- Toast Notification Styles --- */
+
+/* ... existing code ... */
+
+/* ... rest of the file ... */
+
+/* ... additional styles ... */
+
+/* ... end of the file ... */ 

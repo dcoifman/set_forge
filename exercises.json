@@ -1,0 +1,4106 @@
+[
+  {
+    "id": "ex_sq",
+    "name": "Back Squat",
+    "category": "Lower Body",
+    "tags": [
+      "squat",
+      "compound",
+      "barbell"
+    ],
+    "description": "A fundamental compound exercise targeting the lower body by squatting with a barbell on the upper back.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "adductors",
+      "calves",
+      "lower back",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "squat rack"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=ultWZbUMPL8",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_bp",
+    "name": "Bench Press",
+    "category": "Upper Body",
+    "tags": [
+      "press",
+      "compound",
+      "barbell",
+      "chest"
+    ],
+    "description": "A core upper body exercise involving pressing a barbell upwards while lying on a bench.",
+    "primaryMuscles": [
+      "pectorals"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "deltoids"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "bench"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=SCVCLChPQFY",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_dl",
+    "name": "Deadlift",
+    "category": "Full Body",
+    "tags": [
+      "hinge",
+      "compound",
+      "barbell",
+      "posterior chain"
+    ],
+    "description": "A compound lift that involves lifting a loaded barbell off the floor until the body is erect.",
+    "primaryMuscles": [
+      "glutes",
+      "hamstrings",
+      "lower back"
+    ],
+    "secondaryMuscles": [
+      "quadriceps",
+      "trapezius",
+      "latissimus dorsi",
+      "forearms",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "barbell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=vfKwjT5-86k",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_ohp",
+    "name": "Overhead Press",
+    "category": "Upper Body",
+    "tags": [
+      "press",
+      "compound",
+      "barbell",
+      "shoulders"
+    ],
+    "description": "Pressing a barbell vertically overhead from a standing or seated position.",
+    "primaryMuscles": [
+      "deltoids"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "upper pectorals",
+      "trapezius",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "barbell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=qDtwKex8IX4",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_pullup",
+    "name": "Pull Ups",
+    "category": "Upper Body",
+    "tags": [
+      "pull",
+      "compound",
+      "bodyweight",
+      "back"
+    ],
+    "description": "An upper-body compound pulling exercise using bodyweight.",
+    "primaryMuscles": [
+      "latissimus dorsi"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "rhomboids",
+      "trapezius",
+      "forearms"
+    ],
+    "equipmentNeeded": [
+      "pull-up bar"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=6GWT7GLXE3c",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_row",
+    "name": "Barbell Rows",
+    "category": "Upper Body",
+    "tags": [
+      "pull",
+      "compound",
+      "barbell",
+      "back"
+    ],
+    "description": "A compound exercise targeting the back muscles by pulling a barbell towards the torso.",
+    "primaryMuscles": [
+      "latissimus dorsi",
+      "rhomboids",
+      "trapezius"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "posterior deltoids",
+      "lower back",
+      "forearms"
+    ],
+    "equipmentNeeded": [
+      "barbell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=Nqh7q3zDCoQ",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_pc",
+    "name": "Power Clean",
+    "category": "Full Body",
+    "tags": [
+      "olympic",
+      "compound",
+      "barbell",
+      "power"
+    ],
+    "description": "An explosive Olympic weightlifting movement involving lifting a barbell from the floor to the shoulders.",
+    "primaryMuscles": [
+      "glutes",
+      "hamstrings",
+      "quadriceps",
+      "trapezius"
+    ],
+    "secondaryMuscles": [
+      "calves",
+      "deltoids",
+      "lower back",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "bumper plates"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=E2z5zK5V-MM",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_jump",
+    "name": "Box Jumps",
+    "category": "Lower Body",
+    "tags": [
+      "plyometric",
+      "bodyweight",
+      "power"
+    ],
+    "description": "A plyometric exercise involving jumping onto an elevated platform.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes",
+      "calves"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "equipmentNeeded": [
+      "plyo box"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=kNIInK_Le8I",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_sled",
+    "name": "Sled Push",
+    "category": "Full Body",
+    "tags": [
+      "conditioning",
+      "sled"
+    ],
+    "description": "Pushing a weighted sled across a distance, excellent for conditioning and leg drive.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "calves",
+      "hamstrings",
+      "core",
+      "shoulders"
+    ],
+    "equipmentNeeded": [
+      "sled",
+      "weights"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=QaTrePoCT4g",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_fs",
+    "name": "Front Squat",
+    "category": "Lower Body",
+    "tags": [
+      "squat",
+      "compound",
+      "barbell"
+    ],
+    "description": "A squat variation where the barbell rests across the front of the shoulders.",
+    "primaryMuscles": [
+      "quadriceps"
+    ],
+    "secondaryMuscles": [
+      "glutes",
+      "upper back",
+      "core",
+      "hamstrings"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "squat rack"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=VfBOBhwXbro",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_rdl",
+    "name": "Romanian Deadlift",
+    "category": "Lower Body",
+    "tags": [
+      "hinge",
+      "compound",
+      "barbell",
+      "posterior chain"
+    ],
+    "description": "A hinge movement focusing on the hamstrings and glutes by lowering a barbell with relatively straight legs.",
+    "primaryMuscles": [
+      "hamstrings",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "lower back",
+      "forearms",
+      "trapezius"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "dumbbells",
+      "kettlebells"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=5zmlnbWb-g4",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_dip",
+    "name": "Dips",
+    "category": "Upper Body",
+    "tags": [
+      "press",
+      "compound",
+      "bodyweight",
+      "chest",
+      "triceps"
+    ],
+    "description": "A bodyweight exercise performed on parallel bars, targeting chest and triceps.",
+    "primaryMuscles": [
+      "triceps",
+      "pectorals"
+    ],
+    "secondaryMuscles": [
+      "anterior deltoids"
+    ],
+    "equipmentNeeded": [
+      "dip station",
+      "parallel bars"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=SwDers3SMZ4",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_lunge",
+    "name": "Walking Lunges",
+    "category": "Lower Body",
+    "tags": [
+      "unilateral",
+      "dumbbell",
+      "barbell",
+      "bodyweight"
+    ],
+    "description": "A unilateral leg exercise involving stepping forward and lowering the hips.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "adductors",
+      "calves"
+    ],
+    "equipmentNeeded": [
+      "bodyweight",
+      "dumbbells",
+      "barbell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=DlhojghkaQ0",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_idbp",
+    "name": "Incline Dumbbell Press",
+    "category": "Upper Body",
+    "tags": [
+      "press",
+      "dumbbell",
+      "chest",
+      "shoulders"
+    ],
+    "description": "A chest press variation performed on an incline bench using dumbbells, emphasizing the upper chest.",
+    "primaryMuscles": [
+      "upper pectorals",
+      "anterior deltoids"
+    ],
+    "secondaryMuscles": [
+      "triceps"
+    ],
+    "equipmentNeeded": [
+      "dumbbells",
+      "incline bench"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=IP4oeKh1Sd4",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_latpd",
+    "name": "Lat Pulldown",
+    "category": "Upper Body",
+    "tags": [
+      "pull",
+      "machine",
+      "back"
+    ],
+    "description": "A machine-based pulling exercise targeting the latissimus dorsi.",
+    "primaryMuscles": [
+      "latissimus dorsi"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "rhomboids",
+      "trapezius"
+    ],
+    "equipmentNeeded": [
+      "lat pulldown machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=SALxEARiMkw",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_cablerow",
+    "name": "Seated Cable Row",
+    "category": "Upper Body",
+    "tags": [
+      "pull",
+      "cable",
+      "back"
+    ],
+    "description": "A rowing exercise using a cable machine, targeting the mid-back.",
+    "primaryMuscles": [
+      "latissimus dorsi",
+      "rhomboids",
+      "trapezius"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "posterior deltoids"
+    ],
+    "equipmentNeeded": [
+      "cable row machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=5Z27soGfOns",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_dbsp",
+    "name": "Dumbbell Shoulder Press",
+    "category": "Upper Body",
+    "tags": [
+      "press",
+      "dumbbell",
+      "shoulders"
+    ],
+    "description": "Pressing dumbbells overhead from a seated or standing position.",
+    "primaryMuscles": [
+      "deltoids"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "upper pectorals",
+      "trapezius"
+    ],
+    "equipmentNeeded": [
+      "dumbbells",
+      "bench (optional)"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=E9ShwbwZ1zw",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_latraise",
+    "name": "Lateral Raises",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "dumbbell",
+      "shoulders"
+    ],
+    "description": "An isolation exercise for the side deltoids involving raising dumbbells out to the sides.",
+    "primaryMuscles": [
+      "lateral deltoids"
+    ],
+    "secondaryMuscles": [
+      "anterior deltoids",
+      "posterior deltoids",
+      "trapezius"
+    ],
+    "equipmentNeeded": [
+      "dumbbells"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=PzsMitRdI_8",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_frontraise",
+    "name": "Front Raises",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "dumbbell",
+      "shoulders"
+    ],
+    "description": "An isolation exercise targeting the front deltoids by raising dumbbells forward.",
+    "primaryMuscles": [
+      "anterior deltoids"
+    ],
+    "secondaryMuscles": [
+      "lateral deltoids",
+      "upper pectorals"
+    ],
+    "equipmentNeeded": [
+      "dumbbells",
+      "plate",
+      "cable"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=mNOSJrnsn1Y",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_dbrow",
+    "name": "Bent Over Dumbbell Rows",
+    "category": "Upper Body",
+    "tags": [
+      "pull",
+      "dumbbell",
+      "back"
+    ],
+    "description": "A back exercise performed by pulling dumbbells towards the torso while bent over.",
+    "primaryMuscles": [
+      "latissimus dorsi",
+      "rhomboids",
+      "trapezius"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "posterior deltoids",
+      "lower back"
+    ],
+    "equipmentNeeded": [
+      "dumbbells",
+      "bench (optional)"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=gfUg6qWohTk",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_tricepspd",
+    "name": "Triceps Pushdown",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "cable",
+      "triceps"
+    ],
+    "description": "An isolation exercise for the triceps using a cable machine.",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "cable machine",
+      "attachment (rope, bar)"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=-zLyUAo1gMw",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_ohtricepsext",
+    "name": "Overhead Triceps Extension",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "dumbbell",
+      "triceps"
+    ],
+    "description": "Extending a dumbbell overhead to target the triceps.",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "dumbbell",
+      "cable"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=Sv-3JXjCoZ0",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_bbcurl",
+    "name": "Barbell Bicep Curls",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "barbell",
+      "biceps"
+    ],
+    "description": "A fundamental isolation exercise for the biceps using a barbell.",
+    "primaryMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "brachialis",
+      "forearms"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "ez-bar"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=SycPD5FSfv0",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_hammercurl",
+    "name": "Hammer Curls",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "dumbbell",
+      "biceps",
+      "forearms"
+    ],
+    "description": "A bicep curl variation with a neutral grip, also targeting the brachialis and forearms.",
+    "primaryMuscles": [
+      "biceps",
+      "brachialis"
+    ],
+    "secondaryMuscles": [
+      "forearms"
+    ],
+    "equipmentNeeded": [
+      "dumbbells"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=BRVDS6HVR9Q",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_facepull",
+    "name": "Face Pulls",
+    "category": "Upper Body",
+    "tags": [
+      "pull",
+      "cable",
+      "shoulders",
+      "upper back"
+    ],
+    "description": "A cable exercise targeting the rear deltoids and upper back muscles, beneficial for shoulder health.",
+    "primaryMuscles": [
+      "posterior deltoids",
+      "rhomboids",
+      "trapezius"
+    ],
+    "secondaryMuscles": [
+      "rotator cuff"
+    ],
+    "equipmentNeeded": [
+      "cable machine",
+      "rope attachment"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=ljgqer1ZpXg",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_pushup",
+    "name": "Push Ups",
+    "category": "Upper Body",
+    "tags": [
+      "press",
+      "bodyweight",
+      "chest",
+      "shoulders",
+      "triceps"
+    ],
+    "description": "A classic bodyweight exercise targeting the chest, shoulders, and triceps.",
+    "primaryMuscles": [
+      "pectorals"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "anterior deltoids",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=_YrJc-kTYA0",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_chinup",
+    "name": "Chin Ups",
+    "category": "Upper Body",
+    "tags": [
+      "pull",
+      "compound",
+      "bodyweight",
+      "back",
+      "biceps"
+    ],
+    "description": "A bodyweight pulling exercise with an underhand grip, emphasizing the biceps and lats.",
+    "primaryMuscles": [
+      "latissimus dorsi",
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "rhomboids",
+      "trapezius",
+      "forearms"
+    ],
+    "equipmentNeeded": [
+      "pull-up bar"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=brhRXlOhsAM",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_mcp",
+    "name": "Machine Chest Press",
+    "category": "Upper Body",
+    "tags": [
+      "press",
+      "machine",
+      "chest"
+    ],
+    "description": "A machine-based exercise simulating the bench press motion.",
+    "primaryMuscles": [
+      "pectorals"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "anterior deltoids"
+    ],
+    "equipmentNeeded": [
+      "chest press machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=KVDPkBDPT9o",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_msp",
+    "name": "Machine Shoulder Press",
+    "category": "Upper Body",
+    "tags": [
+      "press",
+      "machine",
+      "shoulders"
+    ],
+    "description": "A machine-based exercise simulating the overhead press motion.",
+    "primaryMuscles": [
+      "deltoids"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "upper pectorals"
+    ],
+    "equipmentNeeded": [
+      "shoulder press machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=WvLMauqrnK8",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_pecdeck",
+    "name": "Pec Deck Fly",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "machine",
+      "chest"
+    ],
+    "description": "A machine isolation exercise for the chest, mimicking a fly motion.",
+    "primaryMuscles": [
+      "pectorals"
+    ],
+    "secondaryMuscles": [
+      "anterior deltoids"
+    ],
+    "equipmentNeeded": [
+      "pec deck machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=fgXSA2-o0NM",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_revpecdeck",
+    "name": "Reverse Pec Deck",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "machine",
+      "shoulders",
+      "upper back"
+    ],
+    "description": "A machine isolation exercise targeting the rear deltoids and upper back.",
+    "primaryMuscles": [
+      "posterior deltoids",
+      "rhomboids",
+      "trapezius"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "pec deck machine",
+      "reverse fly machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=-TKqxK7-ehc",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_skullcrusher",
+    "name": "Skullcrushers",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "barbell",
+      "ezbar",
+      "triceps"
+    ],
+    "description": "A triceps isolation exercise involving lowering a barbell towards the forehead while lying down.",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "barbell",
+      "ez-bar",
+      "dumbbells",
+      "bench"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=S0fmDR60X-o",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_conccurl",
+    "name": "Concentration Curls",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "dumbbell",
+      "biceps"
+    ],
+    "description": "A strict bicep isolation exercise performed seated, bracing the arm against the inner thigh.",
+    "primaryMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "brachialis"
+    ],
+    "equipmentNeeded": [
+      "dumbbell",
+      "bench"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=cHxRJdSVIkA",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_legpress",
+    "name": "Leg Press",
+    "category": "Lower Body",
+    "tags": [
+      "press",
+      "machine",
+      "quads",
+      "glutes"
+    ],
+    "description": "A machine-based compound exercise for the lower body, involving pushing a weight sled away with the legs.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "adductors",
+      "calves"
+    ],
+    "equipmentNeeded": [
+      "leg press machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=nDh_BlnLCGc",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_legext",
+    "name": "Leg Extensions",
+    "category": "Lower Body",
+    "tags": [
+      "isolation",
+      "machine",
+      "quads"
+    ],
+    "description": "A machine isolation exercise targeting the quadriceps.",
+    "primaryMuscles": [
+      "quadriceps"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "leg extension machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=o90ocSBDJis",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_hamcurl",
+    "name": "Hamstring Curls",
+    "category": "Lower Body",
+    "tags": [
+      "isolation",
+      "machine",
+      "hamstrings"
+    ],
+    "description": "A machine isolation exercise targeting the hamstrings (seated or lying).",
+    "primaryMuscles": [
+      "hamstrings"
+    ],
+    "secondaryMuscles": [
+      "gastrocnemius"
+    ],
+    "equipmentNeeded": [
+      "hamstring curl machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=LaDKpYN9FDw",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_glutebridge",
+    "name": "Glute Bridges",
+    "category": "Lower Body",
+    "tags": [
+      "isolation",
+      "bodyweight",
+      "barbell",
+      "glutes"
+    ],
+    "description": "An exercise targeting the glutes by lifting the hips off the floor while lying supine.",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "lower back",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "bodyweight",
+      "barbell",
+      "dumbbell",
+      "resistance band"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=Xp33YgPZgns",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_hipthrust",
+    "name": "Hip Thrusts",
+    "category": "Lower Body",
+    "tags": [
+      "compound",
+      "barbell",
+      "glutes"
+    ],
+    "description": "A powerful glute exercise involving thrusting the hips upward against resistance (often a barbell) with the upper back supported on a bench.",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "quadriceps",
+      "adductors"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "bench",
+      "pad"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=jQkKeL4Cg8M",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_calfraise_std",
+    "name": "Standing Calf Raises",
+    "category": "Lower Body",
+    "tags": [
+      "isolation",
+      "machine",
+      "bodyweight",
+      "calves"
+    ],
+    "description": "An isolation exercise for the gastrocnemius muscle by raising the heels.",
+    "primaryMuscles": [
+      "gastrocnemius"
+    ],
+    "secondaryMuscles": [
+      "soleus"
+    ],
+    "equipmentNeeded": [
+      "bodyweight",
+      "calf raise machine",
+      "dumbbells",
+      "smith machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=wlqTemUXPXY",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_calfraise_seat",
+    "name": "Seated Calf Raises",
+    "category": "Lower Body",
+    "tags": [
+      "isolation",
+      "machine",
+      "calves"
+    ],
+    "description": "An isolation exercise targeting the soleus muscle by raising the heels while seated.",
+    "primaryMuscles": [
+      "soleus"
+    ],
+    "secondaryMuscles": [
+      "gastrocnemius"
+    ],
+    "equipmentNeeded": [
+      "seated calf raise machine",
+      "dumbbells"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=fiKbRE96xik",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_goodmorning",
+    "name": "Good Mornings",
+    "category": "Lower Body",
+    "tags": [
+      "hinge",
+      "barbell",
+      "posterior chain"
+    ],
+    "description": "A hinge exercise involving bending forward at the hips with a barbell on the back, targeting the posterior chain.",
+    "primaryMuscles": [
+      "hamstrings",
+      "glutes",
+      "lower back"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "barbell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=vKPGe8zb2S4",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_bss",
+    "name": "Bulgarian Split Squats",
+    "category": "Lower Body",
+    "tags": [
+      "unilateral",
+      "dumbbell",
+      "bodyweight",
+      "quads",
+      "glutes"
+    ],
+    "description": "A single-leg squat variation with the rear foot elevated.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "adductors",
+      "calves"
+    ],
+    "equipmentNeeded": [
+      "bodyweight",
+      "dumbbells",
+      "kettlebells",
+      "barbell",
+      "bench"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=7-LeECREOYI",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_gobletsq",
+    "name": "Goblet Squat",
+    "category": "Lower Body",
+    "tags": [
+      "squat",
+      "dumbbell",
+      "kettlebell",
+      "quads",
+      "glutes"
+    ],
+    "description": "A squat variation holding a single dumbbell or kettlebell vertically against the chest.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "adductors",
+      "core",
+      "upper back"
+    ],
+    "equipmentNeeded": [
+      "dumbbell",
+      "kettlebell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=9KzZD_n2r64",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_kbswing",
+    "name": "Kettlebell Swings",
+    "category": "Full Body",
+    "tags": [
+      "hinge",
+      "kettlebell",
+      "posterior chain",
+      "power",
+      "conditioning"
+    ],
+    "description": "An explosive hinge movement swinging a kettlebell, targeting the posterior chain and providing cardiovascular benefits.",
+    "primaryMuscles": [
+      "glutes",
+      "hamstrings"
+    ],
+    "secondaryMuscles": [
+      "lower back",
+      "core",
+      "shoulders",
+      "forearms"
+    ],
+    "equipmentNeeded": [
+      "kettlebell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=VuMfKP2-F0I",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_hacksq",
+    "name": "Hack Squat",
+    "category": "Lower Body",
+    "tags": [
+      "squat",
+      "machine",
+      "quads",
+      "glutes"
+    ],
+    "description": "A machine-based squat variation focusing on the quadriceps.",
+    "primaryMuscles": [
+      "quadriceps"
+    ],
+    "secondaryMuscles": [
+      "glutes",
+      "hamstrings",
+      "adductors"
+    ],
+    "equipmentNeeded": [
+      "hack squat machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=0tn5K9NlCfo",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_slrdl",
+    "name": "Single Leg RDL",
+    "category": "Lower Body",
+    "tags": [
+      "hinge",
+      "unilateral",
+      "dumbbell",
+      "kettlebell",
+      "bodyweight",
+      "posterior chain",
+      "balance"
+    ],
+    "description": "A unilateral variation of the Romanian Deadlift, challenging balance and targeting the hamstring and glute of one leg.",
+    "primaryMuscles": [
+      "hamstrings",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "lower back",
+      "core",
+      "adductors"
+    ],
+    "equipmentNeeded": [
+      "bodyweight",
+      "dumbbells",
+      "kettlebells"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=qHkctpiIQJw",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_stepup",
+    "name": "Step Ups",
+    "category": "Lower Body",
+    "tags": [
+      "unilateral",
+      "bodyweight",
+      "dumbbell",
+      "quads",
+      "glutes"
+    ],
+    "description": "A unilateral exercise involving stepping up onto an elevated surface.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "calves"
+    ],
+    "equipmentNeeded": [
+      "bodyweight",
+      "dumbbells",
+      "kettlebells",
+      "barbell",
+      "box",
+      "bench"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=-D8rH8OGt4E",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_cj",
+    "name": "Clean and Jerk",
+    "category": "Full Body",
+    "tags": [
+      "olympic",
+      "compound",
+      "barbell",
+      "power",
+      "full body"
+    ],
+    "description": "A complex Olympic weightlifting movement involving lifting a barbell from the floor to overhead in two distinct phases: the clean and the jerk.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes",
+      "hamstrings",
+      "deltoids",
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "calves",
+      "trapezius",
+      "lower back",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "bumper plates",
+      "platform"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=ylzAXlDifu0",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_snatch",
+    "name": "Snatch",
+    "category": "Full Body",
+    "tags": [
+      "olympic",
+      "compound",
+      "barbell",
+      "power",
+      "full body"
+    ],
+    "description": "An explosive Olympic weightlifting movement lifting a barbell from the floor to an overhead position in one continuous motion.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes",
+      "hamstrings",
+      "deltoids",
+      "trapezius"
+    ],
+    "secondaryMuscles": [
+      "calves",
+      "lower back",
+      "core",
+      "triceps"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "bumper plates",
+      "platform"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=qMqJn86j7h4",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_farmerwalk",
+    "name": "Farmer's Walk",
+    "category": "Full Body",
+    "tags": [
+      "carry",
+      "dumbbell",
+      "kettlebell",
+      "trap bar",
+      "grip",
+      "conditioning",
+      "full body"
+    ],
+    "description": "Carrying heavy weights in each hand over a distance, building grip strength, core stability, and overall conditioning.",
+    "primaryMuscles": [
+      "forearms",
+      "trapezius",
+      "core"
+    ],
+    "secondaryMuscles": [
+      "legs",
+      "shoulders",
+      "back"
+    ],
+    "equipmentNeeded": [
+      "dumbbells",
+      "kettlebells",
+      "farmer's walk handles",
+      "trap bar"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=NH7Xv-7NQNQ",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_tireflip",
+    "name": "Tire Flips",
+    "category": "Full Body",
+    "tags": [
+      "strongman",
+      "full body",
+      "power",
+      "conditioning"
+    ],
+    "description": "A strongman exercise involving flipping a large, heavy tire end over end.",
+    "primaryMuscles": [
+      "glutes",
+      "hamstrings",
+      "quadriceps",
+      "lower back",
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "chest",
+      "shoulders",
+      "triceps",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "large tire"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=aIDjGG_xwHg",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_sleddrag",
+    "name": "Sled Drag",
+    "category": "Full Body",
+    "tags": [
+      "conditioning",
+      "sled",
+      "posterior chain"
+    ],
+    "description": "Pulling a weighted sled, often walking backward, excellent for posterior chain development and conditioning.",
+    "primaryMuscles": [
+      "hamstrings",
+      "glutes",
+      "quadriceps"
+    ],
+    "secondaryMuscles": [
+      "calves",
+      "lower back",
+      "upper back"
+    ],
+    "equipmentNeeded": [
+      "sled",
+      "weights",
+      "harness",
+      "strap"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=ijc2aMnhrUM",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_battlerope",
+    "name": "Battle Ropes",
+    "category": "Conditioning",
+    "tags": [
+      "conditioning",
+      "upper body"
+    ],
+    "description": "A high-intensity conditioning exercise using heavy ropes, primarily targeting the upper body and core.",
+    "primaryMuscles": [
+      "shoulders",
+      "biceps",
+      "triceps",
+      "forearms",
+      "core"
+    ],
+    "secondaryMuscles": [
+      "back"
+    ],
+    "equipmentNeeded": [
+      "battle ropes"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=CzxBf5jM3M4",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_plank",
+    "name": "Plank",
+    "category": "Core",
+    "tags": [
+      "core",
+      "isometric",
+      "bodyweight"
+    ],
+    "description": "An isometric core exercise holding a push-up like position, engaging the abdominal muscles.",
+    "primaryMuscles": [
+      "rectus abdominis",
+      "transverse abdominis",
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "shoulders",
+      "back",
+      "glutes"
+    ],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=yeKv5oX_6GY",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_sideplank",
+    "name": "Side Plank",
+    "category": "Core",
+    "tags": [
+      "core",
+      "isometric",
+      "bodyweight",
+      "obliques"
+    ],
+    "description": "An isometric core exercise targeting the obliques by holding the body on its side.",
+    "primaryMuscles": [
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "gluteus medius",
+      "shoulders",
+      "transverse abdominis"
+    ],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=XeN4pEZZJNI",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_russiantwist",
+    "name": "Russian Twists",
+    "category": "Core",
+    "tags": [
+      "core",
+      "bodyweight",
+      "dumbbell",
+      "plate",
+      "obliques"
+    ],
+    "description": "A core exercise involving twisting the torso side to side, often performed with weight.",
+    "primaryMuscles": [
+      "obliques",
+      "rectus abdominis"
+    ],
+    "secondaryMuscles": [
+      "hip flexors",
+      "lower back"
+    ],
+    "equipmentNeeded": [
+      "bodyweight",
+      "dumbbell",
+      "plate",
+      "medicine ball"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=9V9csctSKj0",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_crunch",
+    "name": "Crunches",
+    "category": "Core",
+    "tags": [
+      "core",
+      "bodyweight",
+      "abs"
+    ],
+    "description": "A basic abdominal exercise performed by flexing the spine while lying supine.",
+    "primaryMuscles": [
+      "rectus abdominis"
+    ],
+    "secondaryMuscles": [
+      "obliques"
+    ],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=O0pIQ2UqeCY",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_legraise",
+    "name": "Leg Raises",
+    "category": "Core",
+    "tags": [
+      "core",
+      "bodyweight",
+      "abs"
+    ],
+    "description": "A core exercise targeting the lower abdominals by raising the legs while lying supine.",
+    "primaryMuscles": [
+      "rectus abdominis",
+      "hip flexors"
+    ],
+    "secondaryMuscles": [
+      "obliques"
+    ],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=ObDmLAIIRO4",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_hanglegraise",
+    "name": "Hanging Leg Raises",
+    "category": "Core",
+    "tags": [
+      "core",
+      "bodyweight",
+      "abs"
+    ],
+    "description": "A more advanced core exercise involving raising the legs while hanging from a bar.",
+    "primaryMuscles": [
+      "rectus abdominis",
+      "hip flexors",
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "forearms"
+    ],
+    "equipmentNeeded": [
+      "pull-up bar"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=EYe6dc_i4L0",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_abwheel",
+    "name": "Ab Wheel Rollout",
+    "category": "Core",
+    "tags": [
+      "core",
+      "ab wheel",
+      "abs"
+    ],
+    "description": "An advanced core exercise performed by rolling a wheel forward and backward while kneeling or standing.",
+    "primaryMuscles": [
+      "rectus abdominis",
+      "transverse abdominis",
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "shoulders",
+      "latissimus dorsi",
+      "lower back"
+    ],
+    "equipmentNeeded": [
+      "ab wheel"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=9ZCoAbI7uX0",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_woodchop",
+    "name": "Woodchoppers (Cable)",
+    "category": "Core",
+    "tags": [
+      "core",
+      "cable",
+      "obliques"
+    ],
+    "description": "A core exercise mimicking a chopping motion using a cable machine, targeting the obliques.",
+    "primaryMuscles": [
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "rectus abdominis",
+      "shoulders",
+      "back"
+    ],
+    "equipmentNeeded": [
+      "cable machine",
+      "handle"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=pAplQXk3dkU",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_mbslam",
+    "name": "Medicine Ball Slams",
+    "category": "Full Body",
+    "tags": [
+      "power",
+      "conditioning",
+      "medicine ball",
+      "full body",
+      "core"
+    ],
+    "description": "An explosive exercise involving slamming a medicine ball into the ground.",
+    "primaryMuscles": [
+      "latissimus dorsi",
+      "rectus abdominis",
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "shoulders",
+      "triceps",
+      "glutes",
+      "legs"
+    ],
+    "equipmentNeeded": [
+      "medicine ball (non-bounce)"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=cgKqNn90MEo",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_burpee",
+    "name": "Burpees",
+    "category": "Conditioning",
+    "tags": [
+      "conditioning",
+      "bodyweight",
+      "full body"
+    ],
+    "description": "A full-body calisthenic exercise involving a squat, push-up, and jump.",
+    "primaryMuscles": [
+      "full body"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=zlYA1SENYG4",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_mtnclimber",
+    "name": "Mountain Climbers",
+    "category": "Conditioning",
+    "tags": [
+      "conditioning",
+      "bodyweight",
+      "core"
+    ],
+    "description": "A dynamic bodyweight exercise performed from a plank position, simulating climbing.",
+    "primaryMuscles": [
+      "core",
+      "hip flexors",
+      "shoulders"
+    ],
+    "secondaryMuscles": [
+      "quadriceps"
+    ],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=Fk-kT2hb31U",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_tgu",
+    "name": "Turkish Get-Up",
+    "category": "Full Body",
+    "tags": [
+      "kettlebell",
+      "dumbbell",
+      "full body",
+      "coordination",
+      "stability"
+    ],
+    "description": "A complex, multi-stage exercise moving from lying down to standing while holding a weight overhead.",
+    "primaryMuscles": [
+      "full body"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "kettlebell",
+      "dumbbell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=sgd8n917Zv0",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_windmill",
+    "name": "Windmills",
+    "category": "Core",
+    "tags": [
+      "kettlebell",
+      "dumbbell",
+      "core",
+      "shoulders",
+      "mobility"
+    ],
+    "description": "An exercise that improves shoulder stability, core strength, and hip/hamstring mobility, often performed with a kettlebell.",
+    "primaryMuscles": [
+      "obliques",
+      "shoulders",
+      "hamstrings"
+    ],
+    "secondaryMuscles": [
+      "glutes",
+      "lower back"
+    ],
+    "equipmentNeeded": [
+      "kettlebell",
+      "dumbbell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=q8K_Wg8OuV4",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_kbcnp",
+    "name": "Kettlebell Clean and Press",
+    "category": "Full Body",
+    "tags": [
+      "kettlebell",
+      "compound",
+      "full body",
+      "power"
+    ],
+    "description": "A compound kettlebell exercise involving cleaning the kettlebell to the rack position and then pressing it overhead.",
+    "primaryMuscles": [
+      "glutes",
+      "hamstrings",
+      "quadriceps",
+      "deltoids",
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "core",
+      "back",
+      "forearms"
+    ],
+    "equipmentNeeded": [
+      "kettlebell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=xW3FwDQ59ms",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_hipabduction",
+    "name": "Hip Abduction Machine",
+    "category": "Lower Body",
+    "tags": [
+      "isolation",
+      "machine",
+      "glutes",
+      "hips"
+    ],
+    "description": "A machine exercise isolating the outer hip and glute muscles (gluteus medius/minimus).",
+    "primaryMuscles": [
+      "gluteus medius",
+      "gluteus minimus"
+    ],
+    "secondaryMuscles": [
+      "tensor fasciae latae"
+    ],
+    "equipmentNeeded": [
+      "hip abduction machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=NrowuoGWvRw",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_hipadduction",
+    "name": "Hip Adduction Machine",
+    "category": "Lower Body",
+    "tags": [
+      "isolation",
+      "machine",
+      "adductors",
+      "hips"
+    ],
+    "description": "A machine exercise isolating the inner thigh muscles (adductors).",
+    "primaryMuscles": [
+      "adductors"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "hip adduction machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=GDYSTLYOfnk",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_reversehypers",
+    "name": "Reverse Hyperextensions",
+    "category": "Lower Body",
+    "tags": [
+      "posterior chain",
+      "glutes",
+      "hamstrings",
+      "lower back",
+      "machine",
+      "bodyweight"
+    ],
+    "description": "An exercise targeting the glutes, hamstrings, and lower back by lifting the legs while the torso is supported.",
+    "primaryMuscles": [
+      "glutes",
+      "hamstrings",
+      "erector spinae"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "reverse hyper machine",
+      "bench",
+      "stability ball"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=uQqR1NHfsSU",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_backextension",
+    "name": "Back Extensions",
+    "category": "Lower Body",
+    "tags": [
+      "posterior chain",
+      "lower back",
+      "glutes",
+      "hamstrings",
+      "machine",
+      "bodyweight"
+    ],
+    "description": "An exercise targeting the lower back, glutes, and hamstrings by hinging at the hips while the lower body is secured.",
+    "primaryMuscles": [
+      "erector spinae",
+      "glutes",
+      "hamstrings"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "hyperextension bench",
+      "GHD"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=ENXyYltB7CM",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_ghdraise",
+    "name": "Glute Ham Raise (GHD)",
+    "category": "Lower Body",
+    "tags": [
+      "posterior chain",
+      "hamstrings",
+      "glutes",
+      "machine"
+    ],
+    "description": "An advanced exercise targeting the hamstrings and glutes using a Glute Ham Developer machine.",
+    "primaryMuscles": [
+      "hamstrings",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "gastrocnemius",
+      "erector spinae"
+    ],
+    "equipmentNeeded": [
+      "GHD machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=hUqZf7sr_QU",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_declinebp",
+    "name": "Decline Bench Press",
+    "category": "Upper Body",
+    "tags": [
+      "press",
+      "compound",
+      "barbell",
+      "dumbbell",
+      "chest"
+    ],
+    "description": "A bench press variation performed on a decline bench, emphasizing the lower chest.",
+    "primaryMuscles": [
+      "lower pectorals"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "anterior deltoids"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "dumbbell",
+      "decline bench"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=a-UFQE4oxWY",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_cablefly",
+    "name": "Cable Flyes",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "cable",
+      "chest"
+    ],
+    "description": "A chest isolation exercise using cables to perform a fly motion (various angles possible).",
+    "primaryMuscles": [
+      "pectorals"
+    ],
+    "secondaryMuscles": [
+      "anterior deltoids"
+    ],
+    "equipmentNeeded": [
+      "cable machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=M97ra0UR-40",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_dbpullover",
+    "name": "Dumbbell Pullover",
+    "category": "Upper Body",
+    "tags": [
+      "compound",
+      "dumbbell",
+      "chest",
+      "back"
+    ],
+    "description": "An exercise involving lowering a dumbbell behind the head while lying across a bench, targeting chest and lats.",
+    "primaryMuscles": [
+      "pectorals",
+      "latissimus dorsi"
+    ],
+    "secondaryMuscles": [
+      "serratus anterior",
+      "triceps"
+    ],
+    "equipmentNeeded": [
+      "dumbbell",
+      "bench"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=QA8rwwiQiW0",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_uprightrow",
+    "name": "Upright Rows",
+    "category": "Upper Body",
+    "tags": [
+      "pull",
+      "compound",
+      "barbell",
+      "dumbbell",
+      "shoulders",
+      "traps"
+    ],
+    "description": "An exercise involving pulling a weight vertically towards the chin, targeting shoulders and traps.",
+    "primaryMuscles": [
+      "deltoids",
+      "trapezius"
+    ],
+    "secondaryMuscles": [
+      "biceps"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "dumbbells",
+      "cable",
+      "ez-bar"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=K0dYqPCaO14",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_shrugs",
+    "name": "Shrugs",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "barbell",
+      "dumbbell",
+      "machine",
+      "traps"
+    ],
+    "description": "An isolation exercise for the upper trapezius muscles by elevating the shoulders.",
+    "primaryMuscles": [
+      "trapezius"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "barbell",
+      "dumbbells",
+      "shrug machine",
+      "trap bar"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=R3FLhX81MYg",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_arnoldpress",
+    "name": "Arnold Press",
+    "category": "Upper Body",
+    "tags": [
+      "press",
+      "dumbbell",
+      "shoulders"
+    ],
+    "description": "A dumbbell shoulder press variation involving rotation during the movement.",
+    "primaryMuscles": [
+      "deltoids"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "upper pectorals"
+    ],
+    "equipmentNeeded": [
+      "dumbbells",
+      "bench (optional)"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=6Z15_WdXmVw",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_reardeltfly",
+    "name": "Rear Delt Flyes",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "dumbbell",
+      "cable",
+      "machine",
+      "shoulders",
+      "upper back"
+    ],
+    "description": "An isolation exercise targeting the posterior deltoids (rear shoulder) by moving weights away from the body in a bent-over or machine position.",
+    "primaryMuscles": [
+      "posterior deltoids"
+    ],
+    "secondaryMuscles": [
+      "rhomboids",
+      "trapezius"
+    ],
+    "equipmentNeeded": [
+      "dumbbells",
+      "cable machine",
+      "reverse fly machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=3gJXpfwg_go",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_preachercurl",
+    "name": "Preacher Curls",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "barbell",
+      "dumbbell",
+      "machine",
+      "biceps"
+    ],
+    "description": "A bicep isolation exercise performed on a preacher bench to minimize momentum.",
+    "primaryMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "brachialis"
+    ],
+    "equipmentNeeded": [
+      "preacher curl bench",
+      "barbell",
+      "ez-bar",
+      "dumbbell",
+      "machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=H6ZxuVDkNA8",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_cablecurl",
+    "name": "Cable Curls",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "cable",
+      "biceps"
+    ],
+    "description": "Bicep curls performed using a cable machine, providing constant tension.",
+    "primaryMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "brachialis",
+      "forearms"
+    ],
+    "equipmentNeeded": [
+      "cable machine",
+      "attachment (bar, rope, handle)"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=NFzTWp2qpiE",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_reversecurl",
+    "name": "Reverse Curls",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "barbell",
+      "dumbbell",
+      "forearms",
+      "biceps"
+    ],
+    "description": "A curl variation with an overhand grip, emphasizing the brachialis and forearm muscles.",
+    "primaryMuscles": [
+      "brachialis",
+      "forearms"
+    ],
+    "secondaryMuscles": [
+      "biceps"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "ez-bar",
+      "dumbbells"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=ypfd1kaI1AU",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_closegripbp",
+    "name": "Close Grip Bench Press",
+    "category": "Upper Body",
+    "tags": [
+      "press",
+      "compound",
+      "barbell",
+      "triceps",
+      "chest"
+    ],
+    "description": "A bench press variation with a narrower grip, shifting emphasis to the triceps.",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "pectorals",
+      "anterior deltoids"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "bench"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=43rg7fBNP2w",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_tricepskickback",
+    "name": "Triceps Kickbacks",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "dumbbell",
+      "cable",
+      "triceps"
+    ],
+    "description": "A triceps isolation exercise extending the arm backward against resistance.",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "dumbbells",
+      "cable machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=NIp8MdPKTaI",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_benchdip",
+    "name": "Bench Dips",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "bodyweight",
+      "triceps"
+    ],
+    "description": "A bodyweight triceps exercise performed using a bench.",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "anterior deltoids",
+      "pectorals"
+    ],
+    "equipmentNeeded": [
+      "bench"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=9llvBAV4RHI",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_wristcurl",
+    "name": "Wrist Curls",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "dumbbell",
+      "barbell",
+      "forearms"
+    ],
+    "description": "An isolation exercise for the forearm flexors.",
+    "primaryMuscles": [
+      "forearm flexors"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "dumbbells",
+      "barbell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=u61QWKYgbxI",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_reversewristcurl",
+    "name": "Reverse Wrist Curls",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "dumbbell",
+      "barbell",
+      "forearms"
+    ],
+    "description": "An isolation exercise for the forearm extensors.",
+    "primaryMuscles": [
+      "forearm extensors"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "dumbbells",
+      "barbell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=cRLJ86m00cU",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_lyinglegcurl",
+    "name": "Lying Leg Curls",
+    "category": "Lower Body",
+    "tags": [
+      "isolation",
+      "machine",
+      "hamstrings"
+    ],
+    "description": "A machine isolation exercise targeting the hamstrings while lying prone.",
+    "primaryMuscles": [
+      "hamstrings"
+    ],
+    "secondaryMuscles": [
+      "gastrocnemius"
+    ],
+    "equipmentNeeded": [
+      "lying leg curl machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=ANKSmhT0dTk",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_seatedlegcurl",
+    "name": "Seated Leg Curls",
+    "category": "Lower Body",
+    "tags": [
+      "isolation",
+      "machine",
+      "hamstrings"
+    ],
+    "description": "A machine isolation exercise targeting the hamstrings while seated.",
+    "primaryMuscles": [
+      "hamstrings"
+    ],
+    "secondaryMuscles": [
+      "gastrocnemius"
+    ],
+    "equipmentNeeded": [
+      "seated leg curl machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=aakNLjjm4Qo",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_jumpsquat",
+    "name": "Jump Squats",
+    "category": "Lower Body",
+    "tags": [
+      "plyometric",
+      "bodyweight",
+      "power",
+      "quads",
+      "glutes"
+    ],
+    "description": "A plyometric squat variation involving an explosive jump at the top.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes",
+      "calves"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=BRfxI2Es2lE",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_pistolsquat",
+    "name": "Pistol Squats",
+    "category": "Lower Body",
+    "tags": [
+      "unilateral",
+      "bodyweight",
+      "advanced",
+      "quads",
+      "glutes",
+      "balance"
+    ],
+    "description": "An advanced single-leg bodyweight squat requiring significant strength, balance, and mobility.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "calves",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=Ei1nwSCQx-0",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_nordichamcurl",
+    "name": "Nordic Hamstring Curls",
+    "category": "Lower Body",
+    "tags": [
+      "bodyweight",
+      "hamstrings",
+      "eccentric",
+      "advanced"
+    ],
+    "description": "A challenging bodyweight exercise focusing on the eccentric strength of the hamstrings.",
+    "primaryMuscles": [
+      "hamstrings"
+    ],
+    "secondaryMuscles": [
+      "glutes",
+      "gastrocnemius"
+    ],
+    "equipmentNeeded": [
+      "nordic bench",
+      "partner",
+      "lat pulldown machine (for anchor)"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=DAwJCKwMUIg",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_sissysquat",
+    "name": "Sissy Squats",
+    "category": "Lower Body",
+    "tags": [
+      "bodyweight",
+      "machine",
+      "quads"
+    ],
+    "description": "An exercise isolating the quadriceps by leaning back while keeping the hips extended.",
+    "primaryMuscles": [
+      "quadriceps"
+    ],
+    "secondaryMuscles": [
+      "hip flexors",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "bodyweight",
+      "sissy squat machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=zKzF4ndVPRo",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_hyperextension",
+    "name": "Hyperextensions (45 Degree)",
+    "category": "Lower Body",
+    "tags": [
+      "posterior chain",
+      "lower back",
+      "glutes",
+      "hamstrings",
+      "machine",
+      "bodyweight"
+    ],
+    "description": "Similar to Back Extensions, performed on a 45-degree hyperextension bench.",
+    "primaryMuscles": [
+      "erector spinae",
+      "glutes",
+      "hamstrings"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "45-degree hyperextension bench"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=VH4Bqn1FUhM",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_kettlebellgobletsquat",
+    "name": "Kettlebell Goblet Squat",
+    "category": "Lower Body",
+    "tags": [
+      "squat",
+      "kettlebell",
+      "quads",
+      "glutes"
+    ],
+    "description": "A squat holding a kettlebell by the horns against the chest.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "adductors",
+      "core",
+      "upper back"
+    ],
+    "equipmentNeeded": [
+      "kettlebell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=AB_gOPVG2qk",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_kettlebellsumodeadlift",
+    "name": "Kettlebell Sumo Deadlift",
+    "category": "Lower Body",
+    "tags": [
+      "hinge",
+      "kettlebell",
+      "posterior chain",
+      "glutes",
+      "adductors"
+    ],
+    "description": "A deadlift variation with a wider stance, performed with one or two kettlebells.",
+    "primaryMuscles": [
+      "glutes",
+      "adductors",
+      "hamstrings",
+      "quadriceps"
+    ],
+    "secondaryMuscles": [
+      "lower back",
+      "trapezius",
+      "forearms"
+    ],
+    "equipmentNeeded": [
+      "kettlebell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=8wMGvAFPGxA",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_singlearmdbrow",
+    "name": "Single Arm Dumbbell Row",
+    "category": "Upper Body",
+    "tags": [
+      "pull",
+      "dumbbell",
+      "back",
+      "unilateral"
+    ],
+    "description": "A unilateral rowing exercise performed with one dumbbell, often bracing against a bench.",
+    "primaryMuscles": [
+      "latissimus dorsi",
+      "rhomboids",
+      "trapezius"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "posterior deltoids",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "dumbbell",
+      "bench"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=dFzUjzfih7k",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_pendlayrow",
+    "name": "Pendlay Rows",
+    "category": "Upper Body",
+    "tags": [
+      "pull",
+      "compound",
+      "barbell",
+      "back",
+      "power"
+    ],
+    "description": "A strict barbell row variation where the bar starts and returns to the floor on each rep.",
+    "primaryMuscles": [
+      "latissimus dorsi",
+      "rhomboids",
+      "trapezius",
+      "erector spinae"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "posterior deltoids",
+      "forearms"
+    ],
+    "equipmentNeeded": [
+      "barbell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=h4nkoayPFWw",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_tbarrow",
+    "name": "T-Bar Rows",
+    "category": "Upper Body",
+    "tags": [
+      "pull",
+      "compound",
+      "machine",
+      "barbell",
+      "back"
+    ],
+    "description": "A rowing exercise using a T-bar apparatus or a barbell wedged into a corner.",
+    "primaryMuscles": [
+      "latissimus dorsi",
+      "rhomboids",
+      "trapezius"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "posterior deltoids",
+      "erector spinae"
+    ],
+    "equipmentNeeded": [
+      "t-bar row machine",
+      "barbell",
+      "landmine attachment",
+      "handle"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=SbZycT7Eq58",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_straightarmpulldown",
+    "name": "Straight Arm Pulldown",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "cable",
+      "back",
+      "lats"
+    ],
+    "description": "An isolation exercise for the lats using a cable machine, keeping the arms relatively straight.",
+    "primaryMuscles": [
+      "latissimus dorsi"
+    ],
+    "secondaryMuscles": [
+      "posterior deltoids",
+      "triceps (long head)"
+    ],
+    "equipmentNeeded": [
+      "cable machine",
+      "bar attachment",
+      "rope attachment"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=soX7zhZ7yfQ",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_chestsupportedrow",
+    "name": "Chest Supported Rows",
+    "category": "Upper Body",
+    "tags": [
+      "pull",
+      "compound",
+      "machine",
+      "dumbbell",
+      "back"
+    ],
+    "description": "A rowing variation performed with the chest supported on a bench or machine pad, minimizing lower back involvement.",
+    "primaryMuscles": [
+      "latissimus dorsi",
+      "rhomboids",
+      "trapezius"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "posterior deltoids"
+    ],
+    "equipmentNeeded": [
+      "chest supported row machine",
+      "incline bench",
+      "dumbbells"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=rknGG-14zkI",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_inclinebbpress",
+    "name": "Incline Barbell Press",
+    "category": "Upper Body",
+    "tags": [
+      "press",
+      "compound",
+      "barbell",
+      "chest",
+      "shoulders"
+    ],
+    "description": "A barbell press performed on an incline bench, targeting the upper chest and shoulders.",
+    "primaryMuscles": [
+      "upper pectorals",
+      "anterior deltoids"
+    ],
+    "secondaryMuscles": [
+      "triceps"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "incline bench",
+      "spotter (recommended)"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=jPLdzuHckI8",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_floorpress",
+    "name": "Floor Press",
+    "category": "Upper Body",
+    "tags": [
+      "press",
+      "compound",
+      "barbell",
+      "dumbbell",
+      "chest",
+      "triceps"
+    ],
+    "description": "A pressing variation performed lying on the floor, limiting range of motion and emphasizing triceps.",
+    "primaryMuscles": [
+      "triceps",
+      "pectorals"
+    ],
+    "secondaryMuscles": [
+      "anterior deltoids"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "dumbbells"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=O1x7AoUf5Vs",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_landminepress",
+    "name": "Landmine Press",
+    "category": "Upper Body",
+    "tags": [
+      "press",
+      "barbell",
+      "shoulders",
+      "chest",
+      "unilateral"
+    ],
+    "description": "Pressing one end of a barbell anchored in a landmine unit, often performed kneeling or standing.",
+    "primaryMuscles": [
+      "anterior deltoids",
+      "upper pectorals"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "landmine attachment"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=t9GuiNQo1O4",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_zpress",
+    "name": "Z Press",
+    "category": "Upper Body",
+    "tags": [
+      "press",
+      "barbell",
+      "dumbbell",
+      "kettlebell",
+      "shoulders",
+      "core"
+    ],
+    "description": "An overhead press performed seated on the floor with legs straight, demanding core stability and shoulder strength.",
+    "primaryMuscles": [
+      "deltoids"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "upper pectorals",
+      "core",
+      "hip flexors"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "dumbbells",
+      "kettlebells"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=0fHdnBH9Gdo",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_cablelateralraise",
+    "name": "Cable Lateral Raises",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "cable",
+      "shoulders"
+    ],
+    "description": "Lateral raises performed using a cable machine for constant tension on the side deltoids.",
+    "primaryMuscles": [
+      "lateral deltoids"
+    ],
+    "secondaryMuscles": [
+      "anterior deltoids",
+      "posterior deltoids",
+      "trapezius"
+    ],
+    "equipmentNeeded": [
+      "cable machine",
+      "handle"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=X8tZOGFovj0",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_pushpress",
+    "name": "Push Press",
+    "category": "Full Body",
+    "tags": [
+      "press",
+      "compound",
+      "barbell",
+      "dumbbell",
+      "kettlebell",
+      "power",
+      "shoulders",
+      "legs"
+    ],
+    "description": "An overhead press variation using leg drive to initiate the movement, allowing heavier weight.",
+    "primaryMuscles": [
+      "deltoids",
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "quadriceps",
+      "glutes",
+      "upper pectorals",
+      "trapezius",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "dumbbells",
+      "kettlebells"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=ep30avTSMB0",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_jm press",
+    "name": "JM Press",
+    "category": "Upper Body",
+    "tags": [
+      "press",
+      "compound",
+      "barbell",
+      "triceps"
+    ],
+    "description": "A hybrid exercise between a close-grip bench press and a skullcrusher, targeting the triceps.",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "pectorals",
+      "anterior deltoids"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "bench",
+      "smith machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=hOCW9cE-GJg",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_singlelegpress",
+    "name": "Single Leg Press",
+    "category": "Lower Body",
+    "tags": [
+      "press",
+      "machine",
+      "unilateral",
+      "quads",
+      "glutes"
+    ],
+    "description": "Leg press performed one leg at a time to address imbalances.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "adductors"
+    ],
+    "equipmentNeeded": [
+      "leg press machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=ZYDTJaAM-gE",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_legkickback",
+    "name": "Leg Kickbacks (Cable/Machine)",
+    "category": "Lower Body",
+    "tags": [
+      "isolation",
+      "cable",
+      "machine",
+      "glutes"
+    ],
+    "description": "An isolation exercise for the glutes, kicking the leg backward against resistance.",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "equipmentNeeded": [
+      "cable machine",
+      "ankle strap",
+      "glute kickback machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=SqO-VUEak2M",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_sumosquat",
+    "name": "Sumo Squat",
+    "category": "Lower Body",
+    "tags": [
+      "squat",
+      "compound",
+      "barbell",
+      "dumbbell",
+      "kettlebell",
+      "glutes",
+      "adductors"
+    ],
+    "description": "A squat variation with a wide stance, targeting the glutes and inner thighs (adductors) more.",
+    "primaryMuscles": [
+      "glutes",
+      "adductors",
+      "quadriceps"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "dumbbell",
+      "kettlebell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=kjlfpqXnyL8",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_wallball",
+    "name": "Wall Balls",
+    "category": "Full Body",
+    "tags": [
+      "squat",
+      "press",
+      "compound",
+      "medicine ball",
+      "conditioning",
+      "power"
+    ],
+    "description": "A full-body exercise combining a front squat with an overhead throw of a medicine ball against a wall.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes",
+      "deltoids"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "core",
+      "hamstrings"
+    ],
+    "equipmentNeeded": [
+      "medicine ball",
+      "wall target"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=ryJoFCMNIr8",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_toestobar",
+    "name": "Toes to Bar",
+    "category": "Core",
+    "tags": [
+      "core",
+      "bodyweight",
+      "advanced",
+      "abs",
+      "hip flexors"
+    ],
+    "description": "An advanced core exercise performed hanging from a bar, lifting the toes to touch the bar.",
+    "primaryMuscles": [
+      "rectus abdominis",
+      "hip flexors",
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "forearms",
+      "latissimus dorsi"
+    ],
+    "equipmentNeeded": [
+      "pull-up bar"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=kjYuPnmMjfo",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_kneelingcabcrunch",
+    "name": "Kneeling Cable Crunches",
+    "category": "Core",
+    "tags": [
+      "core",
+      "cable",
+      "abs"
+    ],
+    "description": "A weighted crunch variation performed kneeling using a cable machine.",
+    "primaryMuscles": [
+      "rectus abdominis"
+    ],
+    "secondaryMuscles": [
+      "obliques"
+    ],
+    "equipmentNeeded": [
+      "cable machine",
+      "rope attachment"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=eXjNNROIhD0",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_cablewoodchop_high",
+    "name": "Cable Woodchoppers (High to Low)",
+    "category": "Core",
+    "tags": [
+      "core",
+      "cable",
+      "obliques"
+    ],
+    "description": "A woodchop variation moving the cable from a high anchor point diagonally down across the body.",
+    "primaryMuscles": [
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "rectus abdominis",
+      "shoulders",
+      "back"
+    ],
+    "equipmentNeeded": [
+      "cable machine",
+      "handle"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=gcGNypjIQDo",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_cablewoodchop_low",
+    "name": "Cable Woodchoppers (Low to High)",
+    "category": "Core",
+    "tags": [
+      "core",
+      "cable",
+      "obliques"
+    ],
+    "description": "A woodchop variation moving the cable from a low anchor point diagonally up across the body.",
+    "primaryMuscles": [
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "rectus abdominis",
+      "shoulders",
+      "back"
+    ],
+    "equipmentNeeded": [
+      "cable machine",
+      "handle"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=8OZImYISmSg",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_pallofpress",
+    "name": "Pallof Press",
+    "category": "Core",
+    "tags": [
+      "core",
+      "cable",
+      "resistance band",
+      "anti-rotation"
+    ],
+    "description": "An anti-rotation core exercise performed by pressing a cable or band handle away from the chest while resisting rotational forces.",
+    "primaryMuscles": [
+      "obliques",
+      "transverse abdominis"
+    ],
+    "secondaryMuscles": [
+      "rectus abdominis",
+      "shoulders"
+    ],
+    "equipmentNeeded": [
+      "cable machine",
+      "handle",
+      "resistance band"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=axgv7H_VQOo",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_declinecrunch",
+    "name": "Decline Crunches",
+    "category": "Core",
+    "tags": [
+      "core",
+      "bodyweight",
+      "abs"
+    ],
+    "description": "Crunches performed on a decline bench, increasing the range of motion and difficulty.",
+    "primaryMuscles": [
+      "rectus abdominis"
+    ],
+    "secondaryMuscles": [
+      "obliques"
+    ],
+    "equipmentNeeded": [
+      "decline bench"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=FRzQXeN1hro",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_stabilityballcrunch",
+    "name": "Stability Ball Crunches",
+    "category": "Core",
+    "tags": [
+      "core",
+      "stability ball",
+      "abs"
+    ],
+    "description": "Crunches performed on a stability ball, increasing core activation and range of motion.",
+    "primaryMuscles": [
+      "rectus abdominis"
+    ],
+    "secondaryMuscles": [
+      "obliques",
+      "lower back"
+    ],
+    "equipmentNeeded": [
+      "stability ball"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=UjJ7fWwK5K8",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_stabilityballpike",
+    "name": "Stability Ball Pike",
+    "category": "Core",
+    "tags": [
+      "core",
+      "stability ball",
+      "advanced",
+      "abs",
+      "shoulders"
+    ],
+    "description": "An advanced core exercise involving pulling the feet on a stability ball towards the hands, lifting the hips into a pike position.",
+    "primaryMuscles": [
+      "rectus abdominis",
+      "shoulders",
+      "hip flexors"
+    ],
+    "secondaryMuscles": [
+      "obliques",
+      "triceps"
+    ],
+    "equipmentNeeded": [
+      "stability ball"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=eFcjeQ9tuEQ",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_stabilityballrollout",
+    "name": "Stability Ball Rollout",
+    "category": "Core",
+    "tags": [
+      "core",
+      "stability ball",
+      "abs"
+    ],
+    "description": "Similar to an ab wheel rollout, but performed using a stability ball.",
+    "primaryMuscles": [
+      "rectus abdominis",
+      "transverse abdominis",
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "shoulders",
+      "latissimus dorsi"
+    ],
+    "equipmentNeeded": [
+      "stability ball"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=zeSD85M2t6c",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_reversecrunch",
+    "name": "Reverse Crunches",
+    "category": "Core",
+    "tags": [
+      "core",
+      "bodyweight",
+      "abs"
+    ],
+    "description": "A core exercise targeting the lower abdominals by lifting the knees towards the chest.",
+    "primaryMuscles": [
+      "rectus abdominis",
+      "hip flexors"
+    ],
+    "secondaryMuscles": [
+      "obliques"
+    ],
+    "equipmentNeeded": [
+      "bodyweight",
+      "bench"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=6UZldyEEJu0",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_hangingkneeraise",
+    "name": "Hanging Knee Raises",
+    "category": "Core",
+    "tags": [
+      "core",
+      "bodyweight",
+      "abs",
+      "hip flexors"
+    ],
+    "description": "A core exercise involving raising the knees towards the chest while hanging from a bar.",
+    "primaryMuscles": [
+      "rectus abdominis",
+      "hip flexors",
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "forearms"
+    ],
+    "equipmentNeeded": [
+      "pull-up bar"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=Fl8rJJ7mZJM",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_captainschairlegraise",
+    "name": "Captain's Chair Leg Raise",
+    "category": "Core",
+    "tags": [
+      "core",
+      "machine",
+      "abs",
+      "hip flexors"
+    ],
+    "description": "Leg or knee raises performed on a Captain's Chair apparatus, providing back support.",
+    "primaryMuscles": [
+      "rectus abdominis",
+      "hip flexors",
+      "obliques"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "captain's chair"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=u3dRrxytkBo",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_deadbug",
+    "name": "Dead Bug",
+    "category": "Core",
+    "tags": [
+      "core",
+      "bodyweight",
+      "stability"
+    ],
+    "description": "A core stability exercise involving lowering opposite arm and leg while maintaining a neutral spine.",
+    "primaryMuscles": [
+      "transverse abdominis",
+      "rectus abdominis",
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "hip flexors"
+    ],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=4XLEnwUr1d8",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_bird_dog",
+    "name": "Bird Dog",
+    "category": "Core",
+    "tags": [
+      "core",
+      "bodyweight",
+      "stability",
+      "balance"
+    ],
+    "description": "A core stability exercise performed on all fours, extending opposite arm and leg while maintaining a neutral spine.",
+    "primaryMuscles": [
+      "erector spinae",
+      "glutes",
+      "transverse abdominis"
+    ],
+    "secondaryMuscles": [
+      "deltoids",
+      "hamstrings"
+    ],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=_1j_HWknGLg",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_plankjack",
+    "name": "Plank Jacks",
+    "category": "Conditioning",
+    "tags": [
+      "conditioning",
+      "bodyweight",
+      "core",
+      "cardio"
+    ],
+    "description": "A dynamic plank variation involving jumping the feet in and out like a jumping jack.",
+    "primaryMuscles": [
+      "core",
+      "shoulders"
+    ],
+    "secondaryMuscles": [
+      "adductors",
+      "abductors"
+    ],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=K_-kEVwkGQg",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_sideplankdip",
+    "name": "Side Plank Dips",
+    "category": "Core",
+    "tags": [
+      "core",
+      "bodyweight",
+      "obliques"
+    ],
+    "description": "A dynamic side plank variation involving dipping the hips towards the floor.",
+    "primaryMuscles": [
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "gluteus medius",
+      "shoulders"
+    ],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=sKMD_pbNm7w",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_bicyclecrunch",
+    "name": "Bicycle Crunches",
+    "category": "Core",
+    "tags": [
+      "core",
+      "bodyweight",
+      "abs",
+      "obliques"
+    ],
+    "description": "A core exercise involving bringing opposite elbow to opposite knee in a cycling motion.",
+    "primaryMuscles": [
+      "rectus abdominis",
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "hip flexors"
+    ],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=Km4mZ3zBkCs",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_vup",
+    "name": "V-Ups",
+    "category": "Core",
+    "tags": [
+      "core",
+      "bodyweight",
+      "abs",
+      "hip flexors"
+    ],
+    "description": "An advanced core exercise involving simultaneously lifting the torso and legs towards each other.",
+    "primaryMuscles": [
+      "rectus abdominis",
+      "hip flexors"
+    ],
+    "secondaryMuscles": [
+      "obliques"
+    ],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=iP2fjvG0g3w",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_hollowhold",
+    "name": "Hollow Hold / Hollow Body Hold",
+    "category": "Core",
+    "tags": [
+      "core",
+      "bodyweight",
+      "isometric",
+      "gymnastics"
+    ],
+    "description": "An isometric core exercise fundamental in gymnastics, involving holding a 'dish' shape off the ground.",
+    "primaryMuscles": [
+      "rectus abdominis",
+      "transverse abdominis",
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "hip flexors",
+      "quadriceps"
+    ],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=CE_yMHHY2_s",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_archhold",
+    "name": "Arch Hold / Superman",
+    "category": "Core",
+    "tags": [
+      "core",
+      "bodyweight",
+      "isometric",
+      "lower back",
+      "posterior chain"
+    ],
+    "description": "An isometric exercise strengthening the posterior chain by lifting arms and legs off the ground while lying prone.",
+    "primaryMuscles": [
+      "erector spinae",
+      "glutes",
+      "hamstrings"
+    ],
+    "secondaryMuscles": [
+      "trapezius",
+      "deltoids"
+    ],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=Lard_TuCiWY",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_suitcasewalk",
+    "name": "Suitcase Carry",
+    "category": "Full Body",
+    "tags": [
+      "carry",
+      "dumbbell",
+      "kettlebell",
+      "core",
+      "grip",
+      "conditioning",
+      "unilateral"
+    ],
+    "description": "A unilateral loaded carry holding a weight in one hand like a suitcase, challenging core stability (anti-lateral flexion).",
+    "primaryMuscles": [
+      "obliques",
+      "core",
+      "forearms",
+      "trapezius"
+    ],
+    "secondaryMuscles": [
+      "legs",
+      "shoulders"
+    ],
+    "equipmentNeeded": [
+      "dumbbell",
+      "kettlebell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=tNHdx7pmrGI",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_waiterwalk",
+    "name": "Waiter's Walk",
+    "category": "Full Body",
+    "tags": [
+      "carry",
+      "dumbbell",
+      "kettlebell",
+      "shoulders",
+      "core",
+      "stability",
+      "unilateral"
+    ],
+    "description": "A unilateral loaded carry holding a weight overhead with a straight arm, challenging shoulder and core stability.",
+    "primaryMuscles": [
+      "deltoids",
+      "rotator cuff",
+      "obliques",
+      "core"
+    ],
+    "secondaryMuscles": [
+      "trapezius",
+      "triceps"
+    ],
+    "equipmentNeeded": [
+      "dumbbell",
+      "kettlebell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=F997Zq5_IhM",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_overheadwalk",
+    "name": "Overhead Carry",
+    "category": "Full Body",
+    "tags": [
+      "carry",
+      "barbell",
+      "dumbbell",
+      "kettlebell",
+      "shoulders",
+      "core",
+      "stability"
+    ],
+    "description": "A loaded carry holding weight(s) overhead (barbell, two dumbbells/kettlebells), demanding significant shoulder and core stability.",
+    "primaryMuscles": [
+      "deltoids",
+      "rotator cuff",
+      "trapezius",
+      "core"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "legs"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "dumbbells",
+      "kettlebells"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=f85awvMzwWE",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_bearcrawl",
+    "name": "Bear Crawl",
+    "category": "Conditioning",
+    "tags": [
+      "conditioning",
+      "bodyweight",
+      "full body",
+      "core",
+      "shoulders"
+    ],
+    "description": "A crawling movement pattern performed on hands and feet with knees slightly off the ground.",
+    "primaryMuscles": [
+      "shoulders",
+      "core",
+      "quadriceps"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "chest",
+      "glutes"
+    ],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=PAR0kFtbGro",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_crabwalk",
+    "name": "Crab Walk",
+    "category": "Conditioning",
+    "tags": [
+      "conditioning",
+      "bodyweight",
+      "full body",
+      "triceps",
+      "glutes",
+      "shoulders"
+    ],
+    "description": "A movement pattern performed walking on hands and feet with the chest facing upwards.",
+    "primaryMuscles": [
+      "triceps",
+      "glutes",
+      "shoulders"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "bodyweight"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=XQ1hNhV8NL4",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_zerchersquat",
+    "name": "Zercher Squat",
+    "category": "Lower Body",
+    "tags": [
+      "squat",
+      "compound",
+      "barbell",
+      "core",
+      "upper back"
+    ],
+    "description": "A squat variation holding the barbell in the crook of the elbows.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "core",
+      "upper back",
+      "biceps",
+      "hamstrings"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "squat rack"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=vpy4ADmlo1E",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_sumodeadlifthighpull",
+    "name": "Sumo Deadlift High Pull",
+    "category": "Full Body",
+    "tags": [
+      "hinge",
+      "pull",
+      "compound",
+      "barbell",
+      "kettlebell",
+      "power",
+      "posterior chain",
+      "shoulders",
+      "traps"
+    ],
+    "description": "An explosive movement combining a sumo deadlift with an upright row/high pull.",
+    "primaryMuscles": [
+      "glutes",
+      "hamstrings",
+      "trapezius",
+      "deltoids"
+    ],
+    "secondaryMuscles": [
+      "quadriceps",
+      "lower back",
+      "biceps",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "kettlebell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=RJdeJ8zA6uw",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_thruster",
+    "name": "Thruster",
+    "category": "Full Body",
+    "tags": [
+      "squat",
+      "press",
+      "compound",
+      "barbell",
+      "dumbbell",
+      "kettlebell",
+      "power",
+      "conditioning"
+    ],
+    "description": "A compound exercise combining a front squat with a push press in one fluid motion.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes",
+      "deltoids",
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "core",
+      "upper back",
+      "hamstrings"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "dumbbells",
+      "kettlebells"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=Zvt5-mugUco",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_muscleup_bar",
+    "name": "Bar Muscle Up",
+    "category": "Upper Body",
+    "tags": [
+      "pull",
+      "press",
+      "compound",
+      "bodyweight",
+      "gymnastics",
+      "advanced"
+    ],
+    "description": "An advanced gymnastics movement transitioning from below a pull-up bar to a support position above it.",
+    "primaryMuscles": [
+      "latissimus dorsi",
+      "pectorals",
+      "deltoids",
+      "triceps",
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "core",
+      "forearms"
+    ],
+    "equipmentNeeded": [
+      "pull-up bar"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=FEX27prBhO0",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_muscleup_ring",
+    "name": "Ring Muscle Up",
+    "category": "Upper Body",
+    "tags": [
+      "pull",
+      "press",
+      "compound",
+      "bodyweight",
+      "gymnastics",
+      "advanced",
+      "rings"
+    ],
+    "description": "An advanced gymnastics movement on rings, transitioning from below the rings to a support dip position above them.",
+    "primaryMuscles": [
+      "latissimus dorsi",
+      "pectorals",
+      "deltoids",
+      "triceps",
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "core",
+      "forearms",
+      "rotator cuff"
+    ],
+    "equipmentNeeded": [
+      "gymnastic rings"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=qZAe4JOI36s",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_ringdip",
+    "name": "Ring Dips",
+    "category": "Upper Body",
+    "tags": [
+      "press",
+      "compound",
+      "bodyweight",
+      "gymnastics",
+      "chest",
+      "triceps",
+      "shoulders",
+      "rings"
+    ],
+    "description": "Dips performed on gymnastic rings, requiring greater stability than bar dips.",
+    "primaryMuscles": [
+      "triceps",
+      "pectorals"
+    ],
+    "secondaryMuscles": [
+      "anterior deltoids",
+      "rotator cuff",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "gymnastic rings"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=W-hfweOYsG8",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_ringrow",
+    "name": "Ring Rows / Bodyweight Rows",
+    "category": "Upper Body",
+    "tags": [
+      "pull",
+      "compound",
+      "bodyweight",
+      "gymnastics",
+      "back",
+      "biceps",
+      "rings"
+    ],
+    "description": "A horizontal pulling exercise using gymnastic rings or a suspension trainer, adjustable by foot position.",
+    "primaryMuscles": [
+      "latissimus dorsi",
+      "rhomboids",
+      "trapezius"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "posterior deltoids",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "gymnastic rings",
+      "suspension trainer"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=XTNdSiwiFk4",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_invertedrow",
+    "name": "Inverted Rows",
+    "category": "Upper Body",
+    "tags": [
+      "pull",
+      "compound",
+      "bodyweight",
+      "back",
+      "biceps"
+    ],
+    "description": "Similar to Ring Rows, often performed using a barbell set low in a rack.",
+    "primaryMuscles": [
+      "latissimus dorsi",
+      "rhomboids",
+      "trapezius"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "posterior deltoids",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "squat rack",
+      "smith machine"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=11F_O_sZ1Z4",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_deficitdeadlift",
+    "name": "Deficit Deadlifts",
+    "category": "Full Body",
+    "tags": [
+      "hinge",
+      "compound",
+      "barbell",
+      "posterior chain",
+      "advanced"
+    ],
+    "description": "A deadlift variation performed while standing on an elevated surface, increasing the range of motion.",
+    "primaryMuscles": [
+      "glutes",
+      "hamstrings",
+      "quadriceps",
+      "lower back"
+    ],
+    "secondaryMuscles": [
+      "trapezius",
+      "latissimus dorsi",
+      "forearms",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "weights",
+      "platform/mats"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=eQNcHUM88YE",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_rackpull",
+    "name": "Rack Pulls",
+    "category": "Full Body",
+    "tags": [
+      "hinge",
+      "compound",
+      "barbell",
+      "posterior chain",
+      "back",
+      "traps"
+    ],
+    "description": "A deadlift variation performed with the barbell starting at an elevated position (e.g., knee height) in a power rack, allowing for heavier loads and targeting the upper back and lockout.",
+    "primaryMuscles": [
+      "erector spinae",
+      "trapezius",
+      "glutes",
+      "hamstrings"
+    ],
+    "secondaryMuscles": [
+      "latissimus dorsi",
+      "forearms"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "power rack"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=aAjN8zS7Idg",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_snatchgripdeadlift",
+    "name": "Snatch Grip Deadlift",
+    "category": "Full Body",
+    "tags": [
+      "hinge",
+      "compound",
+      "barbell",
+      "posterior chain",
+      "back",
+      "advanced"
+    ],
+    "description": "A deadlift performed with a wide (snatch) grip, increasing range of motion and upper back engagement.",
+    "primaryMuscles": [
+      "hamstrings",
+      "glutes",
+      "erector spinae",
+      "trapezius",
+      "latissimus dorsi"
+    ],
+    "secondaryMuscles": [
+      "quadriceps",
+      "forearms",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "barbell"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=SI-VOMwWS4I",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "ex_pause_squat",
+    "name": "Pause Squat",
+    "category": "Lower Body",
+    "tags": [
+      "squat",
+      "compound",
+      "barbell",
+      "strength"
+    ],
+    "description": "A squat variation involving a distinct pause at the bottom of the movement.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "adductors",
+      "calves",
+      "lower back",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "squat rack"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=aC7c1d4eWKA",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_pause_bench",
+    "name": "Pause Bench Press",
+    "category": "Upper Body",
+    "tags": [
+      "press",
+      "compound",
+      "barbell",
+      "chest",
+      "strength"
+    ],
+    "description": "A bench press variation involving a distinct pause with the bar on the chest.",
+    "primaryMuscles": [
+      "pectorals"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "deltoids"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "bench"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=dVM-rN5cd4E",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_boxsquat",
+    "name": "Box Squat",
+    "category": "Lower Body",
+    "tags": [
+      "squat",
+      "compound",
+      "barbell",
+      "posterior chain"
+    ],
+    "description": "A squat variation involving squatting down until seated briefly on a box, emphasizing the posterior chain.",
+    "primaryMuscles": [
+      "glutes",
+      "hamstrings",
+      "quadriceps"
+    ],
+    "secondaryMuscles": [
+      "adductors",
+      "lower back",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "barbell",
+      "squat rack",
+      "box"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=WGjf5w8iaTM",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_safetybarsquat",
+    "name": "Safety Bar Squat",
+    "category": "Lower Body",
+    "tags": [
+      "squat",
+      "compound",
+      "barbell",
+      "specialty bar"
+    ],
+    "description": "A squat variation using a safety squat bar, which alters weight distribution and reduces shoulder strain.",
+    "primaryMuscles": [
+      "quadriceps",
+      "glutes",
+      "upper back"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "adductors",
+      "core"
+    ],
+    "equipmentNeeded": [
+      "safety squat bar",
+      "squat rack"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=oADgotgaUck",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "ex_dumbbellfly",
+    "name": "Dumbbell Flyes",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "dumbbell",
+      "chest"
+    ],
+    "description": "A chest isolation exercise using dumbbells in a fly (arc) motion, typically on a flat or incline bench.",
+    "primaryMuscles": [
+      "pectorals"
+    ],
+    "secondaryMuscles": [
+      "anterior deltoids"
+    ],
+    "equipmentNeeded": [
+      "dumbbells",
+      "bench"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=vJh-4hRLH-o",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_seateddipmachine",
+    "name": "Seated Dip Machine",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "cable",
+      "triceps"
+    ],
+    "description": "An isolation exercise for the triceps using a cable machine.",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "seated dip machine",
+      "cable machine",
+      "attachment (rope, bar)"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=pMarNxAvHPc",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_single_arm_cable_pushdown",
+    "name": "Single Arm Cable Pushdown",
+    "category": "Upper Body",
+    "tags": [
+      "isolation",
+      "cable",
+      "triceps"
+    ],
+    "description": "An isolation exercise for the triceps using a cable machine.",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "equipmentNeeded": [
+      "cable machine",
+      "attachment (rope, bar)"
+    ],
+    "videoUrl": "https://www.youtube.com/watch?v=Y82-6mtcN1s",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "ex_triceppushdown",
+    "name": "Tricep Pushdowns",
+    "category": "Upper Body",
+    "primaryMuscles": ["Triceps"],
+    "secondaryMuscles": ["Forearms"],
+    "equipmentNeeded": ["Cable Machine"],
+    "difficulty": "Beginner",
+    "description": "A cable exercise targeting the triceps. Stand facing a cable machine with a rope or bar attachment at head height. Push the attachment down until your arms are fully extended.",
+    "videoUrl": "https://www.youtube.com/watch?v=2-LAMcpzODU"
+  },
+  {
+    "id": "ex_latpulldown",
+    "name": "Lat Pulldowns",
+    "category": "Upper Body",
+    "primaryMuscles": ["Latissimus Dorsi"],
+    "secondaryMuscles": ["Biceps", "Rhomboids", "Trapezius"],
+    "equipmentNeeded": ["Cable Machine"],
+    "difficulty": "Beginner",
+    "description": "A cable exercise targeting the lats. Sit at a lat pulldown machine with a wide grip on the bar. Pull the bar down to your chest, squeezing your shoulder blades together.",
+    "videoUrl": "https://www.youtube.com/watch?v=CAwf7n6Luuc"
+  }
+]

@@ -1,0 +1,3115 @@
+import acwr from './acwr.js';
+import monotony from './monotony.js';
+// Import the engine module as an object
+import * as PeriodizationEngine from './periodizationEngine.js'; 
+import vbtAdjust from './velocityAutoReg.js'; // Import VBT adjustment logic
+// Import necessary helpers/state functions
+import { getStructuredDetails } from './utils/helpers.js'; 
+import { triggerSaveState } from './state/storage.js'; 
+import ForgeAssist from './forgeassist.js'; // <<< RE-ADDED Import ForgeAssist
+import AdaptiveScheduler from './adaptiveScheduler.js'; // Import AdaptiveScheduler explicitly
+import PeriodizationModelManager from './periodizationModelManager.js'; // <<< UNCOMMENTED Import
+import { initializePhaseResizing } from './ui/phaseResize.js'; // <-- Added Phase Resize
+import { handleSelection, getSelectionState } from './ui/selection.js';
+import {
+    handleExerciseDragStart,
+    handleExerciseDragEnd, // Need this one too
+    handleCardDragStart,
+    handleCardDragEnd,
+    attachDragDropListeners, // For dynamic slots
+    handleAltKeyDown,
+    handleAltKeyUp,
+    handleWindowBlur,
+    initializeDragDrop
+} from './calendar/dragdrop.js'; // <-- Added Drag/Drop Handlers
+import { updateCalendarPhaseIndicators } from './calendar/indicators.js'; // <-- Added import
+import { generateCalendarGrid } from './calendar/grid.js'; // <-- Added import
+import { showToast } from './ui/toast.js'; // <-- Added import
+import { getCurrentBlockLoads } from './state/blockData.js'; // <-- Added import
+import { initializeAnalyticsUpdater, triggerAnalyticsUpdate } from './analytics/updates.js'; // <-- Added import
+import { commitVersion, openVersionsModal, closeVersionsModal, populateRecentBlocks } from './state/versioning.js'; // <<< Added versioning imports
+import { SAVE_KEY, SETTINGS_SAVE_KEY, loadStateDataFromLocalStorage, loadSettingsDataFromLocalStorage, saveSettingsToLocalStorage, saveAsTemplate } from './state/storage.js'; // <<< Added storage imports
+import { openInspector, closeInspector, activateTab, initializeInspectorListeners, saveWorkoutCardDetails as saveDetailsFromInspector, setTabVisibility, clearInspectorFocusMessage } from './inspector/inspector.js'; // <<< Re-adding setTabVisibility, Added clearInspectorFocusMessage
+import {
+    initializeLibrary,
+    loadExerciseLibrary, // Keep this if called directly
+    populateExerciseListUI,
+    toggleFavoritesFilter,
+    filterExerciseLibrary,
+    openExerciseModal,
+    closeExerciseModal,
+    handleExerciseFormSubmit,
+    exportUserExercises,
+    handleExerciseImport,
+    setViewMode, // Add view mode function
+    loadViewMode // Add view mode function
+} from './exercises/library.js'; // <-- Added Library import
+
+document.addEventListener('DOMContentLoaded', () => {
+    const workCanvas = document.getElementById('work-canvas');
+    const inspectorPanel = document.getElementById('inspector-panel');
+    const inspectorCloseBtn = document.getElementById('inspector-close-btn');
+    const inspectorTabs = document.querySelectorAll('.inspector-content .tab-content');
+    const exerciseList = document.querySelector('.exercise-list');
+    const sessionSlots = document.querySelectorAll('.day-cell.session-slot');
+    const phaseRibbon = document.getElementById('phase-ribbon');
+    const inspectorSearch = document.querySelector('.inspector-search');
+    const inspectorTitle = document.getElementById('inspector-title');
+    const inspectorTabsContainer = document.querySelector('.inspector-tabs'); // Get tabs container
+    const blockBuilderContainer = document.querySelector('.block-builder-container'); // Added container selector
+    const hubContainer = document.getElementById('block-builder-hub'); // Hub container
+    const createNewBtn = document.getElementById('hub-create-new');
+    const browseTemplatesBtn = document.getElementById('hub-browse-templates');
+    const recentBlocksList = document.getElementById('recent-blocks-list');
+    const backToHubBtn = document.getElementById('back-to-hub-btn');
+    // New Block Options Modal elements
+    const newBlockOptionsModal = document.getElementById('new-block-options-modal');
+    const newBlockOptionsCloseBtn = document.getElementById('new-block-options-close-btn');
+    const createBlockFromOptionsBtn = document.getElementById('create-block-from-options-btn');
+    const newBlockWeeksInput = document.getElementById('new-block-weeks');
+    const newBlockModelSelect = document.getElementById('new-block-model'); // Added model select
+    const newBlockSessionsSelect = document.getElementById('new-block-sessions'); // Get sessions select
+    const newBlockNameModalInput = document.getElementById('new-block-name-modal');
+    const commitBtn = document.getElementById('commit-block-btn'); // <<< ADDED Definition
+    const versionsBtn = document.getElementById('versions-btn'); // <<< ADDED Definition
+    const blockNameInput = document.getElementById('block-name-input');
+    const multiAthleteToggle = document.getElementById('multi-athlete-toggle');
+    const acwrGauge = document.getElementById('acwr-gauge');
+    const monotonyGauge = document.getElementById('monotony-gauge');
+    const strainGauge = document.getElementById('strain-gauge');
+    // NOTE: Also added versionsBtn which is used nearby commitBtn
+
+    // <<< Add Exercise Detail Modal Refs >>>
+    const exerciseDetailModal = document.getElementById('exercise-detail-modal');
+    const exerciseDetailCloseBtn = document.getElementById('exercise-detail-close-btn');
+    const exerciseDetailTitle = document.getElementById('exercise-detail-title');
+    const detailCurrentSets = document.getElementById('detail-current-sets');
+    const detailCurrentReps = document.getElementById('detail-current-reps');
+    const detailCurrentLoadType = document.getElementById('detail-current-load-type');
+    const detailCurrentLoadValue = document.getElementById('detail-current-load-value');
+    const detailCurrentRest = document.getElementById('detail-current-rest');
+    const detailCurrentNotes = document.getElementById('detail-current-notes');
+    const detailLibraryCategory = document.getElementById('detail-library-category');
+    const detailLibraryDescription = document.getElementById('detail-library-description');
+    const detailLibraryMuscles = document.getElementById('detail-library-muscles');
+    const detailLibraryEquipment = document.getElementById('detail-library-equipment');
+    const detailLibraryDifficulty = document.getElementById('detail-library-difficulty');
+    const detailLibraryVideo = document.getElementById('detail-library-video');
+    const detailModalEditBtn = document.getElementById('detail-modal-edit-btn');
+    const detailModalSwapBtn = document.getElementById('detail-modal-swap-btn');
+    // <<< End Refs >>>
+
+    // --- State --- 
+    // let draggedItem = null; // Moved to dragdrop.js
+    let currentBlockData = {}; // Simple object to hold state (future use)
+    let currentLoadedVersionTimestamp = null; // <<< Added declaration
+    // let selectedElement = null; // Moved to ui/selection.js
+    // let selectedElements = new Set(); // Moved to ui/selection.js
+    let exerciseLibraryData = []; // Holds merged default + user exercises
+    const USER_EXERCISES_KEY = 'setforgeUserExercises_v1';
+    const EXERCISE_FAVORITES_KEY = 'setforgeExerciseFavorites_v1';
+    const EXERCISE_FREQUENCY_KEY = 'setforgeExerciseFrequency_v1';
+    const VIEW_MODE_KEY = 'setforgeLibraryViewMode_v1'; // Key for storing view mode
+    let exerciseFavorites = new Set();
+    let exerciseFrequency = {};
+
+    // --- NEW: Unified Selection State ---
+    let selectedContext = {
+        type: 'none',    // 'none', 'exercise', 'day', 'phase', 'model', 'multi-exercise'
+        elements: new Set(), // Store selected DOM elements (can be cards, cells, phases)
+        modelId: null,   // Relevant for 'model' type
+        dayId: null      // Relevant for 'model' type (and potentially 'day')
+    };
+
+    function syncSelectedContext(type, extra = {}) {
+        const { selectedElement, selectedElements } = getSelectionState();
+        selectedContext.type = type;
+        selectedContext.elements = new Set(selectedElements);
+        selectedContext.modelId = extra.modelId || null;
+        selectedContext.dayId = extra.dayId || null;
+    }
+
+    // --- Initialize Library Module ---
+    // Find all necessary elements first
+    const libraryConfig = {
+        exerciseList: document.querySelector('.exercise-list'),
+        inspectorSearch: document.getElementById('inspector-search'),
+        categoryFilter: document.getElementById('library-filter-category'),
+        equipmentFilter: document.getElementById('library-filter-equipment'),
+        sort: document.getElementById('library-sort'),
+        favoritesToggle: document.getElementById('library-toggle-favorites'),
+        exerciseListContainer: document.querySelector('.exercise-list-container'),
+        exerciseModal: document.getElementById('exercise-modal'),
+        exerciseModalCloseBtn: document.getElementById('exercise-modal-close-btn'),
+        exerciseModalForm: document.getElementById('exercise-modal-form'),
+        exerciseModalTitle: document.getElementById('exercise-modal-title'),
+        addExerciseBtn: document.getElementById('add-exercise-btn'), // Need button ref for listener
+        exportExercisesBtn: document.getElementById('export-exercises-btn'), // Need button ref for listener
+        importExercisesInput: document.getElementById('import-exercises-input'), // Need button ref for listener
+        viewModeStandardBtn: document.getElementById('view-mode-standard'), // Need button ref for listener
+        viewModeCompactBtn: document.getElementById('view-mode-compact') // Need button ref for listener
+    };
+
+    // Initialize the library, which returns a promise that resolves when exercises are loaded
+    initializeLibrary(libraryConfig).then(loadedData => {
+        console.log("Library initialized and data loaded successfully.");
+        
+        // <<< ADDED LOGS to inspect data sources >>>
+        console.log("[BlockBuilder .then()] Inspecting loadedData:", loadedData);
+        // <<< ASSIGN loadedData to outer scope variable >>>
+        exerciseLibraryData = loadedData; 
+        console.log("[BlockBuilder .then()] Inspecting outer scope exerciseLibraryData AFTER assignment:", exerciseLibraryData);
+        // <<< END ASSIGNMENT & LOG >>>
+
+        // Now that the library is loaded, we can proceed with loading saved state/settings
+        // loadStateDataFromLocalStorage(); // Example: Load block state after library
+        // loadSettingsDataFromLocalStorage(); // Example: Load settings after library
+        
+        // <<<--- MOVED ForgeAssist Initialization HERE --- >>>
+        // --- Helper Functions for Dependencies ---
+        function getTotalWeeksHelper() {
+            return workCanvas.querySelectorAll('.week-label').length;
+        }
+        
+        function getBlockStateHelper() {
+            // Placeholder: Needs implementation to gather state from DOM/manager
+            // This is complex and depends on how state is managed elsewhere
+            console.warn('[ForgeAssist Init] getBlockStateHelper not fully implemented.');
+            return {
+                slots: {}, // Populate from workCanvas
+                phases: [], // Populate from phaseRibbon
+                periodizationModels: PeriodizationModelManager.getState() // Get from manager
+            };
+        }
+
+        // --- Initialize ForgeAssist --- 
+        console.log('[BlockBuilder] Initializing ForgeAssist...');
+        try {
+            // Make sure exerciseLibraryData is properly assigned from loadedData if necessary
+            // Assuming initializeLibrary updates the outer scope exerciseLibraryData 
+            // or loadedData itself contains the library
+            // Let's be safe and use loadedData if it looks like the library
+            const libraryToUse = Array.isArray(loadedData) ? loadedData : exerciseLibraryData; // <<< CORRECTED LOGIC
+            console.log(`[BlockBuilder] Using exercise library with ${libraryToUse.length} items for ForgeAssist init.`);
+
+            ForgeAssist.init({
+                workCanvas: workCanvas,
+                showToast: showToast, // Assumes showToast is available in this scope
+                triggerAnalyticsUpdate: triggerAnalyticsUpdate, // Assumes triggerAnalyticsUpdate is available
+                getTotalWeeks: getTotalWeeksHelper,
+                getBlockState: getBlockStateHelper,
+                exerciseLibrary: libraryToUse, // Use the determined library
+                // Pass analytics functions
+                acwrFunction: acwr, 
+                monotonyFunction: monotony,
+                // Ensure getCurrentBlockLoads receives workCanvas when called by ForgeAssist/AdaptiveScheduler
+                getCurrentBlockLoads: () => getCurrentBlockLoads(workCanvas), // <<< MODIFIED HERE
+                simulatedPastLoad: window.simulatedPastLoad || [] // Get from global or default
+            });
+            
+            // Initialize Adaptive Training System
+            initializeAdaptiveTraining(libraryToUse);
+            
+            console.log('[BlockBuilder] ForgeAssist initialized successfully.');
+        } catch (error) {
+            console.error('[BlockBuilder] Error initializing ForgeAssist:', error);
+            showToast('ForgeAssist failed to initialize!', 'error');
+        }
+        // <<<--- END MOVED CODE --- >>>
+
+    }).catch(error => {
+        console.error("Failed to initialize exercise library:", error);
+        showToast('Error loading exercise library. Some features may not work.', 'error');
+    });
+    // --- End Library Init ---
+
+    /**
+     * Initializes the Adaptive Training System features.
+     * @param {Array} exerciseLibrary - The loaded exercise library.
+     */
+    function initializeAdaptiveTraining(exerciseLibrary) {
+        console.log('[BlockBuilder] Initializing Adaptive Training System...');
+        
+        // Register event listener for analytics monitoring
+        const originalTriggerAnalytics = triggerAnalyticsUpdate;
+        window.triggerAnalyticsUpdate = function() {
+            originalTriggerAnalytics();
+            setTimeout(checkAnalyticsForDeloadNeed, 500); // Check after analytics update
+        };
+        
+        // First load any stored performance history from localStorage
+        try {
+            if (localStorage.getItem('setforgePerformanceHistory')) {
+                console.log('[AdaptiveTraining] Performance history loaded from localStorage');
+            }
+        } catch (error) {
+            console.error("Error accessing localStorage:", error);
+        }
+        
+        console.log('[BlockBuilder] Adaptive Training System initialized');
+    }
+    
+    /**
+     * Populates the Adaptive tab based on the selected element.
+     * @param {HTMLElement} element - The selected element.
+     */
+    function populateAdaptiveTab(element) {
+        const adaptiveTab = document.getElementById('adaptive');
+        if (!adaptiveTab) return;
+        
+        if (!element) {
+            adaptiveTab.innerHTML = '<p>Select a workout card, day, or phase to see adaptive training options.</p>';
+            return;
+        }
+        
+        if (element.classList.contains('workout-card')) {
+            // Handle workout card selection
+            populateAdaptiveExerciseTab(element, adaptiveTab);
+        } else if (element.classList.contains('day-cell')) {
+            // Handle day cell selection
+            populateAdaptiveDayTab(element, adaptiveTab);
+        } else if (element.classList.contains('phase-bar')) {
+            // Handle phase bar selection
+            populateAdaptivePhaseTab(element, adaptiveTab);
+        } else {
+            adaptiveTab.innerHTML = '<p>Select a workout card, day, or phase to see adaptive training options.</p>';
+        }
+    }
+    
+    /**
+     * Populates the Adaptive tab for an exercise/workout card.
+     * @param {HTMLElement} element - The selected workout card.
+     * @param {HTMLElement} adaptiveTab - The adaptive tab content container.
+     */
+    function populateAdaptiveExerciseTab(element, adaptiveTab) {
+        // Get exercise details from the card
+        const details = getStructuredDetails(element);
+        const exerciseName = details.name;
+        
+        // Find exercise in library
+        const exerciseId = findExerciseIdByName(exerciseName);
+        if (!exerciseId) {
+            adaptiveTab.innerHTML = '<p>Error: Could not find exercise in library.</p>';
+            return;
+        }
+        
+        adaptiveTab.innerHTML = `
+            <h4>Performance Feedback</h4>
+            <div class="form-group">
+                <label for="rpe-feedback">How difficult was this exercise? (RPE)</label>
+                <select id="rpe-feedback">
+                    <option value="">Select RPE</option>
+                    ${[6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(rpe => 
+                        `<option value="${rpe}">${rpe}</option>`
+                    ).join('')}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="reps-completed">Reps Completed (last set)</label>
+                <input type="number" id="reps-completed" min="0" max="100">
+            </div>
+            <button id="submit-feedback" class="cta-button primary-cta">Submit Feedback</button>
+            <div id="load-recommendation" class="recommendation-box" style="display:none; margin-top: 10px; padding: 10px; background: var(--accent-color-light); border-radius: 4px;"></div>
+            
+            <hr class="detail-separator">
+            
+            <h4>Exercise Rotation</h4>
+            <p>Suggested alternatives to maintain variety:</p>
+            <div id="rotation-suggestions" class="suggestion-list"></div>
+            
+            <hr class="detail-separator">
+            
+            <h4>Accessory Recommendations</h4>
+            <p>Suggested accessories to complement this exercise:</p>
+            <div id="accessory-suggestions" class="accessory-list"></div>
+        `;
+        
+        // Add listener for feedback submission
+        document.getElementById('submit-feedback').addEventListener('click', () => {
+            const rpe = document.getElementById('rpe-feedback').value;
+            const reps = document.getElementById('reps-completed').value;
+            
+            if (!rpe || !reps) {
+                showToast('Please provide both RPE and reps completed', 'warning');
+                return;
+            }
+            
+            // Store feedback on the card
+            element.dataset.lastRpe = rpe;
+            element.dataset.lastRepsCompleted = reps;
+            
+            // Call AdaptiveScheduler to get load adjustment
+            const adjustment = AdaptiveScheduler.adjustLoadBasedOnFeedback(
+                exerciseId, 
+                parseFloat(rpe), 
+                parseInt(reps, 10)
+            );
+            
+            // Show recommendation
+            const recBox = document.getElementById('load-recommendation');
+            recBox.innerHTML = `
+                <strong>Recommendation:</strong> 
+                ${adjustment.loadAdjustment > 0 ? 'Increase' : 'Decrease'} load by 
+                ${Math.abs(adjustment.loadAdjustment * 100).toFixed(1)}% 
+                (${adjustment.reason})
+                <button id="apply-adjustment" class="cta-button secondary-cta">Apply</button>
+            `;
+            recBox.style.display = 'block';
+            
+            // Add listener for applying the adjustment
+            document.getElementById('apply-adjustment').addEventListener('click', () => {
+                // Use ForgeAssist.handleChangeIntensity function
+                ForgeAssist.handleChangeIntensity(element, adjustment.loadAdjustment);
+                showToast('Load adjusted based on your feedback', 'success');
+            });
+        });
+        
+        // Get rotation suggestions
+        const weekIndex = parseInt(element.closest('.day-cell').dataset.week, 10) - 1; // 0-based
+        const rotationOptions = AdaptiveScheduler.suggestExerciseRotation(exerciseId, weekIndex);
+        
+        const suggestionsContainer = document.getElementById('rotation-suggestions');
+        
+        // Check if rotationOptions is an array and has items
+        if (!rotationOptions || !Array.isArray(rotationOptions) || rotationOptions.length === 0) {
+            suggestionsContainer.innerHTML = '<p><em>No suitable alternatives found</em></p>';
+        } else {
+            suggestionsContainer.innerHTML = rotationOptions.map(option => `
+                <div class="suggestion-item" style="display: flex; justify-content: space-between; margin-bottom: 8px; padding: 8px; background: var(--bg-color-secondary); border-radius: 4px;">
+                    <div>
+                        <span class="suggestion-name" style="font-weight: bold;">${option.name}</span>
+                        <span class="suggestion-reason" style="display: block; font-size: 0.8em; color: var(--text-color-secondary);">${option.reason}</span>
+                    </div>
+                    <button class="apply-rotation cta-button micro-cta" data-exercise-id="${option.id}">Apply</button>
+                </div>
+            `).join('');
+            
+            // Add listeners for rotation buttons
+            suggestionsContainer.querySelectorAll('.apply-rotation').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const newExerciseId = e.target.dataset.exerciseId;
+                    const newExercise = findExerciseById(newExerciseId);
+                    
+                    if (newExercise) {
+                        // Update workout card with new exercise
+                        const nameElement = element.querySelector('.exercise-name');
+                        if (nameElement) {
+                            nameElement.textContent = newExercise.name;
+                            element.dataset.exerciseId = newExerciseId;
+                            
+                            // Update other card attributes if needed
+                            triggerAnalyticsUpdate();
+                            showToast(`Exercise rotated to ${newExercise.name}`, 'success');
+                        }
+                    }
+                });
+            });
+        }
+        
+        // Similar check for accessory suggestions
+        const accessorySuggestions = AdaptiveScheduler.suggestAccessories(
+            exerciseId,
+            {} // Empty user performance for now
+        );
+        
+        const accessoryContainer = document.getElementById('accessory-suggestions');
+        
+        if (!accessorySuggestions || !Array.isArray(accessorySuggestions) || accessorySuggestions.length === 0) {
+            accessoryContainer.innerHTML = '<p><em>No accessory exercises suggested</em></p>';
+        } else {
+            accessoryContainer.innerHTML = accessorySuggestions.map(acc => `
+                <div class="accessory-item" style="display: flex; justify-content: space-between; margin-bottom: 8px; padding: 8px; background: var(--bg-color-secondary); border-radius: 4px;">
+                    <div>
+                        <span class="accessory-name" style="font-weight: bold;">${acc.name}</span>
+                        <span class="accessory-detail" style="display: block; font-size: 0.8em;">${acc.sets}x${acc.reps}</span>
+                        <span class="accessory-reason" style="display: block; font-size: 0.8em; color: var(--text-color-secondary);">${acc.reason}</span>
+                    </div>
+                    <button class="add-accessory cta-button micro-cta" 
+                            data-exercise="${acc.name}" 
+                            data-sets="${acc.sets}" 
+                            data-reps="${acc.reps}">
+                        Add
+                    </button>
+                </div>
+            `).join('');
+            
+            // Add listeners for accessory buttons
+            accessoryContainer.querySelectorAll('.add-accessory').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const exerciseName = e.target.dataset.exercise;
+                    const sets = e.target.dataset.sets;
+                    const reps = e.target.dataset.reps;
+                    
+                    const dayCellElement = element.closest('.day-cell');
+                    if (dayCellElement) {
+                        const newCardDetails = {
+                            sets: sets,
+                            reps: reps,
+                            loadType: 'rpe',
+                            loadValue: '7',
+                            rest: '60s',
+                            notes: 'Accessory exercise'
+                        };
+                        
+                        const newCard = createWorkoutCard(exerciseName, newCardDetails);
+                        dayCellElement.appendChild(newCard);
+                        triggerAnalyticsUpdate();
+                        showToast(`Added ${exerciseName} as accessory`, 'success');
+                    }
+                });
+            });
+        }
+    }
+    
+    /**
+     * Populates the Adaptive tab for a day cell.
+     * @param {HTMLElement} element - The selected day cell.
+     * @param {HTMLElement} adaptiveTab - The adaptive tab content container.
+     */
+    function populateAdaptiveDayTab(element, adaptiveTab) {
+        const week = parseInt(element.dataset.week, 10);
+        const day = element.dataset.day;
+        
+        adaptiveTab.innerHTML = `
+            <h4>Day Optimization (Week ${week}, ${day})</h4>
+            <p>Options for optimizing this training day:</p>
+            
+            <div class="day-actions" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                <button id="balance-day-load" class="cta-button secondary-cta">Balance Load Distribution</button>
+                <button id="optimize-exercise-selection" class="cta-button secondary-cta">Optimize Exercise Selection</button>
+                <button id="adjust-for-readiness" class="cta-button secondary-cta">Adjust for Readiness Score</button>
+            </div>
+            
+            <hr class="detail-separator">
+            
+            <h4>Volume/Intensity Balance</h4>
+            <div class="balance-sliders">
+                <div class="form-group">
+                    <label for="volume-slider">Volume</label>
+                    <input type="range" id="volume-slider" min="1" max="10" value="5" class="slider">
+                    <span id="volume-value">Medium</span>
+                </div>
+                <div class="form-group">
+                    <label for="intensity-slider">Intensity</label>
+                    <input type="range" id="intensity-slider" min="1" max="10" value="5" class="slider">
+                    <span id="intensity-value">Medium</span>
+                </div>
+                <button id="apply-vi-balance" class="cta-button primary-cta">Apply Balance</button>
+            </div>
+        `;
+        
+        // Add event listeners
+        document.getElementById('balance-day-load').addEventListener('click', () => {
+            showToast('Balancing load distribution...', 'info');
+            // Implementation would go here
+        });
+        
+        document.getElementById('optimize-exercise-selection').addEventListener('click', () => {
+            showToast('Optimizing exercise selection...', 'info');
+            // Implementation would go here
+        });
+        
+        document.getElementById('adjust-for-readiness').addEventListener('click', () => {
+            showToast('Adjusting for readiness...', 'info');
+            // Implementation would go here
+        });
+        
+        // Slider event listeners
+        const volumeSlider = document.getElementById('volume-slider');
+        const intensitySlider = document.getElementById('intensity-slider');
+        const volumeValue = document.getElementById('volume-value');
+        const intensityValue = document.getElementById('intensity-value');
+        
+        // Map slider values to text
+        const valueMap = {
+            1: 'Very Low',
+            2: 'Low',
+            3: 'Low-Medium',
+            4: 'Medium-Low',
+            5: 'Medium',
+            6: 'Medium-High',
+            7: 'High-Medium',
+            8: 'High',
+            9: 'Very High',
+            10: 'Maximum'
+        };
+        
+        volumeSlider.addEventListener('input', () => {
+            volumeValue.textContent = valueMap[volumeSlider.value];
+        });
+        
+        intensitySlider.addEventListener('input', () => {
+            intensityValue.textContent = valueMap[intensitySlider.value];
+        });
+        
+        document.getElementById('apply-vi-balance').addEventListener('click', () => {
+            showToast(`Applying new volume/intensity balance: Volume ${valueMap[volumeSlider.value]}, Intensity ${valueMap[intensitySlider.value]}`, 'success');
+            // Implementation would go here
+        });
+    }
+    
+    /**
+     * Populates the Adaptive tab for a phase bar.
+     * @param {HTMLElement} element - The selected phase bar.
+     * @param {HTMLElement} adaptiveTab - The adaptive tab content container.
+     */
+    function populateAdaptivePhaseTab(element, adaptiveTab) {
+        const phaseName = element.dataset.phaseName || 'Phase';
+        const goal = element.dataset.goal || 'general';
+        
+        // Mock metrics for prototype - would be calculated from real data
+        const strengthProgress = 75;
+        const hypertrophyProgress = 60;
+        const powerProgress = 40;
+        
+        adaptiveTab.innerHTML = `
+            <h4>Phase Progress Analysis: ${phaseName}</h4>
+            <div id="phase-metrics" style="margin-bottom: 20px;">
+                <div class="metric-item" style="margin-bottom: 10px;">
+                    <span class="metric-label">Strength Progress:</span>
+                    <div class="progress-bar" style="background: #eee; height: 10px; border-radius: 5px; margin: 5px 0;">
+                        <div class="progress-fill" style="background: var(--accent-color); height: 100%; width: ${strengthProgress}%; border-radius: 5px;"></div>
+                    </div>
+                    <span class="metric-value">${strengthProgress.toFixed(1)}%</span>
+                </div>
+                
+                <div class="metric-item" style="margin-bottom: 10px;">
+                    <span class="metric-label">Hypertrophy Progress:</span>
+                    <div class="progress-bar" style="background: #eee; height: 10px; border-radius: 5px; margin: 5px 0;">
+                        <div class="progress-fill" style="background: var(--accent-color); height: 100%; width: ${hypertrophyProgress}%; border-radius: 5px;"></div>
+                    </div>
+                    <span class="metric-value">${hypertrophyProgress.toFixed(1)}%</span>
+                </div>
+                
+                <div class="metric-item" style="margin-bottom: 10px;">
+                    <span class="metric-label">Power Development:</span>
+                    <div class="progress-bar" style="background: #eee; height: 10px; border-radius: 5px; margin: 5px 0;">
+                        <div class="progress-fill" style="background: var(--accent-color); height: 100%; width: ${powerProgress}%; border-radius: 5px;"></div>
+                    </div>
+                    <span class="metric-value">${powerProgress.toFixed(1)}%</span>
+                </div>
+            </div>
+            
+            <div id="phase-recommendations">
+                <!-- Show recommendation based on progress -->
+                ${strengthProgress > 70 ? 
+                    `<div class="alert-box recommendation" style="background: var(--accent-color-light); padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                        <h3 style="margin-top: 0;">Phase Transition Recommended</h3>
+                        <p>Based on your progress, it's time to transition to: Power Phase</p>
+                        <button id="transition-phase" class="cta-button primary-cta">Apply Transition</button>
+                    </div>` 
+                : ''}
+            </div>
+            
+            <hr class="detail-separator">
+            
+            <h4>Phase Optimization</h4>
+            <div class="phase-actions" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                <button id="optimize-phase-load" class="cta-button secondary-cta">Optimize Phase Load Distribution</button>
+                <button id="add-deload-week" class="cta-button secondary-cta">Add Strategic Deload Week</button>
+                <button id="realign-progressions" class="cta-button secondary-cta">Realign Exercise Progressions</button>
+            </div>
+        `;
+        
+        // Add event listeners for phase transition
+        const transitionBtn = document.getElementById('transition-phase');
+        if (transitionBtn) {
+            transitionBtn.addEventListener('click', () => {
+                // Set new goal for the phase
+                element.dataset.goal = 'power';
+                
+                // Update styles or indicators if needed
+                if (element.querySelector('.phase-goal')) {
+                    element.querySelector('.phase-goal').textContent = 'Power';
+                }
+                
+                showToast('Phase transitioned to Power', 'success');
+                
+                // Reload adaptive tab
+                populateAdaptivePhaseTab(element, adaptiveTab);
+            });
+        }
+        
+        // Add event listeners for phase actions
+        document.getElementById('optimize-phase-load').addEventListener('click', () => {
+            showToast('Optimizing phase load distribution...', 'info');
+            // Implementation would go here
+        });
+        
+        document.getElementById('add-deload-week').addEventListener('click', () => {
+            showToast('Adding strategic deload week...', 'info');
+            // Implementation would go here
+        });
+        
+        document.getElementById('realign-progressions').addEventListener('click', () => {
+            showToast('Realigning exercise progressions...', 'info');
+            // Implementation would go here
+        });
+    }
+    
+    /**
+     * Helper function to check analytics for deload needs.
+     */
+    function checkAnalyticsForDeloadNeed() {
+        // Get analytics data from gauges
+        const acwrValue = parseFloat(document.getElementById('acwr-gauge').dataset.value || 0);
+        const monotonyValue = parseFloat(document.getElementById('monotony-gauge').dataset.value || 0);
+        const strainValue = parseFloat(document.getElementById('strain-gauge').dataset.value || 0);
+        
+        // Calculate performance metrics - these would need to be gathered from actual data
+        const performanceDeclineDuration = 0; // Placeholder
+        const rpeIncreaseRate = 0; // Placeholder
+        
+        // Call AdaptiveScheduler to check for deload need
+        const deloadAssessment = AdaptiveScheduler.detectDeloadNeed({
+            acwr: acwrValue,
+            monotony: monotonyValue,
+            strain: strainValue,
+            performanceDeclineDuration,
+            rpeIncreaseRate
+        });
+        
+        // If deload needed, add notification to Adaptive tab
+        if (deloadAssessment.needsDeload) {
+            const adaptiveTabLink = document.querySelector('.tab-link[data-tab="adaptive"]');
+            if (adaptiveTabLink && !adaptiveTabLink.querySelector('.notification-badge')) {
+                const badge = document.createElement('span');
+                badge.className = 'notification-badge';
+                badge.textContent = '!';
+                badge.style.backgroundColor = 'red';
+                badge.style.color = 'white';
+                badge.style.borderRadius = '50%';
+                badge.style.padding = '2px 6px';
+                badge.style.fontSize = '0.7em';
+                badge.style.position = 'absolute';
+                badge.style.top = '0';
+                badge.style.right = '0';
+                adaptiveTabLink.style.position = 'relative';
+                adaptiveTabLink.appendChild(badge);
+            }
+        }
+    }
+    
+    /**
+     * Helper function to find an exercise by name.
+     * @param {string} name - The exercise name.
+     * @returns {string|null} - The exercise ID or null if not found.
+     */
+    function findExerciseIdByName(name) {
+        const exercise = exerciseLibraryData.find(ex => ex.name === name);
+        return exercise ? exercise.id : null;
+    }
+    
+    /**
+     * Helper function to find an exercise by ID.
+     * @param {string} id - The exercise ID.
+     * @returns {object|null} - The exercise object or null if not found.
+     */
+    function findExerciseById(id) {
+        return exerciseLibraryData.find(ex => ex.id === id);
+    }
+
+    // --- Initialize UI Components & Systems ---
+    initializeInspectorListeners(); // Initialize Inspector
+    initializePhaseResizing(phaseRibbon, workCanvas); // Initialize Phase Resizing
+    initializeDragDrop(workCanvas, showToast, triggerAnalyticsUpdate); // Initialize Drag & Drop system
+
+    // --- Initialize Periodization Model Manager --- 
+    function getPeriodizationEngine() {
+        // Return the imported engine module object
+        return PeriodizationEngine;
+    }
+    
+    PeriodizationModelManager.init({
+        workCanvas: workCanvas,
+        showToast: showToast,
+        triggerAnalyticsUpdate: triggerAnalyticsUpdate,
+        getPeriodizationEngine: getPeriodizationEngine
+    });
+
+    // --- Analytics Initialization ---
+    initializeAnalyticsUpdater(workCanvas); // Use imported function
+
+    // --- Add Back to Hub Button Listener ---
+    if (backToHubBtn) {
+        backToHubBtn.addEventListener('click', () => {
+            console.log("'Back to Hub' button clicked.");
+            showView('hub');
+        });
+    } else {
+        console.error("'Back to Hub' button (backToHubBtn) not found!");
+    }
+    // --- End Listener Addition ---
+
+    // --- Add Week Expand/Collapse Listener ---
+    if (workCanvas) {
+        workCanvas.addEventListener('click', (e) => {
+            // Remove previous log
+            // console.log("[Week Toggle] click event captured on workCanvas. Target:", e.target);
+
+            // --- MODIFIED: Look for the label, then find its container ---
+            const weekLabel = e.target.closest('.week-label'); // Target must be the week label itself
+
+            // console.log("[Week Toggle] Clicked target:", e.target, "Found .week-label element:", weekLabel);
+            if (weekLabel) {
+                const weekNumber = weekLabel.dataset.week;
+                if (!weekNumber) return;
+
+                // Find the parent container for this week
+                const weekContainer = weekLabel.closest('.week-row-container');
+                if (!weekContainer) {
+                    console.warn(`[Week Toggle] Could not find .week-row-container for week ${weekNumber}`);
+                    return;
+                }
+
+                // console.log(`[Week Toggle] Clicked Week ${weekNumber} label.`);
+
+                // Toggle the class only on the container
+                weekContainer.classList.toggle('week-expanded');
+
+                // --- REMOVED toggling on individual elements ---
+                // const isCurrentlyExpanded = weekLabel.classList.contains('week-expanded');
+                // const weekElements = workCanvas.querySelectorAll(
+                //     `.week-label[data-week="${weekNumber}"], .day-cell[data-week="${weekNumber}"]`
+                // );
+                // weekElements.forEach(el => {
+                //     el.classList.toggle('week-expanded', !isCurrentlyExpanded);
+                // });
+                // --- END REMOVAL ---
+            }
+        });
+    }
+    // --- End Week Expand/Collapse Listener ---
+
+    // --- Load Initial Data ---
+    loadBlockIntoDOM();
+    loadSettingsIntoDOM(); // Assume a similar function exists or needs creation for settings
+
+    // --- Function to handle creating a new block from modal options ---
+    function handleCreateBlockFromOptions() {
+        const numWeeks = parseInt(newBlockWeeksInput?.value || '8', 10);
+        const blockName = newBlockNameModalInput?.value || 'Untitled Block';
+        const modelType = newBlockModelSelect?.value || 'blank'; // Get selected model type
+        const sessionsPerWeek = parseInt(newBlockSessionsSelect?.value || '3', 10);
+
+        console.log(`Creating new block: ${numWeeks} weeks, ${sessionsPerWeek} sessions/wk, Model: ${modelType}, Name: ${blockName}`);
+
+        // 1. Generate Grid
+        generateCalendarGrid(numWeeks);
+
+        // 2. Determine Target Days based on sessionsPerWeek
+        let sessionDays = [];
+        if (sessionsPerWeek >= 7) sessionDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        else if (sessionsPerWeek >= 6) sessionDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        else if (sessionsPerWeek >= 5) sessionDays = ["Mon", "Tue", "Thu", "Fri", "Sat"];
+        else if (sessionsPerWeek >= 4) sessionDays = ["Mon", "Tue", "Thu", "Fri"];
+        else if (sessionsPerWeek >= 3) sessionDays = ["Mon", "Wed", "Fri"];
+        else if (sessionsPerWeek >= 2) sessionDays = ["Tue", "Thu"];
+        else if (sessionsPerWeek >= 1) sessionDays = ["Wed"];
+
+        const targetDayIds = [];
+        for (let week = 0; week < numWeeks; week++) {
+            sessionDays.forEach(day => {
+                const dayId = PeriodizationModelManager.generateDayId(week, day);
+                if (dayId) targetDayIds.push(dayId);
+            });
+        }
+        console.log("Target Day IDs for model:", targetDayIds);
+
+        // 3. Create and Apply Model Instance (if not 'blank')
+        let instanceId = null;
+        if (modelType !== 'blank') {
+            // TODO: Get baseParams if needed (e.g., from other modal inputs)
+            const baseParams = {}; 
+            // <<< MODIFIED: Pass exerciseLibraryData >>>
+            instanceId = PeriodizationModelManager.createAndApplyModel(modelType, baseParams, targetDayIds, exerciseLibraryData);
+            if (!instanceId) {
+                showToast(`Failed to create periodization model: ${modelType}`, 'error');
+                // Proceed with blank block? Or stop?
+                // For now, just continue without model-driven cards.
+            } else {
+                console.log(`Model instance ${instanceId} created and applied.`);
+                // TODO: Call engine to populate cards based on this instanceId and targetDayIds
+                // populateModelDrivenCards(instanceId, targetDayIds);
+                populateModelDrivenCards(instanceId, targetDayIds); // Call the new function
+            }
+        }
+
+        // 4. Reset Phases (Example Default)
+        const phases = phaseRibbon.querySelectorAll('.phase-bar');
+        if (phases.length === 4) { // Basic check
+            phases[0].style.width = '25%';
+            phases[1].style.width = '40%';
+            phases[2].style.width = '25%';
+            phases[3].style.width = '10%';
+        }
+        updateCalendarPhaseIndicators(phaseRibbon, workCanvas);
+
+        // 5. Clear Settings (Except potentially name)
+        const settingsTab = document.getElementById('settings');
+        if (settingsTab) {
+            settingsTab.querySelectorAll('#prev-planned-rpe, #prev-actual-rpe').forEach(input => input.value = '');
+            const nameInput = settingsTab.querySelector('#block-name');
+            if(nameInput) nameInput.value = blockName;
+        }
+        saveSettingsToLocalStorage(); // Save cleared/updated settings
+
+        // 6. Clear Version Tracking & Autosave Keys
+        currentLoadedVersionTimestamp = null;
+        localStorage.removeItem(SAVE_KEY);
+        // Do NOT remove VERSIONS_KEY or RECENT_BLOCKS_KEY
+
+        // 7. Close Modal & Switch View
+        if (newBlockOptionsModal) newBlockOptionsModal.classList.remove('is-visible');
+        showView('builder');
+        showToast(`Created new ${numWeeks}-week block`, 'info', 3000);
+
+        // Attach listeners to the newly generated grid
+        attachListenersToAllSlots();
+
+        // Trigger analytics update after grid is populated
+        triggerAnalyticsUpdate(workCanvas); // <<< Added call here
+
+        // --- NEW: Update badges for affected days ---
+        console.log("[handleCreateBlockFromOptions] Updating badges for affected days...");
+        targetDayIds.forEach(dayId => {
+            const cell = workCanvas.querySelector(`[data-day-id="${dayId}"]`);
+            if (cell) {
+                updateDayBadge(cell); // Call badge update for each cell
+            } else {
+                console.warn(`[handleCreateBlockFromOptions] Could not find cell for dayId ${dayId} to update badge.`);
+            }
+        });
+        // --- END Badge Update ---
+    }
+
+    // --- Function to populate cards based on a model instance ---
+    function populateModelDrivenCards(instanceId, targetDayIds) {
+        if (!instanceId || !targetDayIds || targetDayIds.length === 0) return;
+
+        const modelInstance = PeriodizationModelManager.getModelInstance(instanceId);
+        const engine = getPeriodizationEngine(); // Assume this gives access to calculation functions
+
+        if (!modelInstance) {
+            console.error(`Cannot populate cards: Model instance ${instanceId} not found.`);
+            showToast('Error finding model data to populate cards.', 'error');
+            return;
+        }
+        if (!engine || typeof engine.calculateExercisesForDay !== 'function') {
+            console.error(`Cannot populate cards: Engine or calculateExercisesForDay function not available.`);
+            showToast('Error accessing calculation engine.', 'error');
+            return;
+        }
+
+        console.log(`Populating cards for model ${instanceId} (${modelInstance.type}) on ${targetDayIds.length} days.`);
+
+        targetDayIds.forEach(dayId => {
+            const match = dayId.match(/wk(\d+)-(\w+)/);
+            if (!match) {
+                console.warn(`Could not parse week/day from dayId: ${dayId}`);
+                return;
+            }
+            const weekNum = parseInt(match[1], 10);
+            const dayName = match[2]; // e.g., "mon"
+
+            const cell = workCanvas.querySelector(`[data-day-id="${dayId}"]`);
+            if (!cell) {
+                console.warn(`Could not find cell for dayId: ${dayId}`);
+                return;
+            }
+
+            // Clear any existing cards (e.g., if replacing placeholders later)
+            // cell.innerHTML = ''; 
+
+            try {
+                // Calculate exercises for this specific day using the engine
+                // We pass the full instance (type, params) and the specific week/day context
+                const exercises = engine.calculateExercisesForDay(modelInstance, weekNum, dayName); 
+
+                if (exercises && exercises.length > 0) {
+                    // Find the main exercise defined in the structure for this day
+                    const structureEntry = modelInstance.params.weeklyStructure?.find(entry => entry.dayOfWeek === dayName);
+                    const mainExerciseName = structureEntry?.mainExercise;
+                    const isMainExerciseWaved = structureEntry?.applyWave === true;
+                    
+                    exercises.forEach(exData => {
+                        // Get badge info ONLY if this is the main waved exercise
+                        let badgeContent = null;
+                        let badgeColorClass = null;
+                        if (exData.exerciseName === mainExerciseName && isMainExerciseWaved) {
+                             badgeContent = getIconForModelType(modelInstance.type, true); 
+                             badgeColorClass = `model-color-${modelInstance.type}`.toLowerCase(); 
+                        }
+
+                        // Create card using the specific exercise name from the engine
+                        // <<< ADD LOGGING >>>
+                        console.log(`[populateModelDrivenCards] Creating card for ${dayId}. Exercise Data:`, exData);
+                        if (!exData.id) {
+                             console.warn(`[populateModelDrivenCards] Missing ID in exData for ${exData.exerciseName || 'unknown exercise'}`);
+                        }
+                        // <<< END LOGGING >>>
+                        const card = createWorkoutCard(exData.exerciseName, exData.detailsString, {
+                            sets: exData.sets,
+                            reps: exData.reps,
+                            loadValue: exData.loadValue,
+                            loadType: exData.loadType,
+                            rest: exData.rest,
+                            modelDriven: true, // Mark card as model-driven
+                            modelInstanceId: instanceId, // Link to the source model
+                            targetDayId: dayId,
+                            exerciseId: exData.id // <<< ADDED exerciseId
+                        });
+
+                        // Update the badge element inside the card ONLY if badgeContent is set
+                        if (badgeContent) { // Keep this check, maybe rename badgeContent to reflects it's just for triggering?
+                            const badgeElement = card.querySelector('.card-model-badge-indicator');
+                            if (badgeElement) {
+                                // badgeElement.textContent = badgeContent; // REMOVE THIS LINE
+                                badgeElement.style.display = 'inline-block'; // Make it visible (as a colored block)
+                                badgeElement.classList.add(badgeColorClass); // Add color class 
+                            }
+                        } // Else, the badge div remains hidden
+
+                        cell.appendChild(card);
+                    });
+                } else {
+                    console.log(`No exercises calculated for ${dayId} by model ${instanceId}.`);
+                }
+            } catch (error) {
+                console.error(`Error calculating exercises for ${dayId}:`, error);
+                showToast(`Error calculating exercises for ${dayId}`, 'error');
+                // Optionally add an error indicator to the cell
+            }
+        });
+
+        triggerAnalyticsUpdate(workCanvas); // Update analytics after adding cards
+        triggerSaveState(); // Save the state with the new cards
+    }
+
+    // --- Simulated Past Load Data (for ACWR/Monotony) --- (Moved to js/state/blockData.js)
+    /*
+    const simulatedPastLoad = Array.from({ length: 28 }, 
+        () => Math.random() < 0.2 ? 0 : Math.round(Math.random() * 500 + 200) // ~20% rest days
+    );
+    console.log("Simulated Past 28 days load:", simulatedPastLoad);
+    */
+
+    // --- Helper function to attach drag/drop listeners to all current slots ---
+    function attachListenersToAllSlots() {
+        const currentSlots = workCanvas.querySelectorAll('.day-cell');
+        console.log(`Attaching drag/drop listeners to ${currentSlots.length} slots.`);
+        currentSlots.forEach(slot => {
+            // Remove existing listeners first to prevent duplicates (optional but safer)
+            // slot.removeEventListener('dragover', handleDragOver); // Assuming handleDragOver is imported/available
+            // slot.removeEventListener('dragleave', handleDragLeave);
+            // slot.removeEventListener('drop', handleDrop);
+            // Attach the listeners from the dragdrop module
+            attachDragDropListeners(slot); // Use the imported function
+        });
+    }
+
+    // --- Helper: Get Current Block Loads from DOM --- (Moved to js/state/blockData.js)
+    /*
+    function getCurrentBlockLoads() {
+        const loads = [];
+        const totalWeeks = workCanvas.querySelectorAll('.week-label').length;
+        for (let week = 1; week <= totalWeeks; week++) {
+            const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+            for (const day of daysOfWeek) {
+                const cell = workCanvas.querySelector(`.day-cell[data-week="${week}"][data-day="${day}"]`);
+                 let dailyLoad = 0;
+                 if (cell) {
+                    cell.querySelectorAll('.workout-card').forEach(card => {
+                        dailyLoad += parseInt(card.dataset.load || '0', 10);
+                    });
+                 }
+                 loads.push(dailyLoad);
+            }
+        }
+        return loads;
+    }
+    */
+
+    // --- View Management --- 
+    function showView(viewName) { // 'hub' or 'builder'
+        console.log(`Switching to ${viewName} view`);
+        if (!hubContainer || !blockBuilderContainer || !backToHubBtn) {
+            console.error("View containers or button not found!");
+             return;
+        }
+
+        if (viewName === 'builder') {
+            hubContainer.style.display = 'none';
+            blockBuilderContainer.style.display = 'flex'; // Assuming flex layout for builder
+            backToHubBtn.style.display = 'inline'; // Show back button
+        } else if (viewName === 'hub') {
+            hubContainer.style.display = 'block'; // Or flex, depending on its CSS
+            blockBuilderContainer.style.display = 'none';
+            backToHubBtn.style.display = 'none'; // Hide back button
+        } else {
+            console.warn(`Unknown view name: ${viewName}`);
+        }
+    }
+
+    // <<<--- ADD EVENT LISTENERS HERE --- >>>
+    // --- Hub Button Event Listeners ---
+    if (createNewBtn && newBlockOptionsModal) {
+        createNewBtn.addEventListener('click', () => {
+            console.log("Create New Block button clicked - showing options modal.");
+            newBlockOptionsModal.classList.add('is-visible');
+                     });
+                } else {
+        if (!createNewBtn) console.error("Create New button not found!");
+        if (!newBlockOptionsModal) console.error("New Block Options Modal not found!");
+    }
+
+    if (createBlockFromOptionsBtn) {
+        createBlockFromOptionsBtn.addEventListener('click', () => {
+             console.log("Create button inside modal clicked.");
+             handleCreateBlockFromOptions(); // Call the function to create the block & switch view
+        });
+        } else {
+         console.error("Create Block From Options button not found!");
+    }
+
+     if (newBlockOptionsCloseBtn && newBlockOptionsModal) {
+        newBlockOptionsCloseBtn.addEventListener('click', () => {
+            console.log("Modal close button clicked.");
+                 newBlockOptionsModal.classList.remove('is-visible');
+             });
+        } else {
+        if (!newBlockOptionsCloseBtn) console.error("Modal Close button not found!");
+    }
+
+    if (browseTemplatesBtn) {
+         browseTemplatesBtn.addEventListener('click', () => {
+            console.log("Browse Templates button clicked - showing toast (placeholder)");
+            // Placeholder: Implement template browsing logic/modal later
+            showToast("Template browser not yet implemented.", "info");
+        });
+            } else {
+        console.error("Browse Templates button not found!");
+    }
+    // <<<--- END ADDED EVENT LISTENERS --- >>>
+
+    // --- Helper Functions Now Defined INSIDE DOMContentLoaded ---
+
+    /**
+     * Creates a workout card DOM element.
+     * Utilizes getStructuredDetails, calculateEstimatedLoad, deleteWorkoutCard, 
+     * handleSelection, openInspector, updateCardVbtIndicator (needs import/def)
+     */
+    function createWorkoutCard(exerciseName, details, options = {}) { 
+        const card = document.createElement('div');
+        card.className = 'workout-card';
+        card.draggable = true;
+        card.id = options.id || `workout-${Date.now()}-${Math.random().toString(16).slice(2)}`; 
+
+        // --- MODIFIED: Use options directly, remove getStructuredDetails call --- 
+        // Set dataset attributes directly from options or use defaults
+        card.dataset.sets = options.sets || '';
+        card.dataset.reps = options.reps || '';
+        card.dataset.loadType = options.loadType || 'rpe'; // Default to RPE or empty? Let's keep RPE default for now
+        card.dataset.loadValue = options.loadValue || '';
+        card.dataset.rest = options.rest || '';
+        card.dataset.exerciseId = options.exerciseId || ''; // <<< ADDED exerciseId
+        // Use provided notes from options, fall back to original details string if notes aren't in options
+        card.dataset.notes = options.notes || details || ''; 
+        // Calculate or use provided load
+        card.dataset.load = options.load || calculateEstimatedLoad(card.dataset);
+        // --- END MODIFICATION --- 
+
+        // --- Periodization Data ---
+        card.dataset.modelDriven = options.modelDriven === true ? 'true' : 'false';
+        if (options.sourceModelId) {
+            card.dataset.sourceModelId = options.sourceModelId;
+        }
+        // TODO: Add visual icon if modelDriven is true (Phase 4)
+
+        // --- Card Content ---
+        card.innerHTML = `
+            <div class="card-face card-front">
+                <!-- Badge Placeholder - content added dynamically -->
+                <div class="card-model-badge-indicator" style="display: none;"></div> 
+                <!-- Name and Details moved out of wrapper -->
+                <div class="exercise-name">${exerciseName}</div>
+                <div class="exercise-details">
+                    <span class="sets-reps">${card.dataset.sets}x${card.dataset.reps}</span>
+                    <span class="load">${card.dataset.loadType} ${card.dataset.loadValue}</span>
+                </div>
+                <!-- card-main-content wrapper removed -->
+                <div class="card-actions">
+                    <button class="card-action-btn edit-btn" title="Edit Exercise">✏️</button>
+                    <button class="card-action-btn delete-btn" title="Delete Exercise">🗑️</button>
+                </div>
+                 <div class="vbt-indicator" style="display: none;" title="Velocity Loss Target"></div>
+            </div>
+            <div class="card-face card-back" style="display: none;">
+                <!-- Back content for editing/details -->
+            </div>
+        `;
+
+        // Add event listeners 
+        // Needs deleteWorkoutCard definition or import
+        card.querySelector('.delete-btn').addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent triggering cell selection
+            // deleteWorkoutCard(card); // Assuming deleteWorkoutCard is available in this scope or imported
+             if (typeof deleteWorkoutCard === 'function') {
+                 deleteWorkoutCard(card);
+             } else {
+                 console.warn('deleteWorkoutCard function not available. Removing card directly.');
+                 card.remove();
+                 triggerSaveState(); 
+                 triggerAnalyticsUpdate(workCanvas);
+             }
+        });
+        
+        // Needs handleSelection, openInspector 
+        card.querySelector('.edit-btn').addEventListener('click', (e) => {
+            e.stopPropagation(); 
+            handleSelection(card, false); // Select only this card
+            openInspector(card);
+        });
+
+        // NEW: Make clicking the card (not edit/delete) open inspector and select
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('.edit-btn') || e.target.closest('.delete-btn')) return;
+            handleCardClick(card, e.shiftKey);
+        });
+
+        // Note: Removed model icon listener and update call
+
+        return card;
+    }
+
+    // Helper to estimate load (simplified)
+    function calculateEstimatedLoad(dataset) {
+        let estimatedLoad = 300; // Base load
+        const sets = parseInt(dataset.sets, 10) || 1;
+        const reps = parseInt(String(dataset.reps).split('-')[0], 10) || 5; // Take first number if range
+        const loadVal = parseFloat(dataset.loadValue) || 0;
+        estimatedLoad += sets * reps * 5;
+        if (dataset.loadType === '%' && loadVal > 0) {
+            estimatedLoad *= (loadVal / 100);
+        } else if (loadVal > 0) {
+            estimatedLoad += loadVal;
+        }
+        return Math.round(estimatedLoad).toString();
+    }
+
+    // --- Load Initial Block State into DOM ---
+    // Uses workCanvas, loadStateDataFromLocalStorage, showView, generateCalendarGrid, 
+    // phaseRibbon, updateCalendarPhaseIndicators, PeriodizationModelManager, 
+    // createWorkoutCard, updateCardVbtIndicator, attachListenersToAllSlots, triggerAnalyticsUpdate
+    function loadBlockIntoDOM() {
+        console.log("Forcing Hub view on initial load.");
+        showView('hub');
+        // --- REMOVE STATE LOADING LOGIC --- 
+        /* 
+        console.log("Attempting to load block state into DOM...")
+        const state = loadStateDataFromLocalStorage(); // Get the raw state data
+
+        // --- MODIFIED CHECK --- 
+        // Check not just if state exists, but if it contains meaningful data
+        const isValidState = state && 
+                           ( (state.slots && Object.keys(state.slots).length > 0) || 
+                             (state.phases && state.phases.length > 0) ||
+                             (state.periodizationModels && Object.keys(state.periodizationModels.modelInstances || {}).length > 0)
+                           );
+
+        if (!isValidState) {
+            console.log("No valid saved state found or error loading. Showing Hub.");
+            showView('hub'); // Show hub if no *valid* state
+            // Populate recent blocks for the hub view even if no active state
+            // This might need adjustment depending on where populateRecentBlocks is called
+            // if (typeof populateRecentBlocks === 'function') populateRecentBlocks(); 
+            return;
+        }
+        // --- END MODIFIED CHECK ---
+
+        console.log("Valid saved state loaded:", state);
+
+        // 1. Clear existing canvas
+        if (workCanvas) workCanvas.innerHTML = '';
+        else { console.error("loadBlockIntoDOM: workCanvas not found!"); return; }
+
+        // Determine number of weeks
+        let maxWeek = 0;
+        if (state.slots) {
+            Object.keys(state.slots).forEach(key => {
+                const match = key.match(/w(\d+)d/);
+                if (match && parseInt(match[1], 10) > maxWeek) {
+                    maxWeek = parseInt(match[1], 10);
+                }
+            });
+        }
+        if (maxWeek === 0) maxWeek = 8;
+        console.log(`Generating grid for ${maxWeek} weeks based on loaded state.`);
+
+        // 2. Generate Grid Structure
+        generateCalendarGrid(maxWeek);
+
+        // 3. Restore Phases
+        if (state.phases && state.phases.length > 0 && phaseRibbon) {
+            const phaseBars = phaseRibbon.querySelectorAll('.phase-bar');
+            if (phaseBars.length === state.phases.length) {
+                state.phases.forEach((phaseData, index) => {
+                    phaseBars[index].style.width = phaseData.width;
+                });
+                updateCalendarPhaseIndicators(phaseRibbon, workCanvas);
+            } else {
+                console.warn("Mismatch between saved phases and default ribbon structure.");
+            }
+        }
+
+        // 4. Load Periodization Model State
+        if (state.periodizationModels) {
+            PeriodizationModelManager.loadState(state.periodizationModels);
+        } else {
+            PeriodizationModelManager.loadState({}); // Clear manager state if none saved
+        }
+
+        // 5. Restore Workout Cards
+        if (state.slots && workCanvas) {
+            Object.entries(state.slots).forEach(([slotKey, cardsData]) => {
+                const match = slotKey.match(/w(\d+)d(\w+)/);
+                if (match) {
+                    const week = match[1];
+                    const day = match[2].charAt(0).toUpperCase() + match[2].slice(1).toLowerCase();
+                    const cell = workCanvas.querySelector(`.day-cell[data-week="${week}"][data-day="${day}"]`);
+                    if (cell) {
+                        cardsData.forEach(cardData => {
+                            const newCard = createWorkoutCard(cardData.name, cardData.notes, { 
+                                id: cardData.id,
+                                sets: cardData.sets,
+                                reps: cardData.reps,
+                                loadType: cardData.loadType,
+                                loadValue: cardData.loadValue,
+                                rest: cardData.rest,
+                                load: cardData.load,
+                                modelDriven: cardData.modelDriven,
+                                sourceModelId: cardData.sourceModelId
+                            });
+                            cell.appendChild(newCard);
+                            // VBT Indicator Update (check if function exists)
+                            if (typeof updateCardVbtIndicator === 'function') {
+                                updateCardVbtIndicator(newCard, newCard.dataset.vbtTarget);
+        } else {
+                                // console.warn("updateCardVbtIndicator not available");
+                            }
+                            // Update icon state after loading card
+                            updateCardIcon(newCard); 
+                        });
+                    } else {
+                        console.warn(`Slot element not found for key ${slotKey} (Week: ${week}, Day: ${day})`);
+                    }
+                } else {
+                     console.warn(`Could not parse slot key: ${slotKey}`);
+                }
+            });
+        }
+
+        // 6. Update Day Cell DOM Attributes from Loaded Model Manager State
+        const loadedMapping = PeriodizationModelManager.dayModelMapping;
+        if (loadedMapping && Object.keys(loadedMapping).length > 0 && workCanvas) {
+            console.log("Updating day cell DOM attributes from loaded model manager state...");
+            Object.entries(loadedMapping).forEach(([dayId, instanceId]) => {
+                const cellElement = workCanvas.querySelector(`[data-day-id="${dayId}"]`);
+                if (cellElement) {
+                    PeriodizationModelManager.updateDayCellDOMAttributes(cellElement, instanceId);
+                    // Call updateDayBadge AFTER attributes are set
+                    updateDayBadge(cellElement); 
+                } else {
+                    console.warn(`Could not find day cell element for ${dayId} during post-load update.`);
+                }
+            });
+        }
+
+        // 7. Re-attach listeners
+        attachListenersToAllSlots(); // Uses attachDragDropListeners
+
+        // 8. Trigger analytics
+        triggerAnalyticsUpdate(workCanvas);
+
+        // 9. Show the builder view
+        showView('builder'); 
+        console.log("Block state loaded and applied to DOM.")
+        */
+        // --- END REMOVED STATE LOADING LOGIC ---
+    }
+
+    // --- Load Settings Into DOM ---
+    // Uses loadSettingsDataFromLocalStorage
+    function loadSettingsIntoDOM() {
+        console.log("Attempting to load settings into DOM...");
+        const settings = loadSettingsDataFromLocalStorage();
+        if (!settings) {
+            console.log("No saved settings found.");
+            return; 
+        }
+        console.log("Saved settings loaded:", settings);
+        
+        // Apply settings (Example: block name)
+        if (blockNameInput && settings.blockName) { // blockNameInput is defined in outer scope
+            blockNameInput.value = settings.blockName;
+        }
+        
+        // Apply other settings...
+        // Example: RPE drift - Need element references
+        const prevPlannedRpeInput = document.getElementById('prev-planned-rpe');
+        const prevActualRpeInput = document.getElementById('prev-actual-rpe');
+        if (prevPlannedRpeInput && settings.prevPlannedRpe) {
+            prevPlannedRpeInput.value = settings.prevPlannedRpe;
+        }
+        if (prevActualRpeInput && settings.prevActualRpe) {
+            prevActualRpeInput.value = settings.prevActualRpe;
+        }
+
+        console.log("Settings applied to DOM.");
+    }
+
+    // --- Periodization Model Visuals (Badges) ---
+
+    /**
+     * Creates or updates the model badge on a day cell.
+     * @param {HTMLElement} dayCellElement - The day cell DOM element.
+     */
+    function updateDayBadge(dayCellElement) {
+        // console.log(`[updateDayBadge] Updating badge for cell:`, dayCellElement?.dataset.dayId);
+        if (!dayCellElement) return;
+        const dayId = dayCellElement.dataset.dayId;
+        if (!dayId) return;
+
+        const instanceId = PeriodizationModelManager.getModelForDay(dayId);
+        // console.log(`[updateDayBadge] Model instanceId for day ${dayId}: ${instanceId}`);
+        
+        if (instanceId) {
+            const model = PeriodizationModelManager.getModelInstance(instanceId);
+            // console.log(`[updateDayBadge] Fetched model instance:`, model);
+            if (!model) {
+                // console.log(`[updateDayBadge] Model instance not found, removing badge.`);
+                removeDayBadgeAndClasses(dayCellElement);
+                return;
+            }
+
+            // Check if any card within the cell is actually model-driven
+            const modelDrivenCard = dayCellElement.querySelector('.workout-card[data-model-driven="true"]');
+            const hasModelDrivenCard = !!modelDrivenCard;
+            // console.log(`[updateDayBadge] Cell has model-driven card: ${hasModelDrivenCard}`, modelDrivenCard);
+            
+            if (hasModelDrivenCard) {
+                let badge = dayCellElement.querySelector('.model-badge');
+                let createdBadge = false;
+                if (!badge) {
+                    badge = document.createElement('div');
+                    badge.className = 'model-badge';
+                    dayCellElement.prepend(badge); 
+                    badge.addEventListener('click', handleModelBadgeClick);
+                    createdBadge = true;
+                }
+                // console.log(`[updateDayBadge] Badge element ${createdBadge ? 'created' : 'found'}:`, badge);
+
+                const modelType = model.type.toLowerCase();
+                const shortType = modelType.substring(0, 3).toUpperCase();
+                const icon = getIconForModelType(modelType);
+                // console.log(`[updateDayBadge] Model type: ${modelType}, Icon: ${icon}, ShortType: ${shortType}`);
+                
+                // Update badge content and attributes
+                badge.className = `model-badge model-type-${modelType}`; 
+                badge.dataset.modelId = instanceId;
+                badge.innerHTML = `<span class="badge-icon">${icon}</span><span class="badge-text">${shortType}</span>`;
+                badge.title = `Model: ${model.type} (${instanceId})\nParams: ${JSON.stringify(model.params)}`;
+                badge.style.display = ''; // Ensure badge is visible
+                
+                // Add classes to the day cell itself for styling
+                dayCellElement.classList.add('has-model');
+                dayCellElement.classList.add(`model-type-${modelType}`);
+ 
+            } else {
+                // console.log(`[updateDayBadge] Model assigned, but no model-driven cards found. Removing badge.`);
+                removeDayBadgeAndClasses(dayCellElement);
+            }
+
+        } else {
+            // console.log(`[updateDayBadge] No model instance assigned to this day. Removing badge.`);
+            removeDayBadgeAndClasses(dayCellElement);
+        }
+    }
+
+    /**
+     * Removes the model badge and related classes from a day cell.
+     * @param {HTMLElement} dayCellElement - The day cell DOM element.
+     */
+    function removeDayBadgeAndClasses(dayCellElement) {
+        const badge = dayCellElement?.querySelector('.model-badge');
+        if (badge) {
+            badge.removeEventListener('click', handleModelBadgeClick);
+            badge.remove();
+        }
+        // Remove classes from the cell itself
+        dayCellElement.classList.remove('has-model');
+        // Remove any model-type-* class
+        const modelTypeClasses = Array.from(dayCellElement.classList).filter(cls => cls.startsWith('model-type-'));
+        dayCellElement.classList.remove(...modelTypeClasses);
+    }
+
+    /**
+     * Click handler for model badges.
+     * @param {Event} event 
+     */
+    function handleModelBadgeClick(event) {
+        event.stopPropagation(); // Prevent day cell click
+        const badge = event.currentTarget;
+        const instanceId = badge.dataset.modelId;
+        const dayCell = badge.closest('.day-cell');
+        const dayId = dayCell?.dataset.dayId;
+
+        if (instanceId && dayId && dayCell) {
+            console.log(`Model badge clicked: Instance ${instanceId}, Day ${dayId}`);
+            handleModelContextSelection(instanceId, dayId, dayCell);
+        } else {
+            console.warn("Could not get modelId, dayId, or dayCell from badge click event.");
+        }
+    }
+
+    /**
+     * Sets the selection context to a specific model on a specific day.
+     * @param {string} instanceId - The ID of the selected model instance.
+     * @param {string} dayId - The ID of the day cell related to the selection.
+     * @param {HTMLElement} dayCellElement - The DOM element of the day cell.
+     */
+    function handleModelContextSelection(instanceId, dayId, dayCellElement) {
+        try {
+            clearSelectionStyles();
+        } catch (error) {
+            console.error('[BlockBuilder] Error in clearSelectionStyles (Model Selection):', error);
+        }
+        handleSelection(dayCellElement, false);
+        syncSelectedContext('model', { modelId: instanceId, dayId });
+        ForgeAssist.updateContext(dayCellElement, selectedContext.elements);
+        dayCellElement.classList.add('model-context-selected');
+        updateInspectorForSelection();
+    }
+
+    /**
+     * Helper function to remove all selection-related visual styles.
+     */
+    function clearSelectionStyles() {
+        document.querySelectorAll('.selected, .model-context-selected').forEach(el => {
+            el.classList.remove('selected', 'model-context-selected');
+        });
+    }
+
+    /**
+     * Helper to get an icon for a model type.
+     * @param {string} modelType 
+     * @returns {string} Emoji icon string
+     */
+    function getIconForModelType(modelType) {
+        switch (modelType.toLowerCase()) {
+            case 'linear': return '📈';
+            case 'wave': return '🌊';
+            case 'triphasic': return '🧱'; // Or maybe ⚡️ ?
+            case 'undulating': return '📊';
+            default: return '⚙️';
+        }
+    }
+
+    // --- Phase Ribbon Selection --- 
+    phaseRibbon.addEventListener('click', (e) => {
+        if (e.target.classList.contains('phase-resize-handle')) {
+            return;
+        }
+        const clickedPhase = e.target.closest('.phase-bar');
+        if (clickedPhase) {
+            try {
+                clearSelectionStyles();
+            } catch (error) {
+                console.error('[BlockBuilder] Error in clearSelectionStyles (Phase Click):', error);
+            }
+            handleSelection(clickedPhase, false);
+            syncSelectedContext('phase');
+            ForgeAssist.updateContext(clickedPhase, selectedContext.elements);
+            updateInspectorForSelection();
+            openInspector(clickedPhase);
+        }
+    });
+
+    // --- Refactored workCanvas Click Listener ---
+    workCanvas.addEventListener('click', (e) => {
+        if (e.target.closest('.model-badge')) {
+            return;
+        }
+        if (e.target.closest('.card-action-btn')) {
+            return;
+        }
+        const clickedCard = e.target.closest('.workout-card');
+        const clickedCell = e.target.closest('.day-cell');
+        if (clickedCard) {
+            handleCardClick(clickedCard, e.shiftKey);
+            return;
+        }
+        if (clickedCell) {
+            try {
+                clearSelectionStyles();
+            } catch (error) {
+                console.error('[BlockBuilder] Error in clearSelectionStyles (Cell Click):', error);
+            }
+            handleSelection(clickedCell, e.shiftKey);
+            syncSelectedContext('day', { dayId: clickedCell.dataset.dayId });
+            ForgeAssist.updateContext(clickedCell, selectedContext.elements);
+            updateInspectorForSelection();
+            openInspector(clickedCell);
+            return;
+        }
+        if (!e.target.closest('.inspector-panel') && !e.target.closest('.phase-bar')) {
+            try {
+                clearSelectionStyles();
+            } catch (error) {
+                console.error('[BlockBuilder] Error in clearSelectionStyles (Background Click):', error);
+            }
+            handleSelection(null, false);
+            syncSelectedContext('none');
+            ForgeAssist.updateContext(null, selectedContext.elements);
+            updateInspectorForSelection();
+            closeInspector();
+        }
+    });
+
+    // --- Inspector Update Logic ---
+
+    // Needs getStructuredDetails, showToast, ForgeAssist // <<< Added ForgeAssist dependency note
+    function renderAssistTabContent() {
+        const assistTabContent = document.getElementById('assist');
+        if (!assistTabContent) return;
+
+        // Get actions directly from ForgeAssist
+        const actions = ForgeAssist.getContextualActions(); 
+
+        if (!actions || actions.length === 0) {
+            assistTabContent.innerHTML = '<p><i>No contextual actions available.</i></p>';
+            return;
+        }
+
+        let contentHtml = '<h4>ForgeAssist™ Actions</h4><ul>';
+        actions.forEach(action => {
+            contentHtml += `<li><button class="assist-action cta-button secondary-cta" 
+                                    data-action-id="${action.id}" 
+                                    ${action.disabled ? 'disabled' : ''}>
+                                ${action.label}
+                           </button></li>`;
+        });
+        contentHtml += '</ul>';
+        assistTabContent.innerHTML = contentHtml;
+
+        // Add specific listeners that call the correct handler
+        assistTabContent.querySelectorAll('.assist-action').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent other inspector clicks
+                const actionId = e.target.dataset.actionId;
+                // Find the original action object
+                const action = actions.find(a => a.id === actionId);
+                
+                if (action && action.handler) {
+                    if (typeof action.handler === 'function') {
+                        console.log(`Executing handler function for action: ${actionId}`);
+                        action.handler(); // Execute the function directly
+                    } else if (typeof action.handler === 'string') {
+                        console.log(`Processing command string for action: ${actionId}`);
+                        ForgeAssist.processCommand(action.handler); // Process as command string
+                    } else {
+                        console.warn(`Unknown handler type for action: ${actionId}`);
+                        showToast(`Cannot execute action '${action.label}'.`, 'warning');
+                    }
+                } else {
+                    console.error(`Handler not found for action: ${actionId}`);
+                    showToast(`Action '${action.label || actionId}' could not be executed.`, 'error');
+                }
+            });
+        });
+    }
+
+    /**
+     * Renders the Recovery tab content based on the current selection context
+     * Using data from the BiomechanicalAnalyzer
+     */
+    function renderRecoveryTabContent() {
+        const recoveryTabContent = document.getElementById('recovery');
+        if (!recoveryTabContent) return;
+
+        // Default content when no selection
+        if (!selectedContext || selectedContext.type === 'none' || selectedContext.elements.size === 0) {
+            recoveryTabContent.innerHTML = '<p><i>Select an exercise to see recovery information.</i></p>';
+            return;
+        }
+
+        // Get biomechanical analyzer from ForgeAssist
+        const biomechanicalAnalyzer = ForgeAssist.getBiomechanicalAnalyzer?.();
+        if (!biomechanicalAnalyzer) {
+            recoveryTabContent.innerHTML = '<p><i>Recovery analysis not available.</i></p>';
+            return;
+        }
+
+        // Get current muscle stress levels
+        const stressLevels = biomechanicalAnalyzer.getCurrentStressLevels();
+        const recoveryLevels = {};
+        
+        // Convert stress to recovery (1 - stress)
+        for (const [muscle, stress] of Object.entries(stressLevels)) {
+            recoveryLevels[muscle] = Math.max(0, Math.min(1, 1 - stress));
+        }
+
+        // Generate content based on selection type
+        if (selectedContext.type === 'exercise') {
+            const cardElement = selectedContext.elements.size === 1 ? 
+                Array.from(selectedContext.elements)[0] : null;
+            
+            if (!cardElement) {
+                recoveryTabContent.innerHTML = '<p><i>No exercise selected.</i></p>';
+                return;
+            }
+
+            // Get exercise ID and find in library
+            const exerciseId = cardElement.dataset.exerciseId;
+            const exerciseName = cardElement.querySelector('.exercise-name')?.textContent || 'Exercise';
+            
+            if (!exerciseId) {
+                recoveryTabContent.innerHTML = '<p><i>Exercise ID not found.</i></p>';
+                return;
+            }
+
+            // Get recovery recommendation
+            const exerciseRecovery = biomechanicalAnalyzer.getExerciseReadiness(exerciseId);
+            const isReady = exerciseRecovery.isReady;
+            const readinessScore = exerciseRecovery.readinessScore;
+            const limitingMuscles = exerciseRecovery.limitingMuscles || [];
+
+            // Build HTML content
+            let html = `
+                <h4>Recovery Analysis: ${exerciseName}</h4>
+                <div class="recovery-status ${isReady ? 'recovered' : 'fatigued'}">
+                    <div class="recovery-indicator"></div>
+                    <div class="recovery-text">
+                        <strong>Status:</strong> ${isReady ? 'Ready for Training' : 'Recovery Recommended'}
+                    </div>
+                </div>
+                <div class="readiness-score">
+                    <strong>Readiness Score:</strong> ${Math.round(readinessScore * 100)}%
+                </div>
+                
+                <hr class="detail-separator">
+                
+                <h4>Muscle Recovery</h4>
+                <div class="muscle-recovery-list">
+            `;
+
+            // Add muscle-specific data
+            const affectedMuscles = biomechanicalAnalyzer.getExerciseTargetedMuscles(exerciseId);
+            
+            if (affectedMuscles && affectedMuscles.length > 0) {
+                affectedMuscles.forEach(muscle => {
+                    const recoveryPercent = Math.round((recoveryLevels[muscle] || 0.9) * 100);
+                    const isLimiting = limitingMuscles.includes(muscle);
+                    
+                    html += `
+                        <div class="muscle-recovery-item ${isLimiting ? 'limiting' : ''}">
+                            <div class="muscle-name">${muscle}</div>
+                            <div class="recovery-bar-container">
+                                <div class="recovery-bar" style="width: ${recoveryPercent}%"></div>
+                            </div>
+                            <div class="recovery-percentage">${recoveryPercent}%</div>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<p><i>No muscle data available for this exercise.</i></p>';
+            }
+
+            html += `
+                </div>
+                
+                <hr class="detail-separator">
+                
+                <h4>Recommendations</h4>
+            `;
+
+            if (!isReady) {
+                // Get alternative exercises
+                const alternatives = ForgeAssist.getRecoveryAwareAlternatives?.(exerciseId, { count: 3 }) || [];
+                
+                if (alternatives.length > 0) {
+                    html += '<div class="recommendations-list">';
+                    alternatives.forEach(alt => {
+                        html += `
+                            <div class="recommendation-item">
+                                <div class="recommendation-content">
+                                    <strong>${alt.name}</strong>
+                                    <div>Recovery: ${alt.recoveryPercentage}%</div>
+                                </div>
+                                <button class="swap-to-btn cta-button micro-cta" data-exercise-id="${alt.id}">Use</button>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                } else {
+                    html += `
+                        <p>Consider reducing the intensity or volume for this exercise.</p>
+                        <button id="reduce-intensity-btn" class="cta-button secondary-cta">Reduce Intensity</button>
+                    `;
+                }
+            } else {
+                html += '<p>This exercise is ready to be performed as scheduled.</p>';
+            }
+
+            // Set the HTML content
+            recoveryTabContent.innerHTML = html;
+
+            // Add event listeners
+            recoveryTabContent.querySelectorAll('.swap-to-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    const newExerciseId = e.target.dataset.exerciseId;
+                    if (newExerciseId) {
+                        // Call ForgeAssist to handle the swap
+                        ForgeAssist.handleSuggestSwap(newExerciseId);
+                    }
+                });
+            });
+
+            const reduceIntensityBtn = document.getElementById('reduce-intensity-btn');
+            if (reduceIntensityBtn) {
+                reduceIntensityBtn.addEventListener('click', () => {
+                    // Call ForgeAssist to reduce intensity
+                    ForgeAssist.handleChangeIntensity(cardElement, -1);
+                });
+            }
+        } else {
+            // Default view for non-exercise selections
+            recoveryTabContent.innerHTML = `
+                <h4>Current Recovery Status</h4>
+                <div class="global-recovery-status">
+                    <p>Select a specific exercise to see detailed recovery recommendations.</p>
+                </div>
+                
+                <hr class="detail-separator">
+                
+                <h4>Muscle Groups</h4>
+                <div class="muscle-recovery-list">
+            `;
+
+            // Show general muscle recovery
+            const majorMuscleGroups = [
+                'Quadriceps', 'Hamstrings', 'Glutes', 
+                'Chest', 'Back', 'Shoulders', 
+                'Biceps', 'Triceps', 'Core'
+            ];
+
+            majorMuscleGroups.forEach(muscle => {
+                const recoveryPercent = Math.round((recoveryLevels[muscle] || 0.9) * 100);
+                const statusClass = recoveryPercent < 50 ? 'fatigued' : 
+                                   recoveryPercent < 80 ? 'recovering' : 'recovered';
+                
+                recoveryTabContent.innerHTML += `
+                    <div class="muscle-recovery-item ${statusClass}">
+                        <div class="muscle-name">${muscle}</div>
+                        <div class="recovery-bar-container">
+                            <div class="recovery-bar" style="width: ${recoveryPercent}%"></div>
+                        </div>
+                        <div class="recovery-percentage">${recoveryPercent}%</div>
+                    </div>
+                `;
+            });
+
+            recoveryTabContent.innerHTML += '</div>';
+        }
+    }
+
+    // Needs activateTab, setTabVisibility 
+    function updateInspectorPhaseDetails(phaseElement) {
+        const detailsTabContent = document.getElementById('details');
+        if (!detailsTabContent || !phaseElement) return;
+
+        const phaseId = phaseElement.id;
+        const phaseName = phaseElement.dataset.phaseName || 'Unnamed Phase';
+        const startWeek = phaseElement.dataset.startWeek;
+        const endWeek = phaseElement.dataset.endWeek;
+        const goal = phaseElement.dataset.goal || 'Not Set';
+        const notes = phaseElement.dataset.notes || '';
+
+        if (inspectorTitle) inspectorTitle.textContent = `Phase: ${phaseName}`;
+
+        detailsTabContent.innerHTML = `
+            <h4>${phaseName}</h4>
+            <p><small>ID: ${phaseId}</small></p>
+            <p><strong>Weeks:</strong> ${startWeek} - ${endWeek}</p>
+            <div class="form-group full-width">
+                <label for="inspector-phase-name">Phase Name</label>
+                <input type="text" id="inspector-phase-name" value="${phaseName}">
+            </div>
+            <div class="form-group full-width">
+                <label for="inspector-phase-goal">Goal</label>
+                <select id="inspector-phase-goal">
+                    <option value="" ${goal === 'Not Set' ? 'selected' : ''}>Not Set</option>
+                    <option value="hypertrophy" ${goal === 'hypertrophy' ? 'selected' : ''}>Hypertrophy</option>
+                    <option value="strength" ${goal === 'strength' ? 'selected' : ''}>Strength</option>
+                    <option value="power" ${goal === 'power' ? 'selected' : ''}>Power</option>
+                    <option value="endurance" ${goal === 'endurance' ? 'selected' : ''}>Endurance</option>
+                    <option value="peaking" ${goal === 'peaking' ? 'selected' : ''}>Peaking</option>
+                    <option value="maintenance" ${goal === 'maintenance' ? 'selected' : ''}>Maintenance</option>
+                     <option value="other" ${goal === 'other' ? 'selected' : ''}>Other</option>
+                 </select>
+            </div>
+            <div class="form-group full-width">
+                 <label for="inspector-phase-notes">Notes</label>
+                <textarea id="inspector-phase-notes" rows="3">${notes}</textarea>
+            </div>
+            <hr class="detail-separator">
+            <button id="save-phase-details" class="cta-button primary-cta">Save Phase</button>
+            <button id="delete-phase" class="cta-button secondary-cta" style="margin-top: 10px; background-color: #555;">Delete Phase</button>
+            <button id="split-phase" class="cta-button secondary-cta" style="margin-top: 10px;">Split Phase Here</button>
+            `;
+
+         // Add event listeners (needs save/delete/split functions)
+         document.getElementById('save-phase-details')?.addEventListener('click', () => {
+             console.log('Save Phase clicked'); // Placeholder
+             // Call actual save function: savePhaseDetails(phaseElement);
+             showToast('Save Phase functionality pending.', 'info');
+         });
+        document.getElementById('delete-phase')?.addEventListener('click', () => {
+             console.log('Delete Phase clicked'); // Placeholder
+             // Call actual delete function: deletePhase(phaseElement);
+             showToast('Delete Phase functionality pending.', 'info');
+         });
+        document.getElementById('split-phase')?.addEventListener('click', () => {
+            console.log('Split Phase clicked'); // Placeholder
+            // Call actual split function: splitPhase(phaseElement);
+             showToast('Split Phase functionality pending.', 'info');
+         });
+    }
+
+    // Needs activateTab, setTabVisibility, deleteSelectedWorkoutCard (needs import/def)
+    function openMultiSelectInspector() {
+        if (!inspectorPanel.classList.contains('is-visible')) {
+            openInspector(); // Open with default view first if closed
+        }
+
+        const detailsTab = document.getElementById('details');
+        if (!detailsTab) return;
+
+        activateTab('details'); 
+
+        const selectionSize = selectedContext.elements.size;
+        if (inspectorTitle) inspectorTitle.textContent = `${selectionSize} Items Selected`;
+
+        detailsTab.innerHTML = `
+            <h4>Multiple Items Selected (${selectionSize})</h4>
+            <p>Apply bulk actions:</p>
+            <button id="delete-selected-items" class="cta-button secondary-cta" style="background-color: #555;">Delete Selected Cards</button>
+            <hr class="detail-separator">
+            <p><em>More bulk actions coming soon (e.g., copy, tag).</em></p>
+        `;
+
+        const deleteBtn = detailsTab.querySelector('#delete-selected-items');
+        if (deleteBtn) {
+            const cardsSelected = Array.from(selectedContext.elements).some(el => el.classList.contains('workout-card'));
+            deleteBtn.disabled = !cardsSelected;
+            if (cardsSelected) {
+                deleteBtn.addEventListener('click', () => {
+                    // Call delete helper, needs reference
+                    if (typeof deleteSelectedWorkoutCard === 'function') {
+                        deleteSelectedWorkoutCard(); // Assumes it uses the selection context
+        } else {
+                        console.warn("deleteSelectedWorkoutCard not available for bulk delete");
+                    }
+        });
+            } else {
+                deleteBtn.textContent = 'Delete Selected (No Cards)';
+            }
+        }
+        setTabVisibility(['details']); 
+    }
+
+    // Needs clearInspectorFocusMessage, getStructuredDetails, updateLoadValueExplanation, 
+    // saveWorkoutCardDetails, deleteSelectedWorkoutCard, renderAssistTabContent, 
+    // updateInspectorPhaseDetails, openMultiSelectInspector, populateInspectorModelView (new)
+    function updateInspectorForSelection() {
+        // Clear any focus message
+        clearInspectorFocusMessage();
+        
+        // Get the details tab content element
+        const detailsTabContent = document.getElementById('details');
+        
+        // Render the ForgeAssist tab content
+        renderAssistTabContent();
+
+        // Render the Recovery tab content
+        renderRecoveryTabContent();
+
+        // Render the Adaptive tab content with the selected element
+        const selectedElement = selectedContext.elements.size === 1 ? 
+            Array.from(selectedContext.elements)[0] : null;
+        populateAdaptiveTab(selectedElement);
+        
+        // No selection, show default view
+        if (selectedContext.type === 'none' || selectedContext.elements.size === 0) {
+            // Only make changes if the inspector is visible
+            if (inspectorPanel.classList.contains('is-visible')) {
+                // Hide model-specific tabs, show standard tabs
+                setTabVisibility(['library', 'details', 'assist', 'recovery', 'adaptive', 'analytics', 'settings']);
+                
+                // Show block settings in title
+                if (inspectorTitle) inspectorTitle.textContent = 'Block Settings';
+                
+                // Show appropriate content
+                activateTab('settings'); 
+            }
+            return;
+        }
+
+        // Ensure inspector is visible if we have a valid single selection type
+        if (!inspectorPanel.classList.contains('is-visible')) {
+            openInspector(selectedElement); // Make sure openInspector is available
+        }
+        
+        // --- Handle Different Selection Types ---
+        switch (selectedContext.type) {
+            case 'exercise':
+                // Add the recovery tab to the visible tabs
+                setTabVisibility(['library', 'details', 'assist', 'recovery', 'adaptive', 'analytics', 'settings']);
+                activateTab('details');
+                const cardElement = selectedElement; // Alias for clarity
+                const structuredDetails = getStructuredDetails(cardElement);
+                const parentCell = cardElement.closest('.day-cell');
+                const week = parentCell?.dataset.week || '?';
+                const day = parentCell?.dataset.day || '?';
+                const cardLoad = parseInt(cardElement.dataset.load || '0', 10);
+
+                // Update title and details content
+                if (inspectorTitle) inspectorTitle.textContent = `Edit: ${structuredDetails.name}`;
+
+                detailsTabContent.innerHTML = `
+                    <p><small>Location: Week ${week}, ${day}</small></p>
+                    <p><small>Est. Load Contribution: ${cardLoad} units</small></p>
+                    <hr class="detail-separator">
+                    <div class="form-group full-width">
+                       <label for="inspector-exercise-name">Exercise Name</label>
+                       <input type="text" id="inspector-exercise-name" value="${structuredDetails.name}">
+                    </div>
+                    <div class="structured-inputs" style="display: flex; flex-wrap: wrap; gap: 0 1rem;">
+                       <div style="display: flex; gap: 1rem; width: 100%; margin-bottom: 1rem;">
+                           <div class="form-group" style="flex: 1;">
+                               <label for="inspector-sets">Sets</label>
+                               <input type="number" id="inspector-sets" value="${structuredDetails.sets}" min="1">
+                           </div>
+                           <div class="form-group" style="flex: 1;">
+                               <label for="inspector-reps">Reps</label>
+                               <input type="text" id="inspector-reps" value="${structuredDetails.reps}" placeholder="e.g., 5 or 8-12">
+                           </div>
+                       </div>
+                       <div class="form-group" style="flex-basis: 50%; flex-grow: 1;">
+                           <label for="inspector-load-type">Load Type</label>
+                           <select id="inspector-load-type">
+                               <option value="rpe" ${structuredDetails.loadType === 'rpe' ? 'selected' : ''}>RPE</option>
+                               <option value="percent" ${structuredDetails.loadType === 'percent' ? 'selected' : ''}>% 1RM</option>
+                               <option value="weight" ${structuredDetails.loadType === 'weight' ? 'selected' : ''}>Weight (kg)</option>
+                               <option value="text" ${structuredDetails.loadType === 'text' ? 'selected' : ''}>Text</option>
+                           </select>
+                       </div>
+                       <div class="form-group" style="flex-basis: calc(50% - 1rem); flex-grow: 1;">
+                           <label for="inspector-load-value">Load Value</label>
+                           <input type="text" id="inspector-load-value" value="${structuredDetails.loadValue}" placeholder="e.g., 8 or 75">
+                           <div id="load-value-explanation" style="font-size: 0.75rem; color: var(--text-color); margin-top: 4px; min-height: 1em;"></div>
+                       </div>
+                       <div class="form-group" style="flex-basis: 100%;">
+                           <label for="inspector-rest">Rest</label>
+                           <input type="text" id="inspector-rest" value="${structuredDetails.rest}" placeholder="e.g., 90s or 2m">
+                       </div>
+                    </div>
+                    <div class="form-group full-width">
+                       <label for="inspector-notes">Notes</label>
+                       <textarea id="inspector-notes" rows="3">${structuredDetails.notes}</textarea>
+                    </div>
+                    <hr class="detail-separator">
+                    <button id="save-card-details" class="cta-button primary-cta">Save Details</button>
+                    <button id="delete-card" class="cta-button secondary-cta" style="margin-top: 10px; background-color: #555;">Delete Card</button>
+               `;
+                // Add listeners
+                document.getElementById('save-card-details')?.addEventListener('click', saveWorkoutCardDetails); 
+                document.getElementById('delete-card')?.addEventListener('click', () => {
+                    if(typeof deleteSelectedWorkoutCard === 'function') deleteSelectedWorkoutCard(cardElement);
+                    else console.warn('deleteSelectedWorkoutCard not available');
+                }); 
+                const loadTypeSelect = document.getElementById('inspector-load-type');
+                if (loadTypeSelect && typeof updateLoadValueExplanation === 'function') {
+                    loadTypeSelect.addEventListener('change', updateLoadValueExplanation);
+                    updateLoadValueExplanation(); 
+                }
+                break;
+
+            case 'day':
+                // Add the recovery tab to the visible tabs
+                setTabVisibility(['library', 'details', 'assist', 'recovery', 'adaptive', 'analytics', 'settings']);
+                activateTab('details');
+                const dayCellElement = selectedElement;
+                const week_day = dayCellElement.dataset.week;
+                const day_day = dayCellElement.dataset.day;
+
+                if (inspectorTitle) inspectorTitle.textContent = `Day Details: Wk ${week_day}, ${day_day}`;
+
+                let totalDayLoad = 0;
+                let cardCount = 0;
+                let exerciseNames = [];
+                dayCellElement.querySelectorAll('.workout-card:not(.session-placeholder-card)').forEach(card => {
+                    const name = card.querySelector('.exercise-name')?.textContent || '';
+                    if(name) exerciseNames.push(name.toLowerCase());
+                    totalDayLoad += parseInt(card.dataset.load || '0', 10);
+                    cardCount++;
+                });
+                let focus = 'Mixed';
+                 if (cardCount > 0) {
+                     if (exerciseNames.every(name => name.includes('squat') || name.includes('deadlift') || name.includes('leg'))) focus = 'Lower Body';
+                     else if (exerciseNames.every(name => name.includes('press') || name.includes('row') || name.includes('pull'))) focus = 'Upper Body';
+                     else if (exerciseNames.every(name => name.includes('run') || name.includes('sprint') || name.includes('jump'))) focus = 'Conditioning/Plyo';
+                 }
+                detailsTabContent.innerHTML = `<h4>Week ${week_day}, ${day_day}</h4>`;
+                if (cardCount > 0) {
+                   detailsTabContent.innerHTML += '<ul>' + exerciseNames.map(name => `<li>${name}</li>`).join('') + '</ul>';
+                }
+                detailsTabContent.innerHTML += `
+                    <hr class="detail-separator">
+                    <p><small>Card Count: ${cardCount}</small></p>
+                    <p><small>Est. Daily Load: ${totalDayLoad} units</small></p>
+                    <p><small>Focus: ${focus}</small></p>
+                    <p><small>Phase: [Needs Phase Info]</small></p> 
+                `;
+                break;
+
+            case 'phase':
+                // Add the recovery tab to the visible tabs
+                setTabVisibility(['library', 'details', 'assist', 'recovery', 'adaptive', 'analytics', 'settings']);
+                activateTab('details');
+                updateInspectorPhaseDetails(selectedElement); 
+                break;
+           
+            case 'model':
+                 // New case for model context selection
+                 console.log("Updating inspector for MODEL context");
+                 // Explicitly clear/hide the standard details tab content
+                 if (detailsTabContent) {
+                    detailsTabContent.innerHTML = ''; 
+                    detailsTabContent.classList.remove('active');
+                 }
+                 // Set visibility for model tabs - USE CORRECT IDs WITH -content
+                 setTabVisibility(['model-status-content', 'model-config-content', 'model-sim-content']);
+                 activateTab('model-status-content'); // Default to status tab - USE CORRECT ID
+                 // Call a new function to populate the model-specific view
+                 populateInspectorModelView(selectedContext.modelId, selectedContext.dayId);
+                 break;
+
+            default: // Includes 'none'
+                 if (inspectorPanel.classList.contains('is-visible')) {
+                    detailsTabContent.innerHTML = '<p>Select an item on the canvas to see details.</p>';
+                    if (inspectorTitle) inspectorTitle.textContent = 'Block Settings';
+                    setTabVisibility(['library', 'details', 'assist', 'analytics', 'settings']);
+                    activateTab('settings'); 
+                }
+                break;
+        }
+
+        // Update ForgeAssist Contextual Actions for all valid selections
+        // <<< REMOVED call from here, moved to top of function >>>
+        // renderAssistTabContent(); 
+    }
+
+    // Save function for workout card details (Local function)
+    // Needs triggerAnalyticsUpdate, triggerSaveState references
+    function saveWorkoutCardDetails() {
+        // Use selectedContext to find the card (should be type 'exercise' with 1 element)
+        if (selectedContext.type !== 'exercise' || selectedContext.elements.size !== 1) {
+             console.warn("Save called without a single exercise card selected.");
+             return;
+         }
+        const cardElement = Array.from(selectedContext.elements)[0];
+        if (!cardElement || !cardElement.classList.contains('workout-card')) return;
+
+        const nameInput = document.getElementById('inspector-exercise-name');
+        const setsInput = document.getElementById('inspector-sets');
+        const repsInput = document.getElementById('inspector-reps');
+        const loadTypeSelect = document.getElementById('inspector-load-type');
+        const loadValueInput = document.getElementById('inspector-load-value');
+        const restInput = document.getElementById('inspector-rest');
+        const notesInput = document.getElementById('inspector-notes');
+
+        // Gather updated data from the form
+        const updatedData = {
+            name: nameInput?.value,
+            sets: setsInput?.value,
+            reps: repsInput?.value,
+            loadType: loadTypeSelect?.value,
+            loadValue: loadValueInput?.value,
+            rest: restInput?.value,
+            notes: notesInput?.value
+        };
+
+        // --- Phase 12: Edit Tracking ---
+        let madeIndependent = false;
+        if (cardElement.dataset.modelDriven === 'true') {
+            console.log("[Edit Tracking] Checking model-driven card:", cardElement.id);
+            // Define which fields trigger detachment
+            const fieldsToCheck = ['name', 'sets', 'reps', 'loadType', 'loadValue'];
+            let changed = false;
+            for (const field of fieldsToCheck) {
+                let currentValue = '';
+                if (field === 'name') {
+                    currentValue = cardElement.querySelector('.exercise-name')?.textContent || '';
+             } else {
+                    currentValue = cardElement.dataset[field] || '';
+                }
+                const newValue = updatedData[field] || ''; // Ensure newValue is defined
+                
+                // Log values being compared
+                // console.log(`[Edit Tracking] Comparing field '${field}': Current='${currentValue}' (${typeof currentValue}), New='${newValue}' (${typeof newValue})`);
+                
+                // Use strict inequality check (!==) after ensuring types are comparable if necessary
+                // For simplicity, start with != but log types, switch to !== if needed.
+                if (newValue != currentValue) { 
+                    console.log(`[Edit Tracking] Change DETECTED in field '${field}': '${currentValue}' -> '${newValue}'`);
+                    changed = true;
+                    break; // Stop checking once a change is found
+                }
+            }
+
+            if (changed) {
+                console.log(`[Edit Tracking] Model-driven card ${cardElement.id} edited. Setting modelDriven=false.`);
+                cardElement.dataset.modelDriven = 'false';
+                madeIndependent = true;
+                updateCardIcon(cardElement); // Hide icon
+                const dayCell = cardElement.closest('.day-cell');
+                if (dayCell) {
+                    updateDayBadge(dayCell); // Update badge (might hide if last model card)
+             }
+         } else {
+                 console.log("[Edit Tracking] No changes detected in key fields.");
+            }
+        }
+        // --- End Phase 12 ---
+
+        // Call the imported, aliased function from inspector.js
+        if (typeof saveDetailsFromInspector === 'function') {
+            saveDetailsFromInspector(cardElement, updatedData);
+            console.log("Called imported saveDetailsFromInspector with:", updatedData);
+             } else {
+            console.error("Imported saveDetailsFromInspector function not found!");
+            showToast("Error saving card details.", "error");
+        }
+    }
+
+    // Placeholder for the function that populates the model inspector view
+    function populateInspectorModelView(modelId, dayId) {
+        console.log(`[populateInspectorModelView] Populating for model ${modelId}, day ${dayId}`);
+        const model = PeriodizationModelManager.getModelInstance(modelId);
+        const dayCell = workCanvas.querySelector(`[data-day-id="${dayId}"]`);
+
+        if (!model || !dayCell) {
+            console.error(`[populateInspectorModelView] Could not find model (${modelId}) or day cell (${dayId}).`);
+            // Optionally reset inspector to a default state or show error
+            if (inspectorTitle) inspectorTitle.textContent = 'Error Loading Model View';
+            document.getElementById('model-status-content').innerHTML = '<p>Error loading model details.</p>';
+            // Hide other model tabs if they exist
+            document.getElementById('model-config-content')?.classList.remove('active');
+            document.getElementById('model-sim-content')?.classList.remove('active');
+            return;
+        }
+
+        // --- Set Inspector Title --- 
+        const week = dayCell.dataset.week || '?';
+        const day = dayCell.dataset.day || '?';
+        if (inspectorTitle) inspectorTitle.textContent = `Model: ${model.type} (Wk ${week}, ${day})`;
+
+        // --- Populate Status Tab --- 
+        const statusTabContent = document.getElementById('model-status-content');
+        if (!statusTabContent) {
+            console.error("[populateInspectorModelView] #model-status-content element not found!");
+            return;
+        }
+
+        // --- Add Try/Catch and Logging ---
+        try {
+            // --- Determine Context Specific Parameters (Example for Triphasic/Wave) ---
+            let contextSpecificParams = [];
+            const weekIndex = parseInt(dayCell.dataset.week, 10) - 1; // Get 0-based week index
+
+            if (model.type === 'triphasic') {
+                const phaseLengths = model.params.phaseLengthWeeks || [2, 2, 2];
+                const eccLength = phaseLengths[0] || 2;
+                const isoLength = phaseLengths[1] || 2;
+                let currentPhaseName = 'concentric';
+                let currentPhaseParams = model.params.concentricFocusParams;
+                if (weekIndex < eccLength) {
+                    currentPhaseName = 'eccentric';
+                    currentPhaseParams = model.params.eccentricFocusParams;
+                } else if (weekIndex < eccLength + isoLength) {
+                    currentPhaseName = 'isometric';
+                    currentPhaseParams = model.params.isometricFocusParams;
+                }
+                contextSpecificParams.push(`<strong>Current Phase:</strong> ${currentPhaseName.charAt(0).toUpperCase() + currentPhaseName.slice(1)}`);
+                contextSpecificParams.push(`<strong>Target (${model.params.loadType || '?'})</strong>: ${currentPhaseParams?.targets?.[0] || 'N/A'}`);
+                contextSpecificParams.push(`<strong>Reps:</strong> ${currentPhaseParams?.reps?.[0] || 'N/A'}`);
+            } else if (model.type === 'wave') {
+                const patternName = model.params.weeklyStructure?.find(e => e.dayOfWeek === day)?.applyWavePattern || Object.keys(model.params.wavePatternDefinitions || {})[0] || 'default';
+                const patternDefinition = model.params.wavePatternDefinitions?.[patternName];
+                if (patternDefinition) {
+                    const patternLength = patternDefinition.patternTargets?.length || 1;
+                    const stepIndexWave = weekIndex % patternLength;
+                    const currentWaveTarget = patternDefinition.patternTargets?.[stepIndexWave] ?? 'N/A';
+                    const currentRepsWave = patternDefinition.repsPerStep?.[stepIndexWave] ?? 'N/A';
+                    contextSpecificParams.push(`<strong>Current Step:</strong> ${stepIndexWave + 1} / ${patternLength}`);
+                    contextSpecificParams.push(`<strong>Target (${model.params.waveLoadType || '?'})</strong>: ${currentWaveTarget}`);
+                    contextSpecificParams.push(`<strong>Reps:</strong> ${currentRepsWave}`);
+                } else {
+                     contextSpecificParams.push(`<i>Wave pattern "${patternName}" not found.</i>`);
+                }
+            } // Add similar logic for Linear or other models if needed
+            
+            // --- Find Model Driven/Independent Cards --- 
+            const modelDrivenCards = [];
+            const independentCards = [];
+            dayCell.querySelectorAll('.workout-card').forEach(card => {
+                if (card.dataset.modelDriven === 'true') {
+                    modelDrivenCards.push(card);
+                } else {
+                    independentCards.push(card);
+                }
+            });
+
+            // --- Refactored HTML Generation for Status Tab ---
+            let statusHTML = `
+                <div class="model-status-section section-header">
+                    <h4>${model.type.charAt(0).toUpperCase() + model.type.slice(1)} Model Status</h4>
+                    <span class="instance-id" title="Instance ID: ${modelId}"><small>ID: ${modelId.split('_')[0]}_...${modelId.slice(-5)}</small></span>
+                </div>
+                
+                <div class="model-status-section section-context">
+                    <h5>Current Context (Wk ${week}, ${day.toUpperCase()})</h5> <!-- MODIFIED: Use 'day' instead of 'dayName' -->
+                    <div class="status-details">
+                         ${contextSpecificParams.map(p => `<div class="status-item"><strong>${p.split(':')[0]}:</strong> ${p.split(':')[1]}</div>`).join('')}
+                    </div>
+                </div>
+                
+                <hr class="detail-separator">
+                
+                <div class="model-status-section section-exercises">
+                    <h5>Exercises on This Day</h5>
+                    
+                    <div class="exercise-list-container">
+                        <h6>Model-Driven (${modelDrivenCards.length}) <span class="status-icon model-driven-icon" title="Controlled by Model">⚙️</span></h6>
+                        ${modelDrivenCards.length > 0 ? `
+                        <ul class="inspector-card-list model-driven-list">
+                            ${modelDrivenCards.map(card => {
+                                const name = card.querySelector('.exercise-name')?.textContent || 'Unknown';
+                                const sets = card.dataset.sets || '?';
+                                const reps = card.dataset.reps || '?';
+                                const loadType = card.dataset.loadType || '';
+                                const loadValue = card.dataset.loadValue || '';
+                                const details = `${sets}x${reps} ${loadType ? (loadType + ' ' + loadValue) : ''}`.trim();
+                                return `<li data-card-id="${card.id}" title="Click to highlight on canvas">
+                                            <span class="exercise-item-name">${name}</span> 
+                                            <small class="exercise-item-details">${details}</small>
+                                        </li>`;
+                            }).join('')}
+                        </ul>
+                        ` : '<p><small>No model-driven exercises found.</small></p>'}
+                    </div>
+
+                    <div class="exercise-list-container">
+                        <h6>Independent (${independentCards.length}) <span class="status-icon independent-icon" title="Manually Edited/Added">✏️</span></h6>
+                         ${independentCards.length > 0 ? `
+                        <ul class="inspector-card-list independent-list">
+                             ${independentCards.map(card => {
+                                const name = card.querySelector('.exercise-name')?.textContent || 'Unknown';
+                                const sets = card.dataset.sets || '?';
+                                const reps = card.dataset.reps || '?';
+                                const loadType = card.dataset.loadType || '';
+                                const loadValue = card.dataset.loadValue || '';
+                                const details = `${sets}x${reps} ${loadType ? (loadType + ' ' + loadValue) : ''}`.trim();
+                                return `<li data-card-id="${card.id}" title="Click to highlight on canvas">
+                                             <span class="exercise-item-name">${name}</span> 
+                                             <small class="exercise-item-details">${details}</small>
+                                         </li>`;
+                            }).join('')}
+                         </ul>
+                         ` : '<p><small>No independently edited exercises on this day.</small></p>'}
+                     </div>
+                </div>
+
+                <hr class="detail-separator">
+
+                <div class="model-status-section section-actions">
+                    <h5>Model Actions for This Day</h5>
+                    <div class="action-buttons-container">
+                        <button class="model-action-btn" data-action="make-all-independent" data-instance-id="${modelId}" data-day-id="${dayId}" title="Make all cards on this day independent (won't update with model changes)">
+                             ✏️ Make All Independent
+                        </button>
+                        <button class="model-action-btn" data-action="revert-to-model" data-instance-id="${modelId}" data-day-id="${dayId}" title="Discard edits and recalculate cards based on the current model state">
+                             🔄 Revert to Model
+                         </button>
+                        <button class="model-action-btn detach-btn" data-action="detach-day" data-instance-id="${modelId}" data-day-id="${dayId}" title="Remove this day from model control completely">
+                             ❌ Detach Day from Model
+                        </button>
+                    </div>
+                </div>
+            `; // <<< REMOVED Stray closing div here
+            // --- END REMOVED --- 
+
+            statusTabContent.innerHTML = statusHTML;
+
+        } catch (error) {
+            console.error("Error populating model status content:", error);
+            statusTabContent.innerHTML = '<p>Error loading model details.</p>';
+        }
+    }
+
+    // --- Helper Function to Add Config Tab Listeners (Phase 7) ---
+    function addConfigTabListeners(configTabContent, instanceId) {
+        const form = configTabContent.querySelector('#model-params-form');
+        const previewConfigBtn = configTabContent.querySelector('#preview-config-changes');
+        const swapTypeSelect = configTabContent.querySelector('#swap-model-type');
+        const previewSwapBtn = configTabContent.querySelector('#preview-model-swap');
+
+        // Listener for parameter form inputs
+        if (form && previewConfigBtn) {
+            form.addEventListener('input', () => {
+                // Basic check: enable button if any value differs from its original value
+                let changed = false;
+                form.querySelectorAll('input, select').forEach(input => {
+                    if (input.value != input.dataset.originalValue) { // Use != for type coercion comparison initially
+                        changed = true;
+                    }
+                });
+                previewConfigBtn.disabled = !changed;
+            });
+        }
+
+        // Listener for swap model type selection
+        if (swapTypeSelect && previewSwapBtn) {
+            swapTypeSelect.addEventListener('change', () => {
+                previewSwapBtn.disabled = !swapTypeSelect.value; // Enable if a type is selected
+            });
+        }
+
+        // Listener for Preview Config Changes button
+        if (previewConfigBtn) {
+            previewConfigBtn.addEventListener('click', () => {
+                const formData = new FormData(form);
+                const newParams = Object.fromEntries(formData.entries());
+                const scope = configTabContent.querySelector('input[name="param-scope"]:checked')?.value || 'day';
+                console.log("Preview Config Changes Clicked", { instanceId, newParams, scope });
+                showToast("Configuration change simulation not yet implemented.", "info");
+                // TODO: Implement Phase 7 - Simulation & Confirmation Logic
+                // 1. Call engine.simulateParameterChange(instanceId, currentDayId, newParams, scope)
+                // 2. Display simulation results (modal or toast)
+                // 3. If confirmed:
+                //    - Call PeriodizationModelManager.updateModelParams(instanceId, newParams, scope)
+                //    - Trigger recalculation/DOM updates for affected days/cards
+                //    - Re-populate inspector
+                //    - triggerAnalyticsUpdate(), triggerSaveState()
+            });
+        }
+
+        // Listener for Preview Model Swap button
+        if (previewSwapBtn) {
+            previewSwapBtn.addEventListener('click', () => {
+                const newModelType = swapTypeSelect.value;
+                const scope = configTabContent.querySelector('input[name="swap-scope"]:checked')?.value || 'day';
+                const currentDayId = selectedContext.dayId; // Get dayId from current selection context
+                
+                console.log("Preview Model Swap Clicked", { instanceId, currentDayId, newModelType, scope });
+                if (!currentDayId) {
+                     console.error("Cannot perform swap: Current dayId context is missing.");
+                     showToast("Error: Missing day context for swap.", "error");
+             return;
+        }
+
+                // 1. Call simulation (placeholder)
+                const engine = getPeriodizationEngine();
+                let simulationResult = { summary: "Swap simulation not implemented.", changes: [] };
+                if (engine && typeof engine.simulateModelSwap === 'function') {
+                    try {
+                         simulationResult = engine.simulateModelSwap(instanceId, currentDayId, newModelType, scope);
+                    } catch (error) {
+                         console.error("Error during model swap simulation:", error);
+                         showToast("Error simulating model swap.", "error");
+                         simulationResult.summary = "Error during simulation.";
+                    }
+        } else {
+                    console.warn("simulateModelSwap function not found on engine.");
+                }
+
+                // 2. Display simulation results and confirm
+                // Ensure variables are interpolated correctly within the template literal
+                const confirmationMessage = `Simulated Impact: ${simulationResult.summary}\n\nProceed with swapping to ${newModelType} model for scope: ${scope}?`;
+                
+                if (confirm(confirmationMessage)) {
+                     console.log("User confirmed model swap. Proceeding with execution...");
+                    // TODO: Implement Execution Logic (Phase 11)
+                    // a. Identify affected dayIds based on scope and currentDayId
+                    // b. Get parameters for the new model (use defaults for now)
+                    // c. Detach old model for scope (PeriodizationModelManager.detachModelFromDay for each affected dayId)
+                    // d. Create new model instance (PeriodizationModelManager.createAndApplyModel)
+                    // e. Generate new cards (populateModelDrivenCards or similar, clearing old cards first)
+                    // f. Update Inspector view
+                    // g. triggerAnalyticsUpdate(), triggerSaveState()
+                    // Ensure template literal interpolation is correct
+                    showToast(`Model swap execution logic not yet implemented for ${newModelType}.`, "info");
+
+                } else {
+                     console.log("User cancelled model swap.");
+                     showToast("Model swap cancelled.", "info");
+                 }
+            });
+        }
+    }
+
+    // --- Action Button Handler for Model Inspector ---
+    function handleModelActionButtonClick(event) {
+        const button = event.currentTarget;
+        const action = button.dataset.action;
+        const instanceId = button.dataset.instanceId;
+        const dayId = button.dataset.dayId;
+
+        console.log(`[Model Action] Clicked: ${action}, Instance: ${instanceId}, Day: ${dayId}`);
+
+        if (!instanceId || !dayId) {
+            console.error("Missing instanceId or dayId for model action button.");
+            showToast("Error performing action: Missing context.", "error");
+             return;
+        }
+
+        // Find the day cell element - ensure template literal is correct
+        const dayCell = workCanvas.querySelector(`[data-day-id="${dayId}"]`);
+        if (!dayCell) {
+            console.error(`Could not find day cell for ${dayId}`); // Ensure template literal is correct
+            showToast("Error performing action: Day cell not found.", "error");
+            return;
+        }
+
+        switch (action) {
+            case 'revert-to-model':
+                if (confirm("Revert all independently edited exercises on this day back to the model's calculated state?")) {
+                    console.log("TODO: Implement Revert to Model logic");
+                    showToast("Revert functionality not yet implemented.", "info");
+                    // 1. Find independent cards in dayCell
+                    // 2. For each, call engine.calculateExercisesForDay(modelInstance, week, day)
+                    // 3. Update card DOM (name, details, dataset)
+                    // 4. Set card.dataset.modelDriven = 'true'
+                    // 5. Call updateCardIcon(card)
+                    // 6. Call updateDayBadge(dayCell)
+                    // 7. Re-populate inspector: populateInspectorModelView(instanceId, dayId)
+                    // 8. triggerSaveState(), triggerAnalyticsUpdate()
+                }
+                break;
+
+            case 'make-all-independent':
+                 if (confirm("Make all exercises on this day independent from the model? They will no longer automatically update.")) {
+                    console.log("Making all cards independent for day", dayId);
+                    let changed = false;
+                    dayCell.querySelectorAll('.workout-card[data-model-driven="true"]').forEach(card => {
+                        card.dataset.modelDriven = 'false';
+                        updateCardIcon(card);
+                        changed = true;
+                    });
+                    if (changed) {
+                        updateDayBadge(dayCell); // Badge might disappear if no model-driven cards remain
+                        populateInspectorModelView(instanceId, dayId); // Refresh the inspector view
+                        triggerSaveState();
+                        showToast("All cards on this day are now independent.", "success");
+                } else {
+                        showToast("No model-driven cards found to make independent.", "info");
+                    }
+                 }
+                break;
+
+            case 'detach-day':
+                if (confirm("Completely detach this day from the periodization model? All exercises will become independent.")) {
+                    // Call the manager function. The event listener will handle UI updates.
+                    const detached = PeriodizationModelManager.detachModelFromDay(dayId);
+                    if (detached) {
+                         console.log(`[Model Action] Successfully initiated detachment for day ${dayId}`); // Ensure template literal is correct
+                         showToast(`Day ${dayId} detached from model ${instanceId}.`, "success"); // Ensure template literal is correct
+                         // UI updates are handled by the event listener
+        } else {
+                         console.error(`[Model Action] Failed to detach day ${dayId}.`); // Ensure template literal is correct
+                         showToast(`Error detaching day ${dayId} from model.`, "error"); // Ensure template literal is correct
+                    }
+                 }
+                break;
+
+            default:
+                console.warn(`Unknown model action: ${action}`); // Ensure template literal is correct
+        }
+    }
+
+    // --- Card List Click Handler for Inspector ---
+    function handleInspectorCardListClick(event) {
+        const listItem = event.currentTarget;
+        const cardId = listItem.dataset.cardId;
+        if (!cardId) return;
+
+        const cardElement = document.getElementById(cardId);
+        if (cardElement) {
+            console.log(`Highlighting card: ${cardId}`); // Ensure template literal is correct
+            // Remove previous highlights
+            document.querySelectorAll('.highlight-card').forEach(el => el.classList.remove('highlight-card'));
+            // Add highlight
+            cardElement.classList.add('highlight-card');
+            // Scroll into view
+            cardElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // Remove highlight after a delay
+            setTimeout(() => { 
+                cardElement.classList.remove('highlight-card'); 
+            }, 1500); // Highlight for 1.5 seconds
+        } else {
+            console.warn(`Card element with ID ${cardId} not found on canvas.`); // Ensure template literal is correct
+        }
+    }
+
+    // Helper function to delete the currently selected workout card (if single selection)
+    // Needs selectedContext, closeInspector, triggerSaveState, triggerAnalyticsUpdate
+    function deleteSelectedWorkoutCard() {
+         if (selectedContext.type === 'exercise' && selectedContext.elements.size === 1) {
+            const cardElement = Array.from(selectedContext.elements)[0];
+            console.log(`Deleting selected card: ${cardElement.id}`); // Ensure template literal is correct
+            cardElement.remove();
+            selectedContext = { type: 'none', elements: new Set(), modelId: null, dayId: null }; // Reset selection
+            closeInspector();
+            triggerSaveState();
+            triggerAnalyticsUpdate(workCanvas); // Pass workCanvas if needed by the function
+            showToast("Workout card deleted.", "success");
+            } else {
+            console.warn("Delete called but no single exercise card selected.");
+            showToast("Select a single card to delete.", "warning");
+        }
+    }
+
+    // Add a temporary CSS rule for highlighting
+    const highlightStyle = document.createElement('style');
+    highlightStyle.innerHTML = `
+    /* Existing highlight */
+    .highlight-card {
+        outline: 3px solid var(--accent-color) !important;
+        box-shadow: 0 0 15px var(--accent-color) !important;
+        transition: outline 0.2s ease-out, box-shadow 0.2s ease-out;
+    }
+    /* Model Inspector Status Styles */
+    .model-status-section { margin-bottom: 1.5rem; }
+    .model-status-section .section-header { 
+        display: flex; justify-content: space-between; align-items: center; 
+        margin-bottom: 0.5rem; border-bottom: 1px solid rgba(204, 209, 217, 0.1); padding-bottom: 0.5rem;
+    }
+    .model-status-section .section-header h4 { margin: 0; color: var(--primary-accent); }
+    .model-status-section .instance-id { font-size: 0.8rem; opacity: 0.7; cursor: help; }
+    .model-status-section h5 { 
+        margin-top: 0; margin-bottom: 0.8rem; color: var(--accent-color); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .model-status-section h6 {
+        margin-top: 0.5rem; margin-bottom: 0.3rem; font-size: 0.85rem; color: var(--cool-steel); display: flex; align-items: center; gap: 0.5em;
+    }
+    .status-details { display: flex; flex-direction: column; gap: 0.5rem; }
+    .status-item { display: flex; justify-content: space-between; font-size: 0.9rem; }
+    .status-item strong { color: var(--text-color); opacity: 0.8; }
+    .status-item .status-value { font-weight: 500; }
+
+    /* Wave Specific */
+    .wave-pattern-info h5 { margin-bottom: 0.5rem; font-size: 0.9rem; }
+    .wave-pattern-info .pattern-name { font-weight: normal; color: var(--primary-accent); background-color: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 3px; }
+    .wave-pattern-display { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; padding: 5px; background-color: rgba(0,0,0,0.1); border-radius: 4px; }
+    .wave-step { 
+        flex: 1; /* Try to make them equal width */
+        min-width: 60px; /* Prevent shrinking too much */
+        padding: 6px 8px; border: 1px solid rgba(204, 209, 217, 0.2); border-radius: 3px; font-size: 0.8em; 
+        text-align: center; cursor: help; transition: all 0.2s ease; background-color: rgba(27, 28, 34, 0.7);
+    }
+    .wave-step .step-number { display: block; font-weight: bold; margin-bottom: 2px; font-size: 0.9em; }
+    .wave-step .step-details { display: block; font-size: 0.85em; opacity: 0.8; }
+    .wave-step.active { 
+        background-color: var(--accent-color); color: var(--bg-color); border-color: var(--accent-color); font-weight: bold;
+        transform: scale(1.05); box-shadow: 0 0 8px rgba(255, 112, 59, 0.3);
+    }
+    .wave-step.active .step-details { opacity: 1; }
+    .wave-summary { display: flex; justify-content: space-around; font-size: 0.85rem; margin-top: 5px; padding-top: 5px; border-top: 1px dashed rgba(204, 209, 217, 0.1); }
+    .wave-summary span { opacity: 0.9; }
+    .wave-summary strong { color: var(--text-color); }
+
+    /* Inspector Card List */
+    .exercise-list-container { margin-bottom: 1rem; }
+    ul.inspector-card-list {
+        list-style: none; padding: 0; margin: 0; max-height: 150px; overflow-y: auto; 
+        background-color: rgba(0,0,0,0.15); border-radius: 4px; padding: 5px;
+    }
+    ul.inspector-card-list li {
+        padding: 0.4rem 0.6rem; margin-bottom: 3px; background-color: rgba(27, 28, 34, 0.7);
+        border-radius: 3px; cursor: pointer; font-size: 0.85rem; transition: background-color 0.2s;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    ul.inspector-card-list li:hover { background-color: rgba(255, 112, 59, 0.15); }
+    .exercise-item-name { font-weight: 500; }
+    .exercise-item-details { opacity: 0.7; font-size: 0.9em; }
+    .status-icon { font-size: 0.9em; opacity: 0.7; cursor: help; }
+
+    /* Action Buttons */
+    .action-buttons-container { display: flex; flex-direction: column; gap: 0.5rem; }
+    .model-action-btn {
+        /*display: block; width: 100%; margin-bottom: 0.5rem; Now handled by flex gap */
+        padding: 0.6rem 0.8rem; background-color: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(204, 209, 217, 0.2); color: var(--text-color);
+        border-radius: 4px; cursor: pointer; font-size: 0.85rem; text-align: left; transition: all 0.2s ease;
+    }
+    .model-action-btn:hover { background-color: rgba(255, 255, 255, 0.15); border-color: rgba(204, 209, 217, 0.4); }
+    .model-action-btn.detach-btn:hover { background-color: rgba(255, 80, 80, 0.2); border-color: rgba(255, 80, 80, 0.5); color: #ffcccc; }
+    `; // <<< Added missing closing backtick
+    document.head.appendChild(highlightStyle);
+
+    /* Add styles for the new config elements */
+    const configStyle = document.createElement('style');
+    configStyle.innerHTML = `
+    .config-section h5 {
+        margin-top: 0;
+        margin-bottom: 0.8rem;
+        color: var(--accent-color);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+    }
+    .form-group.small-margin {
+        margin-bottom: 0.8rem;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 0.3rem;
+        font-weight: 500;
+        color: var(--cool-steel);
+        font-size: 0.85rem;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group select {
+        width: 100%;
+        padding: 0.5rem 0.7rem;
+        border-radius: 4px;
+        border: 1px solid rgba(204, 209, 217, 0.2);
+        background-color: rgba(27, 28, 34, 0.7);
+        color: var(--text-color);
+        font-size: 0.9rem;
+    }
+    .form-group select {
+        appearance: none;
+        background-image: url('data:image/svg+xml;utf8,<svg fill="%23CCD1D9" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        background-size: 1em;
+        padding-right: 2em;
+    }
+    .param-description {
+        font-size: 0.75rem;
+        color: var(--text-color);
+        opacity: 0.7;
+        display: block;
+        margin-top: 3px;
+    }
+    .scope-selection label {
+        display: inline-block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--cool-steel);
+    }
+    .scope-selection .radio-group {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    .scope-selection .radio-group input[type="radio"] {
+        margin-right: 0.3rem;
+    }
+    .scope-selection .radio-group label {
+        margin-bottom: 0; /* Reset margin for radio labels */
+        font-weight: normal;
+        color: var(--text-color);
+        font-size: 0.9rem;
+    }
+    #preview-config-changes:disabled,
+    #preview-model-swap:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+    `; // <<< Added missing closing backtick
+    document.head.appendChild(configStyle);
+
+    // --- Periodization Model Visuals (Day Cell Classes) --- // Renamed section
+
+    /**
+     * Updates the CSS classes on a day cell to reflect its model governance.
+     * @param {HTMLElement} dayCellElement - The day cell DOM element.
+     */
+    function updateDayCellModelClasses(dayCellElement) {
+        if (!dayCellElement) return;
+        const dayId = dayCellElement.dataset.dayId;
+        if (!dayId) return;
+
+        const instanceId = PeriodizationModelManager.getModelForDay(dayId);
+
+        // Always remove existing classes first
+        dayCellElement.classList.remove('has-model');
+        const existingModelTypeClasses = Array.from(dayCellElement.classList).filter(cls => cls.startsWith('model-type-'));
+        dayCellElement.classList.remove(...existingModelTypeClasses);
+
+        if (instanceId) {
+            const model = PeriodizationModelManager.getModelInstance(instanceId);
+            if (model) {
+                // Check if any card within the cell is actually model-driven
+                // This prevents styling the cell if only independent cards remain after edits
+                const modelDrivenCard = dayCellElement.querySelector('.workout-card[data-model-driven="true"]');
+                if (modelDrivenCard) {
+                    const modelType = model.type.toLowerCase();
+                    dayCellElement.classList.add('has-model');
+                    dayCellElement.classList.add(`model-type-${modelType}`); // Ensure template literal interpolation is correct
+                }
+            }
+        }
+    }
+
+    // --- Helper Functions for Dependencies ---
+    function getTotalWeeksHelper() {
+        return workCanvas.querySelectorAll('.week-label').length;
+    }
+    
+    function getBlockStateHelper() {
+        // Placeholder: Needs implementation to gather state from DOM/manager
+        // This is complex and depends on how state is managed elsewhere
+        console.warn('[ForgeAssist Init] getBlockStateHelper not fully implemented.');
+        return {
+            slots: {}, // Populate from workCanvas
+            phases: [], // Populate from phaseRibbon
+            periodizationModels: PeriodizationModelManager.getState() // Get from manager
+        };
+    }
+
+    // --- Initialize ForgeAssist --- 
+    console.log('[BlockBuilder] Initializing ForgeAssist...');
+    try {
+        ForgeAssist.init({
+            workCanvas: workCanvas,
+            showToast: showToast, // Assumes showToast is available in this scope
+            triggerAnalyticsUpdate: triggerAnalyticsUpdate, // Assumes triggerAnalyticsUpdate is available
+            getTotalWeeks: getTotalWeeksHelper,
+            getBlockState: getBlockStateHelper,
+            exerciseLibrary: exerciseLibraryData, // Assumes exerciseLibraryData holds the loaded library
+            // Pass analytics functions
+            acwrFunction: acwr, 
+            monotonyFunction: monotony,
+            // Ensure getCurrentBlockLoads receives workCanvas when called by ForgeAssist/AdaptiveScheduler
+            getCurrentBlockLoads: () => getCurrentBlockLoads(workCanvas), // <<< MODIFIED HERE
+            simulatedPastLoad: window.simulatedPastLoad || [] // Get from global or default
+        });
+         console.log('[BlockBuilder] ForgeAssist Initialized.');
+    } catch (error) {
+        console.error('[BlockBuilder] Error initializing ForgeAssist:', error);
+        showToast('ForgeAssist failed to initialize!', 'error');
+    }
+
+    // --- Inspector Update Logic ---
+
+    // <<< NEW: Listen for event to re-render assist actions >>>
+    const inspectorElement = document.getElementById('inspector');
+    if (inspectorElement) {
+        inspectorElement.addEventListener('forge-assist:render-actions', (e) => {
+            console.log('[BlockBuilder] Received forge-assist:render-actions event. Rendering default actions.');
+            renderAssistTabContent(); // Re-render the default actions
+        });
+    }
+    // <<< END NEW LISTENER >>>
+
+    // <<< MODIFIED: Listen on document.body >>>
+    document.body.addEventListener('forge-assist:render-actions', (e) => {
+        console.log('[BlockBuilder] Received forge-assist:render-actions event on body. Rendering default actions.');
+        renderAssistTabContent(); // Re-render the default actions
+    });
+    // <<< END MODIFICATION >>>
+
+    // <<< NEW: Function to handle workout card clicks (opens modal) >>>
+    function handleCardClick(cardElement, isShiftKey) {
+        // First handle the selection state
+        handleSelection(cardElement, isShiftKey);
+        
+        // Make sure we correctly identify this as an exercise for the inspector context
+        syncSelectedContext('exercise');
+        
+        // Update ForgeAssist context to ensure it has the latest selection
+        const { selectedElement, selectedElements } = getSelectionState();
+        ForgeAssist.updateContext(selectedElement, selectedElements);
+        
+        // Open inspector based on selection count
+        if (selectedContext.elements.size === 1) {
+            // Single selection - show exercise details
+            updateInspectorForSelection(); // Ensure details are updated before opening
+            openInspector(cardElement);
+        } else if (selectedContext.elements.size > 1) {
+            // Multi-selection - show multi-select inspector
+            openMultiSelectInspector();
+        } else {
+            // No selection - close inspector
+            closeInspector();
+        }
+    }
+    // <<< END MODIFIED Handler >>>
+
+    // <<< Add Exercise Detail Modal Close Listener >>>
+    function closeExerciseDetailModal() {
+        if (exerciseDetailModal) {
+            exerciseDetailModal.classList.remove('is-visible');
+            
+            // Stop any playing videos when closing the modal
+            const videoIframe = exerciseDetailModal.querySelector('iframe');
+            if (videoIframe && videoIframe.src) {
+                // Pause YouTube videos by reloading the iframe
+                const currentSrc = videoIframe.src;
+                videoIframe.src = currentSrc;
+            }
+        }
+    }
+    
+    // Make sure we have all necessary elements before attaching listeners
+    if (exerciseDetailCloseBtn) {
+        exerciseDetailCloseBtn.addEventListener('click', closeExerciseDetailModal);
+    }
+    
+    // Also close modal on overlay click
+    if (exerciseDetailModal) {
+        exerciseDetailModal.addEventListener('click', (e) => {
+            if (e.target === exerciseDetailModal) { // Clicked on the overlay itself
+                closeExerciseDetailModal();
+            }
+        });
+        
+        // Add escape key listener for better UX
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && exerciseDetailModal.classList.contains('is-visible')) {
+                closeExerciseDetailModal();
+            }
+        });
+    }
+    // <<< End Close Listener >>>
+
+    // <<< NEW: Listener for library item clicks >>>
+    const inspectorPanelElement = document.getElementById('inspector-panel');
+    if (inspectorPanelElement) {
+        inspectorPanelElement.addEventListener('forge-library:show-detail', (e) => {
+            const exerciseId = e.detail.exerciseId;
+            console.log(`[BlockBuilder] Caught forge-library:show-detail event for ID: ${exerciseId}`);
+            if (exerciseId) {
+                const libraryData = exerciseLibraryData.find(ex => ex.id === exerciseId);
+                if (libraryData) {
+                    // Call the modal population function, passing only library data
+                    populateAndShowExerciseDetailModal(libraryData, null); 
+                } else {
+                    console.warn(`Exercise data not found in library for ID: ${exerciseId}`);
+                    showToast('Could not find exercise details.', 'warning');
+                }
+            } else {
+                console.error('forge-library:show-detail event missing exerciseId.');
+            }
+        });
+    }
+    // <<< END NEW LISTENER >>>
+
+    // <<< NEW: Central function to populate and show the modal >>>
+    function populateAndShowExerciseDetailModal(libraryData, cardData) {
+        if (!libraryData) return;
+
+        const exerciseName = libraryData.name || 'Exercise';
+        if (exerciseDetailTitle) exerciseDetailTitle.textContent = exerciseName;
+
+        // Populate Library Info (Always available)
+        if (detailLibraryCategory) detailLibraryCategory.textContent = libraryData.category || '-';
+        if (detailLibraryDescription) detailLibraryDescription.textContent = libraryData.description || '-';
+        if (detailLibraryMuscles) detailLibraryMuscles.textContent = (libraryData.primaryMuscles || []).join(', ') || '-';
+        if (detailLibraryEquipment) detailLibraryEquipment.textContent = (libraryData.equipmentNeeded || []).join(', ') || '-';
+        if (detailLibraryDifficulty) detailLibraryDifficulty.textContent = libraryData.difficulty || '-';
+        
+        // Enhanced YouTube Video Handling
+        const videoContainer = document.getElementById('exercise-video-container');
+        if (videoContainer) {
+            videoContainer.innerHTML = ''; // Clear previous video
+            
+            if (libraryData.videoUrl && (libraryData.videoUrl.includes('youtube.com') || libraryData.videoUrl.includes('youtu.be'))) {
+                let videoId = null;
+                
+                try {
+                    // Extract YouTube video ID from different URL formats
+                    const url = new URL(libraryData.videoUrl);
+                    
+                    if (url.hostname === 'youtu.be') {
+                        videoId = url.pathname.substring(1); // Get path after hostname
+                    } else if (url.hostname.includes('youtube.com')) {
+                        if (url.searchParams.has('v')) {
+                            videoId = url.searchParams.get('v');
+                        } else if (url.pathname.includes('/embed/')) {
+                            videoId = url.pathname.split('/embed/')[1];
+                        } else if (url.pathname.includes('/v/')) {
+                            videoId = url.pathname.split('/v/')[1];
+                        }
+                    }
+                    
+                    // Handle any additional parameters in the videoId
+                    if (videoId && videoId.includes('&')) {
+                        videoId = videoId.split('&')[0];
+                    }
+                    if (videoId && videoId.includes('?')) {
+                        videoId = videoId.split('?')[0];
+                    }
+                    
+                } catch (e) {
+                    console.error("Error parsing video URL:", libraryData.videoUrl, e);
+                }
+
+                if (videoId) {
+                    // Create enhanced iframe with additional parameters for better UX
+                    const iframe = document.createElement('iframe');
+                    iframe.width = '100%';
+                    iframe.height = '100%';
+                    
+                    // Add params for better playback experience
+                    const params = new URLSearchParams({
+                        rel: '0',              // Don't show related videos from other channels
+                        modestbranding: '1',   // Hide YouTube logo
+                        enablejsapi: '1',      // Enable JavaScript API
+                        origin: window.location.origin, // Security: specify origin
+                        playsinline: '1',      // Play inline on mobile devices
+                        autoplay: '0',         // Don't autoplay
+                        fs: '1',               // Show fullscreen button
+                        color: 'white',        // Use white progress bar
+                        hl: 'en',              // English interface
+                        iv_load_policy: '3'    // Hide annotations
+                    });
+                    
+                    iframe.src = `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+                    iframe.title = `${exerciseName} video demonstration`;
+                    iframe.loading = "lazy"; // Lazy load iframe for performance
+                    iframe.frameBorder = '0';
+                    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen';
+                    iframe.allowFullscreen = true;
+                    
+                    // Add a loading animation while the video loads
+                    const loadingWrapper = document.createElement('div');
+                    loadingWrapper.className = 'video-loading-wrapper';
+                    
+                    // Create the loading animation
+                    const loadingAnimation = document.createElement('div');
+                    loadingAnimation.className = 'video-loading-animation';
+                    loadingAnimation.innerHTML = '<div></div><div></div><div></div>';
+                    
+                    loadingWrapper.appendChild(loadingAnimation);
+                    loadingWrapper.appendChild(iframe);
+                    videoContainer.appendChild(loadingWrapper);
+                    
+                    // Hide loading animation when iframe loads
+                    iframe.onload = () => {
+                        loadingAnimation.style.display = 'none';
+                    };
+                } else {
+                    // Show placeholder with error message
+                    videoContainer.innerHTML = `
+                        <div class="video-placeholder">
+                            <div class="video-icon-placeholder">
+                                <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="1.5"/>
+                                    <path d="M15 9L9 15M9 9L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <p>Could not extract video ID</p>
+                        </div>
+                    `;
+                }
+            } else {
+                // No video available placeholder
+                videoContainer.innerHTML = `
+                    <div class="video-placeholder">
+                        <div class="video-icon-placeholder">
+                            <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="1.5"/>
+                                <path d="M15.5 12L10 16V8L15.5 12Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <p>No video available</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Populate Current Specs & Footer Buttons based on context (card or library)
+        const currentSpecsSection = exerciseDetailModal.querySelector('.current-specs');
+        if (cardData) { // Clicked from a card on the canvas
+            if (currentSpecsSection) currentSpecsSection.style.display = ''; // Show
+            if (detailCurrentSets) detailCurrentSets.textContent = cardData.sets || '-';
+            if (detailCurrentReps) detailCurrentReps.textContent = cardData.reps || '-';
+            if (detailCurrentLoadType) detailCurrentLoadType.textContent = cardData.loadType || '-';
+            if (detailCurrentLoadValue) detailCurrentLoadValue.textContent = cardData.loadValue || '-';
+            if (detailCurrentRest) detailCurrentRest.textContent = cardData.rest || '-';
+            if (detailCurrentNotes) detailCurrentNotes.textContent = cardData.notes || '-';
+
+            // Configure buttons for card context
+            if (detailModalEditBtn) detailModalEditBtn.style.display = ''; // Show
+            if (detailModalSwapBtn) detailModalSwapBtn.textContent = 'Suggest Swap'; // Reset text
+            detailModalEditBtn.onclick = () => {
+                closeExerciseDetailModal();
+                openInspector(document.getElementById(cardData.id)); // Find card by ID
+                activateTab('details');
+            };
+            detailModalSwapBtn.onclick = () => {
+                closeExerciseDetailModal();
+                // Get the specific card element for context
+                const cardElement = document.getElementById(cardData.id);
+                if(cardElement) ForgeAssist.updateContext(cardElement, new Set([cardElement])); // Ensure context is set
+                const action = ForgeAssist.getContextualActions().find(a => a.id === 'suggest_swap' || a.id === 'find-alternative');
+                if (action?.handler) action.handler();
+                else showToast('Could not trigger swap suggestion.', 'warning');
+            };
+
+        } else { // Clicked from the library list
+            if (currentSpecsSection) currentSpecsSection.style.display = 'none'; // Hide
+            // Clear current specs just in case
+            if (detailCurrentSets) detailCurrentSets.textContent = '-';
+            if (detailCurrentReps) detailCurrentReps.textContent = '-';
+            if (detailCurrentLoadType) detailCurrentLoadType.textContent = '-';
+            if (detailCurrentLoadValue) detailCurrentLoadValue.textContent = '-';
+            if (detailCurrentRest) detailCurrentRest.textContent = '-';
+            if (detailCurrentNotes) detailCurrentNotes.textContent = '-';
+
+            // Configure buttons for library context
+            if (detailModalEditBtn) detailModalEditBtn.style.display = 'none'; // Hide
+            if (detailModalSwapBtn) detailModalSwapBtn.textContent = 'Find Alternatives'; // Change text
+            detailModalSwapBtn.onclick = () => {
+                closeExerciseDetailModal();
+                // Trigger swap using only the ID
+                 ForgeAssist.updateContext(null, new Set()); // Clear card context
+                 // Directly call the handler if possible (assuming ForgeAssist is accessible)
+                 // It might be better to have a dedicated ForgeAssist function that accepts only an ID
+                 console.warn('Triggering swap from library context - handler might expect a card element.');
+                 const swapAction = ForgeAssist.getContextualActions().find(a => a.id === 'suggest_swap' || a.id === 'find-alternative');
+                 if(swapAction && typeof swapAction.handler === 'function'){
+                    // The handler currently expects currentContext.selectedElement to be the card
+                    // This won't work perfectly without refactoring handleSuggestSwap.
+                    // For now, we can *try* calling it but it might fail gracefully or require a selected card.
+                    // A better approach: ForgeAssist.suggestSwapById(libraryData.id);
+                    // Let's just show a toast for now.
+                    showToast(`Alternative suggestions for ${libraryData.name} would appear here. (Needs handler update)`, 'info');
+                 } else {
+                    showToast('Could not trigger alternative suggestion.', 'warning');
+                 }
+            };
+        }
+
+        // Show Modal
+        if (exerciseDetailModal) exerciseDetailModal.classList.add('is-visible');
+    }
+    // <<< END Central function >>>
+
+}); // End DOMContentLoaded 

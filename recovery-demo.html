@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biomechanical Recovery Analysis</title>
+    <link rel="stylesheet" href="css/progression.css">
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+        
+        .demo-section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        
+        .demo-title {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        .control-panel {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .exercise-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .button-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .secondary-button {
+            background-color: #95a5a6;
+        }
+        
+        .secondary-button:hover {
+            background-color: #7f8c8d;
+        }
+        
+        .reset-button {
+            background-color: #e74c3c;
+        }
+        
+        .reset-button:hover {
+            background-color: #c0392b;
+        }
+        
+        .display-container {
+            margin-top: 30px;
+        }
+        
+        .exercise-history {
+            margin-top: 30px;
+        }
+        
+        .history-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .history-item {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .history-time {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .history-exercise {
+            font-weight: 500;
+        }
+        
+        .history-muscles {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 5px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .exercise-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Biomechanical Recovery Analysis</h1>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="demo-section">
+            <h2 class="demo-title">Recovery Analyzer Demo</h2>
+            <p>This demo shows how the Biomechanical Analyzer tracks muscle stress and recovery across workouts.</p>
+            
+            <div class="control-panel">
+                <h3>Record Exercise</h3>
+                <form id="exercise-form" class="exercise-form">
+                    <div class="form-group">
+                        <label for="exercise-select">Exercise</label>
+                        <select id="exercise-select" required>
+                            <option value="">Select an exercise</option>
+                            <optgroup label="Push Exercises">
+                                <option value="push_up">Push-up</option>
+                                <option value="bench_press">Bench Press</option>
+                                <option value="overhead_press">Overhead Press</option>
+                                <option value="dips">Dips</option>
+                            </optgroup>
+                            <optgroup label="Pull Exercises">
+                                <option value="pull_up">Pull-up</option>
+                                <option value="row">Row</option>
+                                <option value="lat_pulldown">Lat Pulldown</option>
+                                <option value="bicep_curl">Bicep Curl</option>
+                            </optgroup>
+                            <optgroup label="Leg Exercises">
+                                <option value="squat">Squat</option>
+                                <option value="deadlift">Deadlift</option>
+                                <option value="lunge">Lunge</option>
+                                <option value="leg_press">Leg Press</option>
+                            </optgroup>
+                            <optgroup label="Core Exercises">
+                                <option value="plank">Plank</option>
+                                <option value="sit_up">Sit-up</option>
+                                <option value="russian_twist">Russian Twist</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sets-input">Sets</label>
+                        <input id="sets-input" type="number" min="1" max="10" value="3" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reps-input">Reps</label>
+                        <input id="reps-input" type="number" min="1" max="100" value="10" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="intensity-input">Intensity (RPE)</label>
+                        <input id="intensity-input" type="range" min="1" max="10" value="7" required>
+                        <output for="intensity-input" id="intensity-output">7</output>
+                    </div>
+                </form>
+                
+                <div class="button-row">
+                    <button id="record-button" type="button">Record Exercise</button>
+                    <button id="recommend-button" type="button" class="secondary-button">Get Recommendations</button>
+                    <button id="reset-button" type="button" class="reset-button">Reset History</button>
+                </div>
+            </div>
+            
+            <div id="recovery-display" class="display-container">
+                <!-- MuscleRecoveryDisplay will render here -->
+            </div>
+            
+            <div id="recommendations-container" class="display-container" style="display: none;">
+                <!-- Exercise recommendations will render here -->
+            </div>
+            
+            <div class="exercise-history">
+                <h3 class="history-title">Exercise History</h3>
+                <ul id="history-list" class="history-list">
+                    <!-- Exercise history will be displayed here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <p>BiomechanicalAnalyzer Demo &copy; 2023 SetForge</p>
+        </div>
+    </footer>
+    
+    <script type="module">
+        // Import the BiomechanicalAnalyzer and MuscleRecoveryDisplay
+        import MuscleRecoveryDisplay from './js/components/MuscleRecoveryDisplay.js';
+        
+        // We need to use the non-module version of BiomechanicalAnalyzer since that's how it's defined
+        // Normally, you would import it like: import { BiomechanicalAnalyzer } from './js/biomechanical-analyzer.js';
+        
+        // Exercise mappings to muscle stress
+        const EXERCISE_STRESS_MAPPINGS = {
+            // Push exercises
+            push_up: {
+                'Chest': 0.7,
+                'Triceps': 0.4,
+                'Shoulders': 0.3,
+                'Core': 0.2
+            },
+            bench_press: {
+                'Chest': 0.8,
+                'Triceps': 0.5,
+                'Shoulders': 0.3
+            },
+            overhead_press: {
+                'Shoulders': 0.8,
+                'Triceps': 0.4,
+                'Core': 0.3
+            },
+            dips: {
+                'Chest': 0.6,
+                'Triceps': 0.7,
+                'Shoulders': 0.4
+            },
+            
+            // Pull exercises
+            pull_up: {
+                'Back': 0.7,
+                'Biceps': 0.5,
+                'Forearms': 0.3,
+                'Core': 0.2
+            },
+            row: {
+                'Back': 0.8,
+                'Biceps': 0.4,
+                'Forearms': 0.3
+            },
+            lat_pulldown: {
+                'Back': 0.7,
+                'Biceps': 0.4,
+                'Forearms': 0.2
+            },
+            bicep_curl: {
+                'Biceps': 0.8,
+                'Forearms': 0.4
+            },
+            
+            // Leg exercises
+            squat: {
+                'Quadriceps': 0.8,
+                'Glutes': 0.6,
+                'Core': 0.3,
+                'Hamstrings': 0.3
+            },
+            deadlift: {
+                'Hamstrings': 0.8,
+                'Glutes': 0.7,
+                'Lower_Back': 0.6,
+                'Forearms': 0.3,
+                'Quadriceps': 0.3
+            },
+            lunge: {
+                'Quadriceps': 0.7,
+                'Glutes': 0.6,
+                'Hamstrings': 0.4,
+                'Core': 0.3
+            },
+            leg_press: {
+                'Quadriceps': 0.8,
+                'Glutes': 0.5,
+                'Hamstrings': 0.3
+            },
+            
+            // Core exercises
+            plank: {
+                'Core': 0.8,
+                'Shoulders': 0.3
+            },
+            sit_up: {
+                'Abs': 0.7,
+                'Hip Flexors': 0.4
+            },
+            russian_twist: {
+                'Obliques': 0.8,
+                'Abs': 0.5,
+                'Core': 0.6
+            }
+        };
+        
+        // Initialize the analyzer when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create instance of BiomechanicalAnalyzer
+            const analyzer = new BiomechanicalAnalyzer();
+            
+            // Create muscle recovery display
+            const recoveryDisplay = new MuscleRecoveryDisplay(
+                document.getElementById('recovery-display'),
+                analyzer
+            );
+            
+            // Initialize the display
+            recoveryDisplay.render();
+            
+            // Listen for intensity slider changes
+            document.getElementById('intensity-input').addEventListener('input', function(e) {
+                document.getElementById('intensity-output').textContent = e.target.value;
+            });
+            
+            // Record exercise button
+            document.getElementById('record-button').addEventListener('click', function() {
+                const exerciseSelect = document.getElementById('exercise-select');
+                const exerciseName = exerciseSelect.value;
+                const exerciseLabel = exerciseSelect.options[exerciseSelect.selectedIndex].text;
+                
+                if (!exerciseName) {
+                    alert('Please select an exercise');
+                    return;
+                }
+                
+                const sets = parseInt(document.getElementById('sets-input').value, 10);
+                const reps = parseInt(document.getElementById('reps-input').value, 10);
+                const intensity = parseInt(document.getElementById('intensity-input').value, 10);
+                
+                // Get base stress values for the exercise
+                const baseStressMap = EXERCISE_STRESS_MAPPINGS[exerciseName] || {};
+                
+                // Adjust stress based on volume and intensity
+                const volumeFactor = (sets * reps) / 30; // Normalize to typical 3x10
+                const intensityFactor = intensity / 7; // Normalize to typical RPE 7
+                const adjustmentFactor = volumeFactor * intensityFactor;
+                
+                // Create adjusted stress map
+                const adjustedStressMap = {};
+                for (const muscle in baseStressMap) {
+                    // Apply adjustment but cap at 1.0
+                    adjustedStressMap[muscle] = Math.min(1.0, baseStressMap[muscle] * adjustmentFactor);
+                }
+                
+                // Record the exercise in the analyzer
+                analyzer.recordExercise(exerciseLabel, adjustedStressMap);
+                
+                // Update the display
+                recoveryDisplay.update();
+                
+                // Update history display
+                updateExerciseHistory(analyzer.exerciseHistory);
+                
+                // Clear recommendations if showing
+                document.getElementById('recommendations-container').style.display = 'none';
+            });
+            
+            // Get recommendations button
+            document.getElementById('recommend-button').addEventListener('click', function() {
+                const recommendations = analyzer.getRecommendedExercises();
+                displayRecommendations(recommendations);
+            });
+            
+            // Reset history button
+            document.getElementById('reset-button').addEventListener('click', function() {
+                if (confirm('Are you sure you want to reset your exercise history?')) {
+                    analyzer.clearHistory();
+                    recoveryDisplay.update();
+                    updateExerciseHistory([]);
+                    document.getElementById('recommendations-container').style.display = 'none';
+                }
+            });
+            
+            // Function to update exercise history display
+            function updateExerciseHistory(history) {
+                const historyList = document.getElementById('history-list');
+                historyList.innerHTML = '';
+                
+                if (history.length === 0) {
+                    const emptyItem = document.createElement('li');
+                    emptyItem.textContent = 'No exercises recorded yet.';
+                    emptyItem.style.fontStyle = 'italic';
+                    emptyItem.style.color = '#999';
+                    historyList.appendChild(emptyItem);
+                    return;
+                }
+                
+                // Display recent history first
+                const recentHistory = [...history].reverse();
+                
+                recentHistory.forEach(entry => {
+                    const historyItem = document.createElement('li');
+                    historyItem.className = 'history-item';
+                    
+                    const timeElement = document.createElement('div');
+                    timeElement.className = 'history-time';
+                    const date = new Date(entry.timestamp);
+                    timeElement.textContent = date.toLocaleString();
+                    
+                    const exerciseElement = document.createElement('div');
+                    exerciseElement.className = 'history-exercise';
+                    exerciseElement.textContent = entry.name;
+                    
+                    const musclesElement = document.createElement('div');
+                    musclesElement.className = 'history-muscles';
+                    const muscleTexts = [];
+                    for (const muscle in entry.stressMap) {
+                        const stressPercentage = Math.round(entry.stressMap[muscle] * 100);
+                        muscleTexts.push(`${muscle}: ${stressPercentage}%`);
+                    }
+                    musclesElement.textContent = muscleTexts.join(', ');
+                    
+                    historyItem.appendChild(timeElement);
+                    historyItem.appendChild(exerciseElement);
+                    historyItem.appendChild(musclesElement);
+                    
+                    historyList.appendChild(historyItem);
+                });
+            }
+            
+            // Function to display recommendations
+            function displayRecommendations(recommendations) {
+                const container = document.getElementById('recommendations-container');
+                container.innerHTML = '';
+                container.style.display = 'block';
+                
+                const title = document.createElement('h3');
+                title.textContent = 'Exercise Recommendations';
+                title.style.marginBottom = '15px';
+                container.appendChild(title);
+                
+                const grid = document.createElement('div');
+                grid.style.display = 'grid';
+                grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
+                grid.style.gap = '15px';
+                
+                recommendations.forEach(rec => {
+                    const card = document.createElement('div');
+                    card.className = 'muscle-status';
+                    
+                    // Color based on recommendation type
+                    if (rec.type === 'Optimal Training' || rec.type === 'Ready for Training') {
+                        card.classList.add('recovered');
+                    } else if (rec.type === 'Light Training') {
+                        card.classList.add('recovering');
+                    } else {
+                        card.classList.add('fatigued');
+                    }
+                    
+                    const typeElement = document.createElement('div');
+                    typeElement.style.fontWeight = '500';
+                    typeElement.style.marginBottom = '5px';
+                    typeElement.textContent = rec.type;
+                    
+                    const nameElement = document.createElement('div');
+                    nameElement.style.fontSize = '1.1rem';
+                    nameElement.style.marginBottom = '8px';
+                    nameElement.textContent = rec.name;
+                    
+                    const detailsElement = document.createElement('div');
+                    detailsElement.style.fontSize = '0.9rem';
+                    detailsElement.style.color = '#555';
+                    detailsElement.style.marginBottom = '10px';
+                    detailsElement.textContent = rec.details || '';
+                    
+                    // Recovery bar
+                    const barContainer = document.createElement('div');
+                    barContainer.className = 'recovery-bar-container';
+                    
+                    const recoveryBar = document.createElement('div');
+                    recoveryBar.className = 'recovery-bar';
+                    recoveryBar.style.width = `${rec.recoveryPercentage}%`;
+                    
+                    // Set color based on recovery percentage
+                    if (rec.recoveryPercentage >= 85) {
+                        recoveryBar.style.backgroundColor = '#4CAF50';
+                    } else if (rec.recoveryPercentage >= 60) {
+                        recoveryBar.style.backgroundColor = '#8BC34A';
+                    } else if (rec.recoveryPercentage >= 40) {
+                        recoveryBar.style.backgroundColor = '#FFC107';
+                    } else if (rec.recoveryPercentage >= 20) {
+                        recoveryBar.style.backgroundColor = '#FF9800';
+                    } else {
+                        recoveryBar.style.backgroundColor = '#F44336';
+                    }
+                    
+                    barContainer.appendChild(recoveryBar);
+                    
+                    const percentText = document.createElement('div');
+                    percentText.style.textAlign = 'right';
+                    percentText.style.fontSize = '0.8rem';
+                    percentText.style.marginTop = '5px';
+                    percentText.textContent = `${rec.recoveryPercentage}% recovered`;
+                    
+                    card.appendChild(typeElement);
+                    card.appendChild(nameElement);
+                    card.appendChild(detailsElement);
+                    card.appendChild(barContainer);
+                    card.appendChild(percentText);
+                    
+                    grid.appendChild(card);
+                });
+                
+                container.appendChild(grid);
+            }
+            
+            // Initialize history display
+            updateExerciseHistory(analyzer.exerciseHistory);
+        });
+    </script>
+</body>
+</html> 

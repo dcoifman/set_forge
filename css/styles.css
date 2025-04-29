@@ -1,0 +1,150 @@
+/* Add at the end of the file */
+
+/* Confirmation Modal Styles */
+.forge-modal {
+  display: flex;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.forge-modal-show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.forge-modal-content {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 3px 16px rgba(0, 0, 0, 0.18);
+  width: 95%;
+  max-width: 420px;
+  max-height: 92vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.3s ease forwards;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.forge-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px 12px 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.forge-modal-header h3 {
+  margin: 0;
+  color: #222;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.forge-modal-close {
+  font-size: 28px;
+  font-weight: bold;
+  color: #bbb;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.forge-modal-close:hover {
+  color: #222;
+}
+
+.forge-modal-body {
+  padding: 24px 24px 10px 24px;
+  font-size: 1.05rem;
+  color: #333;
+  background: #fcfcfc;
+}
+
+.forge-modal-body p {
+  margin: 0 0 10px 0;
+  font-size: 1.08em;
+  font-weight: 500;
+}
+
+.forge-modal-details {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background-color: #f3f6fa;
+  border-radius: 5px;
+  font-size: 0.98em;
+  color: #4a4a4a;
+  border-left: 4px solid #4285f4;
+  word-break: break-word;
+}
+
+.forge-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 18px 24px 18px 24px;
+  border-top: 1px solid #eee;
+  gap: 12px;
+  background: #fafbfc;
+}
+
+.forge-btn {
+  padding: 10px 22px;
+  border-radius: 5px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  border: none;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.forge-btn-confirm {
+  background-color: #4285f4;
+  color: white;
+  box-shadow: 0 1px 4px rgba(66,133,244,0.08);
+}
+
+.forge-btn-confirm:hover {
+  background-color: #3367d6;
+}
+
+.forge-btn-cancel {
+  background-color: #f1f3f4;
+  color: #5f6368;
+  border: 1px solid #e0e0e0;
+}
+
+.forge-btn-cancel:hover {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+@media (max-width: 600px) {
+  .forge-modal-content {
+    max-width: 98vw;
+    padding: 0;
+  }
+  .forge-modal-header, .forge-modal-body, .forge-modal-footer {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+} 

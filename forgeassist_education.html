@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForgeAssist Education Center</title>
+    <link rel="stylesheet" href="css/forgeassist_education.css">
+</head>
+<body>
+    <!-- Button to trigger the modal (place this in your main app HTML) -->
+    <!-- <button id="open-fa-education-btn">Learn about ForgeAssist</button> -->
+
+    <!-- The Modal -->
+    <div id="fa-education-modal" class="fa-modal">
+        <!-- Modal content -->
+        <div class="fa-modal-content">
+            <div class="fa-modal-header">
+                <span class="fa-close-btn">&times;</span>
+                <h2>ForgeAssist Education Center</h2>
+            </div>
+            <div class="fa-modal-body">
+                <div class="fa-tabs">
+                    <button class="fa-tab-link active" data-tab="intro">Introduction</button>
+                    <button class="fa-tab-link" data-tab="scenario-acwr">Risk Detection</button>
+                    <button class="fa-tab-link" data-tab="scenario-monotony">Smart Suggestions</button>
+                    <button class="fa-tab-link" data-tab="scenario-contextual">Contextual Actions</button>
+                    <button class="fa-tab-link" data-tab="scenario-commands">Commands</button>
+                </div>
+
+                <div id="intro" class="fa-tab-content active">
+                    <h3>Welcome!</h3>
+                    <p>Meet ForgeAssist, your AI planning partner designed to help you build smarter, safer, and more effective training blocks.</p>
+                    <h4>Key Benefits:</h4>
+                    <ul>
+                        <li><span class="emoji">⏱️</span> Saves time automating tedious adjustments.</li>
+                        <li><span class="emoji">🛡️</span> Helps prevent injury by monitoring workload risks (like ACWR).</li>
+                        <li><span class="emoji">💡</span> Optimizes plans by suggesting load variations and exercise swaps.</li>
+                        <li><span class="emoji">🤖</span> Adapts to changes like missed sessions.</li>
+                    </ul>
+                    <h4>How it Works:</h4>
+                    <p>ForgeAssist monitors your block's analytics in real-time, understands natural language commands, and provides contextual actions right where you need them. Explore the tabs to see it in action!</p>
+                </div>
+
+                <div id="scenario-acwr" class="fa-tab-content">
+                    <h3>Scenario: Proactive Risk Detection (High ACWR)</h3>
+                    <p>ForgeAssist constantly monitors the Acute:Chronic Workload Ratio (ACWR). If it gets too high (typically > 1.5), injury risk increases significantly.</p>
+                    <div class="fa-simulation-area">
+                        <div class="fa-sim-controls">
+                            <button data-action="trigger-acwr">Trigger High ACWR Scenario</button>
+                        </div>
+                        <div class="fa-sim-block">
+                            <!-- Placeholder for potential grid if needed -->
+                             <!-- New Visual Gauge -->
+                             <div class="fa-sim-gauge-container" data-gauge="acwr" data-state="normal">
+                                 <div class="fa-sim-gauge-bg"></div>
+                                 <div class="fa-sim-gauge-mask"></div>
+                                 <div class="fa-sim-gauge-needle"></div>
+                                 <div class="fa-sim-gauge-value">ACWR: 1.20</div>
+                             </div>
+                        </div>
+                        <div class="fa-sim-output">
+                            <p>(ForgeAssist Output Area)</p>
+                        </div>
+                    </div>
+                    <p class="takeaway"><strong>Takeaway:</strong> ForgeAssist automatically flags risks based on established sports science principles and suggests specific fixes.</p>
+                </div>
+
+                <div id="scenario-monotony" class="fa-tab-content">
+                    <h3>Scenario: Smart Suggestions (High Monotony)</h3>
+                    <p>High training monotony (doing similar loads every day) can lead to accommodation and burnout. ForgeAssist suggests ways to vary the stimulus.</p>
+                     <div class="fa-simulation-area">
+                        <div class="fa-sim-controls">
+                            <button data-action="trigger-monotony">Trigger High Monotony Scenario</button>
+                        </div>
+                        <div class="fa-sim-block">
+                             <!-- Example Grid Structure -->
+                             <div class="fa-sim-grid">
+                                 <div class="fa-sim-week-label">Wk 1</div>
+                                 <div class="fa-sim-day-cell" data-week="1" data-day="mon"><div class="fa-sim-day-content">Mon<div class="fa-sim-load high"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="1" data-day="tue"><div class="fa-sim-day-content">Tue<div class="fa-sim-load high"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="1" data-day="wed"><div class="fa-sim-day-content">Wed<div class="fa-sim-load high"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="1" data-day="thu"><div class="fa-sim-day-content">Thu<div class="fa-sim-load high"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="1" data-day="fri"><div class="fa-sim-day-content">Fri<div class="fa-sim-load high"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="1" data-day="sat"><div class="fa-sim-day-content">Sat<div class="fa-sim-load high"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="1" data-day="sun"><div class="fa-sim-day-content">Sun<div class="fa-sim-load low"></div></div></div>
+                             </div>
+                             <!-- New Visual Gauge -->
+                             <div class="fa-sim-gauge-container" data-gauge="monotony" data-state="normal">
+                                 <div class="fa-sim-gauge-bg"></div>
+                                 <div class="fa-sim-gauge-mask"></div>
+                                 <div class="fa-sim-gauge-needle"></div>
+                                 <div class="fa-sim-gauge-value">Monotony: 1.3</div>
+                             </div>
+                        </div>
+                        <div class="fa-sim-output">
+                            <p>(ForgeAssist Output Area)</p>
+                        </div>
+                    </div>
+                     <p class="takeaway"><strong>Takeaway:</strong> ForgeAssist helps optimize load distribution for better adaptation and reduced staleness.</p>
+                </div>
+
+                <div id="scenario-contextual" class="fa-tab-content">
+                    <h3>Scenario: Contextual Actions</h3>
+                    <p>ForgeAssist provides relevant actions based on what you've selected in the block builder.</p>
+                     <div class="fa-simulation-area">
+                        <div class="fa-sim-controls">
+                             <p>Click on the simulated elements below:</p>
+                            <button class="fa-sim-clickable" data-type="workout-card">Workout Card (Simulated)</button>
+                            <button class="fa-sim-clickable" data-type="day-cell">Day Cell (Simulated)</button>
+                        </div>
+                        <div class="fa-sim-inspector">
+                            <h4>Simulated Inspector</h4>
+                             <div class="fa-sim-context-actions">
+                                (Contextual Actions Appear Here)
+                             </div>
+                        </div>
+                        <div class="fa-sim-output">
+                            <p>(ForgeAssist Output Area - e.g., swap suggestions)</p>
+                        </div>
+                        <!-- SVG container for connector line - added dynamically via JS now -->
+                    </div>
+                    <p class="takeaway"><strong>Takeaway:</strong> Get relevant help exactly when and where you need it, saving clicks and guesswork.</p>
+                </div>
+
+                <div id="scenario-commands" class="fa-tab-content">
+                    <h3>Scenario: Natural Language Commands</h3>
+                    <p>Make quick edits using simple, natural language commands.</p>
+                    <div class="fa-simulation-area">
+                        <div class="fa-sim-controls">
+                             <p>Click an example command:</p>
+                            <button class="fa-sim-command" data-command="clear week 3">clear week 3</button>
+                            <button class="fa-sim-command" data-command="shift mon wk 2 forward 1 day">shift mon wk 2 forward 1 day</button>
+                        </div>
+                         <div class="fa-sim-block">
+                             <!-- More detailed example grid -->
+                             <div class="fa-sim-grid">
+                                 <!-- Week 1 -->
+                                 <div class="fa-sim-week-label">Wk 1</div>
+                                 <div class="fa-sim-day-cell" data-week="1" data-day="mon"><div class="fa-sim-day-content">Mon<div class="fa-sim-load high"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="1" data-day="tue"><div class="fa-sim-day-content">Tue<div class="fa-sim-load med"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="1" data-day="wed"><div class="fa-sim-day-content">Wed<div class="fa-sim-load low"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="1" data-day="thu"><div class="fa-sim-day-content">Thu<div class="fa-sim-load med"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="1" data-day="fri"><div class="fa-sim-day-content">Fri<div class="fa-sim-load high"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="1" data-day="sat"><div class="fa-sim-day-content">Sat<div class="fa-sim-load low"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="1" data-day="sun"><div class="fa-sim-day-content">REST</div></div>
+                                  <!-- Week 2 -->
+                                 <div class="fa-sim-week-label">Wk 2</div>
+                                 <div class="fa-sim-day-cell" data-week="2" data-day="mon"><div class="fa-sim-day-content">Mon<div class="fa-sim-load high"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="2" data-day="tue"><div class="fa-sim-day-content">Tue<div class="fa-sim-load med"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="2" data-day="wed"><div class="fa-sim-day-content">Wed<div class="fa-sim-load low"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="2" data-day="thu"><div class="fa-sim-day-content">Thu<div class="fa-sim-load med"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="2" data-day="fri"><div class="fa-sim-day-content">Fri<div class="fa-sim-load high"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="2" data-day="sat"><div class="fa-sim-day-content">Sat<div class="fa-sim-load low"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="2" data-day="sun"><div class="fa-sim-day-content">REST</div></div>
+                                  <!-- Week 3 -->
+                                 <div class="fa-sim-week-label">Wk 3</div>
+                                 <div class="fa-sim-day-cell" data-week="3" data-day="mon"><div class="fa-sim-day-content">Mon<div class="fa-sim-load high"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="3" data-day="tue"><div class="fa-sim-day-content">Tue<div class="fa-sim-load med"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="3" data-day="wed"><div class="fa-sim-day-content">Wed<div class="fa-sim-load low"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="3" data-day="thu"><div class="fa-sim-day-content">Thu<div class="fa-sim-load med"></div></div></div>
+                                 <div class="fa-sim-day-ell" data-week="3" data-day="fri"><div class="fa-sim-day-content">Fri<div class="fa-sim-load high"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="3" data-day="sat"><div class="fa-sim-day-content">Sat<div class="fa-sim-load low"></div></div></div>
+                                 <div class="fa-sim-day-cell" data-week="3" data-day="sun"><div class="fa-sim-day-content">REST</div></div>
+                             </div>
+                        </div>
+                         <div class="fa-sim-output">
+                            <p>(ForgeAssist Output Area - Shows confirmation/result)</p>
+                        </div>
+                    </div>
+                     <p class="takeaway"><strong>Takeaway:</strong> Interact with your plan more fluidly using intuitive text commands.</p>
+                </div>
+
+            </div>
+            <div class="fa-modal-footer">
+                <button class="fa-close-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/forgeassist_education.js"></script>
+</body>
+</html> 
