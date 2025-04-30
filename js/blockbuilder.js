@@ -3188,6 +3188,24 @@ document.addEventListener('DOMContentLoaded', () => {
     function populateAndShowExerciseDetailModal(libraryData, cardData) {
         if (!libraryData) return;
 
+        // Initialize DOM element references that were causing errors
+        const exerciseDetailTitle = document.getElementById('exercise-detail-title');
+        const detailLibraryCategory = document.getElementById('detail-library-category');
+        const detailLibraryDescription = document.getElementById('detail-library-description');
+        const detailLibraryMuscles = document.getElementById('detail-library-muscles');
+        const detailLibraryEquipment = document.getElementById('detail-library-equipment');
+        const detailLibraryDifficulty = document.getElementById('detail-library-difficulty');
+        const detailCurrentSets = document.getElementById('detail-current-sets');
+        const detailCurrentReps = document.getElementById('detail-current-reps');
+        const detailCurrentLoadType = document.getElementById('detail-current-load-type');
+        const detailCurrentLoadValue = document.getElementById('detail-current-load-value');
+        const detailCurrentRest = document.getElementById('detail-current-rest');
+        const detailCurrentNotes = document.getElementById('detail-current-notes');
+        
+        const exerciseDetailModal = document.getElementById('exercise-detail-modal');
+        const detailModalEditBtn = document.getElementById('detail-modal-edit-btn');
+        const detailModalSwapBtn = document.getElementById('detail-modal-swap-btn');
+
         const exerciseName = libraryData.name || 'Exercise';
         if (exerciseDetailTitle) exerciseDetailTitle.textContent = exerciseName;
 
@@ -4246,8 +4264,15 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function syncSelectedContext(contextType, data = {}) {
+    // Define and call internal clearSelectionStyles function to avoid reference error
+    function clearSelectionStylesInternal() {
+        document.querySelectorAll('.selected, .model-context-selected').forEach(el => {
+            el.classList.remove('selected', 'model-context-selected');
+        });
+    }
+    
     // Update the UI based on selection context
-    clearSelectionStyles();
+    clearSelectionStylesInternal();
     
     // Store current selection context
     window.currentContext = {
@@ -4280,5 +4305,7 @@ function syncSelectedContext(contextType, data = {}) {
     }
     
     // Update inspector or other UI elements as needed
-    updateInspectorForSelection();
+    if (typeof updateInspectorForSelection === 'function') {
+        updateInspectorForSelection();
+    }
 }
