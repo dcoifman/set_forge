@@ -4244,3 +4244,41 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('blockbuilderReady event dispatched');
     }, 500); // Short delay to ensure everything is loaded
 });
+
+function syncSelectedContext(contextType, data = {}) {
+    // Update the UI based on selection context
+    clearSelectionStyles();
+    
+    // Store current selection context
+    window.currentContext = {
+        type: contextType,
+        ...data
+    };
+    
+    // Apply visual styles based on context type
+    if (contextType === 'model') {
+        const { modelId, dayId } = data;
+        const dayCells = document.querySelectorAll('.day-cell');
+        dayCells.forEach(cell => {
+            if (cell.dataset.dayId === dayId) {
+                cell.classList.add('model-selected');
+            }
+        });
+    } else if (contextType === 'phase') {
+        // Handle phase selection UI updates
+        const phaseElements = document.querySelectorAll('.phase-container');
+        phaseElements.forEach(phase => {
+            phase.classList.add('phase-context-active');
+        });
+    } else if (contextType === 'day') {
+        // Handle day selection UI updates
+        const { dayId } = data;
+        const dayCell = document.querySelector(`.day-cell[data-day-id="${dayId}"]`);
+        if (dayCell) {
+            dayCell.classList.add('day-selected');
+        }
+    }
+    
+    // Update inspector or other UI elements as needed
+    updateInspectorForSelection();
+}
