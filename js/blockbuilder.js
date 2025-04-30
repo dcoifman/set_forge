@@ -951,17 +951,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (model !== 'blank') {
             // TODO: Get baseParams if needed (e.g., from other modal inputs)
             const baseParams = {}; 
-            // <<< MODIFIED: Pass exerciseLibraryData >>>
-            instanceId = PeriodizationModelManager.createAndApplyModel(model, baseParams, targetDayIds, exerciseLibraryData);
-            if (!instanceId) {
-                showToast(`Failed to create periodization model: ${model}`, 'error');
-                // Proceed with blank block? Or stop?
-                // For now, just continue without model-driven cards.
+            // Use the instance created earlier instead of static method
+            if (window.periodizationManager && typeof window.periodizationManager.createAndApplyModel === 'function') {
+                instanceId = window.periodizationManager.createAndApplyModel(model, baseParams, targetDayIds, exerciseLibraryData);
+                if (!instanceId) {
+                    showToast(`Failed to create periodization model: ${model}`, 'error');
+                    // Proceed with blank block? Or stop?
+                    // For now, just continue without model-driven cards.
+                } else {
+                    console.log(`Model instance ${instanceId} created and applied.`);
+                    // TODO: Call engine to populate cards based on this instanceId and targetDayIds
+                    // populateModelDrivenCards(instanceId, targetDayIds);
+                    populateModelDrivenCards(instanceId, targetDayIds); // Call the new function
+                }
             } else {
-                console.log(`Model instance ${instanceId} created and applied.`);
-                // TODO: Call engine to populate cards based on this instanceId and targetDayIds
-                // populateModelDrivenCards(instanceId, targetDayIds);
-                populateModelDrivenCards(instanceId, targetDayIds); // Call the new function
+                console.error("PeriodizationModelManager instance not available");
+                showToast(`Cannot create model: PeriodizationModelManager unavailable`, 'error');
             }
         }
 

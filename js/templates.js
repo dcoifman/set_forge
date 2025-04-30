@@ -736,13 +736,35 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (templatesCloseBtn && templatesModal) {
             templatesCloseBtn.addEventListener('click', function() {
+                console.log("Templates modal close button clicked");
                 templatesModal.classList.remove('is-visible');
+                
+                // Added direct style changes as backup for visibility
+                templatesModal.style.display = 'none';
+                templatesModal.style.opacity = '0';
+                templatesModal.style.visibility = 'hidden';
+            });
+        } else {
+            console.error("Templates modal close button or modal not found:", {
+                templatesCloseBtn: templatesCloseBtn ? "Found" : "Missing",
+                templatesModal: templatesModal ? "Found" : "Missing"
             });
         }
         
         if (templatePreviewCloseBtn && templatePreviewModal) {
             templatePreviewCloseBtn.addEventListener('click', function() {
+                console.log("Template preview modal close button clicked");
                 templatePreviewModal.classList.remove('is-visible');
+                
+                // Added direct style changes as backup for visibility
+                templatePreviewModal.style.display = 'none';
+                templatePreviewModal.style.opacity = '0';
+                templatePreviewModal.style.visibility = 'hidden';
+            });
+        } else {
+            console.error("Template preview modal close button or modal not found:", {
+                templatePreviewCloseBtn: templatePreviewCloseBtn ? "Found" : "Missing", 
+                templatePreviewModal: templatePreviewModal ? "Found" : "Missing"
             });
         }
         
