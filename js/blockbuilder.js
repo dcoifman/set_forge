@@ -44,6 +44,9 @@ import {
     setViewMode, // Add view mode function
     loadViewMode // Add view mode function
 } from './exercises/library.js'; // <-- Added Library import
+import ForgeAssist from './forgeassist.js';
+
+const hubContainer = document.getElementById('block-builder-hub');
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM fully loaded and parsed for blockbuilder.js");
@@ -92,8 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Hub View Elements ---
     const blockBuilderHub = document.getElementById('block-builder-hub');
-    const hubContainer = document.getElementById('block-builder-hub'); // <<< ADDED Definition
-    const hubCreateNewBtn = document.getElementById('hub-create-new'); 
+    const hubCreateNewBtn = document.getElementById('hub-create-new'); // <<< DEFINE THIS
     const hubBrowseTemplatesBtn = document.getElementById('hub-browse-templates');
     const recentBlocksList = document.getElementById('recent-blocks-list');
     const backToHubBtn = document.getElementById('back-to-hub-btn');
@@ -157,16 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Periodization Model Manager
     if (typeof PeriodizationModelManager !== 'undefined') {
         const periodizationManagerInstance = new PeriodizationModelManager();
-        // Pass ALL required dependencies
-        periodizationManagerInstance.init({
-            workCanvas: workCanvas, 
-            showToast: showToast, 
-            createWorkoutCard: createWorkoutCard, // Assuming defined
-            getBlockStateHelper: getBlockStateHelper, // Assuming defined
-            getTotalWeeksHelper: getTotalWeeksHelper, // Assuming defined
-            getPeriodizationEngine: getPeriodizationEngine, // Assuming defined
-            triggerAnalyticsUpdate: triggerAnalyticsUpdate // Assuming defined
-        });
+        periodizationManagerInstance.init({ showToast, createWorkoutCard, getBlockStateHelper, getTotalWeeksHelper });
         // Make the instance available globally if needed by other parts (optional)
         window.periodizationManager = periodizationManagerInstance; 
     } else {
