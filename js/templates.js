@@ -3,6 +3,8 @@
  * Contains detailed, research-based training program templates.
  */
 
+console.log("Templates module loading...");
+
 // Template data - research-based training programs
 const trainingTemplates = [
     {
@@ -331,17 +333,53 @@ const trainingTemplates = [
 
 // Event Listeners and DOM Manipulation
 document.addEventListener('DOMContentLoaded', function() {
-    // DOM Elements
+    console.log("Templates module DOM content loaded");
+    
+    // DOM Elements - with existence checks
     const hubBrowseTemplatesBtn = document.getElementById('hub-browse-templates');
+    if (!hubBrowseTemplatesBtn) {
+        console.error("Templates module: 'hub-browse-templates' button not found");
+    }
+    
     const templatesModal = document.getElementById('templates-modal');
+    if (!templatesModal) {
+        console.error("Templates module: 'templates-modal' element not found");
+    }
+    
     const templatesCloseBtn = document.getElementById('templates-close-btn');
+    if (!templatesCloseBtn) {
+        console.error("Templates module: 'templates-close-btn' element not found");
+    }
+    
     const templatesList = document.getElementById('templates-list');
+    if (!templatesList) {
+        console.error("Templates module: 'templates-list' element not found");
+    }
+    
     const templatesSearch = document.getElementById('templates-search');
+    if (!templatesSearch) {
+        console.error("Templates module: 'templates-search' element not found");
+    }
+    
     const categoryButtons = document.querySelectorAll('.template-category-btn');
+    if (categoryButtons.length === 0) {
+        console.error("Templates module: No '.template-category-btn' elements found");
+    }
     
     const templatePreviewModal = document.getElementById('template-preview-modal');
+    if (!templatePreviewModal) {
+        console.error("Templates module: 'template-preview-modal' element not found");
+    }
+    
     const templatePreviewCloseBtn = document.getElementById('template-preview-close-btn');
+    if (!templatePreviewCloseBtn) {
+        console.error("Templates module: 'template-preview-close-btn' element not found");
+    }
+    
     const useTemplateBtn = document.getElementById('use-template-btn');
+    if (!useTemplateBtn) {
+        console.error("Templates module: 'use-template-btn' element not found");
+    }
     
     // Current state
     let currentCategory = 'all';
@@ -350,12 +388,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize templates
     function init() {
-        renderTemplates();
-        addEventListeners();
-        if (templatesList) {
-            applyTemplateGridLayout();
-        } else {
-            console.error("Could not find templatesList element to apply grid layout.");
+        console.log("Templates module initializing...");
+        try {
+            renderTemplates();
+            addEventListeners();
+            if (templatesList) {
+                applyTemplateGridLayout();
+                console.log("Templates module initialized successfully");
+            } else {
+                console.error("Failed to initialize templates: templatesList element not found");
+            }
+        } catch (error) {
+            console.error("Error initializing templates module:", error);
         }
     }
 
@@ -604,67 +648,82 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add all event listeners
     function addEventListeners() {
-        // Open templates modal
-        hubBrowseTemplatesBtn.addEventListener('click', function() {
-            templatesModal.classList.add('is-visible');
-        });
+        // Only add event listeners if elements exist
+        if (hubBrowseTemplatesBtn && templatesModal) {
+            hubBrowseTemplatesBtn.addEventListener('click', function() {
+                console.log("Templates: Opening templates modal");
+                templatesModal.classList.add('is-visible');
+            });
+        }
         
-        // Close templates modal
-        templatesCloseBtn.addEventListener('click', function() {
-            templatesModal.classList.remove('is-visible');
-        });
+        if (templatesCloseBtn && templatesModal) {
+            templatesCloseBtn.addEventListener('click', function() {
+                templatesModal.classList.remove('is-visible');
+            });
+        }
         
-        // Close template preview modal
-        templatePreviewCloseBtn.addEventListener('click', function() {
-            templatePreviewModal.classList.remove('is-visible');
-        });
+        if (templatePreviewCloseBtn && templatePreviewModal) {
+            templatePreviewCloseBtn.addEventListener('click', function() {
+                templatePreviewModal.classList.remove('is-visible');
+            });
+        }
         
         // Search input
-        templatesSearch.addEventListener('input', function() {
-            currentSearchTerm = this.value.trim();
-            renderTemplates();
-        });
-        
-        // Category filtering
-        categoryButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                categoryButtons.forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                currentCategory = this.getAttribute('data-category');
+        if (templatesSearch) {
+            templatesSearch.addEventListener('input', function() {
+                currentSearchTerm = this.value.trim();
                 renderTemplates();
             });
-        });
+        }
+        
+        // Category filtering
+        if (categoryButtons) {
+            categoryButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    categoryButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentCategory = this.getAttribute('data-category');
+                    renderTemplates();
+                });
+            });
+        }
         
         // Template actions delegation (preview and use buttons)
-        templatesList.addEventListener('click', function(e) {
-            const previewBtn = e.target.closest('.template-preview-btn');
-            const useBtn = e.target.closest('.template-use-btn');
-            
-            if (previewBtn) {
-                const templateId = previewBtn.getAttribute('data-id');
-                showTemplatePreview(templateId);
-            } else if (useBtn) {
-                const templateId = useBtn.getAttribute('data-id');
-                useTemplate(templateId);
-            }
-        });
+        if (templatesList) {
+            templatesList.addEventListener('click', function(e) {
+                const previewBtn = e.target.closest('.template-preview-btn');
+                const useBtn = e.target.closest('.template-use-btn');
+                
+                if (previewBtn) {
+                    const templateId = previewBtn.getAttribute('data-id');
+                    showTemplatePreview(templateId);
+                } else if (useBtn) {
+                    const templateId = useBtn.getAttribute('data-id');
+                    useTemplate(templateId);
+                }
+            });
+        }
         
         // Use template button in preview modal
-        useTemplateBtn.addEventListener('click', function() {
-            if (currentTemplateId) {
+        if (useTemplateBtn && currentTemplateId) {
+            useTemplateBtn.addEventListener('click', function() {
                 useTemplate(currentTemplateId);
-            }
-        });
+            });
+        }
         
-        // Close modals when clicking outside
-        window.addEventListener('click', function(e) {
-            if (e.target === templatesModal) {
-                templatesModal.classList.remove('is-visible');
-            }
-            if (e.target === templatePreviewModal) {
-                templatePreviewModal.classList.remove('is-visible');
-            }
-        });
+        // Add window events for closing modals
+        if (templatesModal || templatePreviewModal) {
+            window.addEventListener('click', function(e) {
+                if (templatesModal && e.target === templatesModal) {
+                    templatesModal.classList.remove('is-visible');
+                }
+                if (templatePreviewModal && e.target === templatePreviewModal) {
+                    templatePreviewModal.classList.remove('is-visible');
+                }
+            });
+        }
+        
+        console.log("Templates module: Event listeners attached");
     }
     
     // Make the templates list display as a grid
@@ -679,6 +738,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize on load
     init();
+
+    console.log("Templates module setup complete");
 });
 
 // Helper function to get category-specific icon

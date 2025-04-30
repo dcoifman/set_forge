@@ -4002,3 +4002,81 @@ document.addEventListener('DOMContentLoaded', () => {
     window.dispatchEvent(new CustomEvent('blockbuilderReady'));
 
 }); // End DOMContentLoaded 
+
+// Expose required functions for template integration
+window.blockBuilder = {
+    loadTemplateBlock: function(template) {
+        console.log("Loading template block:", template.title);
+        
+        // Switch to builder view
+        document.body.classList.add('show-builder');
+        document.body.classList.remove('show-hub');
+        document.getElementById('back-to-hub-btn').style.display = 'inline-block';
+        
+        // Set the block name from template
+        const blockNameInput = document.getElementById('block-name');
+        if (blockNameInput) {
+            blockNameInput.value = template.title;
+        }
+        
+        // Configure phases based on template
+        if (template.phases && template.phases.length > 0) {
+            // Clear existing phases
+            const phaseRibbon = document.getElementById('phase-ribbon');
+            phaseRibbon.innerHTML = '';
+            
+            // Add phases from template
+            let totalWidth = 100;
+            template.phases.forEach((phase, index) => {
+                const isLast = index === template.phases.length - 1;
+                const phaseWidth = phase.duration / template.weeks * 100;
+                
+                const phaseBar = document.createElement('div');
+                phaseBar.className = `phase-bar phase-${phase.color}`;
+                phaseBar.style.width = `${phaseWidth}%`;
+                phaseBar.setAttribute('data-phase', phase.color);
+                
+                const phaseLabel = document.createElement('span');
+                phaseLabel.className = 'phase-bar-label';
+                phaseLabel.textContent = phase.name;
+                phaseBar.appendChild(phaseLabel);
+                
+                if (!isLast) {
+                    const resizeHandle = document.createElement('div');
+                    resizeHandle.className = 'phase-resize-handle';
+                    phaseBar.appendChild(resizeHandle);
+                }
+                
+                phaseRibbon.appendChild(phaseBar);
+            });
+            
+            // Reinitialize phase resizing
+            if (typeof initializePhaseResizing === 'function') {
+                initializePhaseResizing();
+            }
+        }
+        
+        // Generate blocks or call any other initialization needed
+        // For now we'll just generate calendar with template weeks
+        generateCalendarGrid(template.weeks || 8);
+        
+        // Load the template data - to be implemented based on your data structure
+        // This could populate workouts from template.schedule
+        
+        // Fire any custom events needed
+        const loadedEvent = new CustomEvent('templateLoaded', { detail: template });
+        window.dispatchEvent(loadedEvent);
+        
+        return true;
+    },
+    // Add other exposed functions as needed
+};
+
+// Dispatch blockbuilderReady event when initialization is complete
+document.addEventListener('DOMContentLoaded', function() {
+    // After all initialization is complete
+    setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('blockbuilderReady'));
+        console.log('blockbuilderReady event dispatched');
+    }, 500); // Short delay to ensure everything is loaded
+});
