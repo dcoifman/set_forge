@@ -3820,4 +3820,41 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Event Listeners --- //
+    if (hubCreateNewBtn) {
+        hubCreateNewBtn.addEventListener('click', () => {
+            console.log("Create New button clicked");
+            const modal = document.getElementById('new-block-options-modal');
+            if (modal) {
+                modal.classList.add('is-visible');
+            }
+            // Previously, this might have directly shown the builder view
+            // showView('builder'); 
+            // generateCalendarGrid(8); // Default 8 weeks
+        });
+    }
+
+    if (hubBrowseTemplatesBtn) {
+        hubBrowseTemplatesBtn.addEventListener('click', () => {
+            console.log("Browse Templates button clicked (hub)");
+            // showToast("Template browser not yet implemented.", "info"); // <<< REMOVE THIS LINE
+            const templatesModal = document.getElementById('templates-modal');
+            if (templatesModal) {
+                templatesModal.classList.add('is-visible');
+            } else {
+                console.error("Templates modal not found!");
+            }
+        });
+    }
+
+    // Listener for the button *within* the new block modal
+    if (createBlockFromOptionsBtn) {
+        createBlockFromOptionsBtn.addEventListener('click', () => {
+             console.log("Create button inside modal clicked.");
+             handleCreateBlockFromOptions(); // Call the function to create the block & switch view
+        });
+        } else {
+         console.error("Create Block From Options button not found!");
+    }
+
 }); // End DOMContentLoaded 
