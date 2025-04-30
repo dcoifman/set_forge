@@ -513,7 +513,7 @@
     <!-- Templates Modal -->
     <div id="templates-modal" class="modal-overlay">
         <div class="modal-content templates-content">
-            <button id="templates-close-btn" class="modal-close-btn">&times;</button>
+            <button id="templates-close-btn" class="modal-close-btn" onclick="document.getElementById('templates-modal').classList.remove('is-visible'); document.getElementById('templates-list').innerHTML = '';">&times;</button>
             <h2>Training Program Templates</h2>
             <p>Browse research-based training programs and apply them to your block.</p>
             

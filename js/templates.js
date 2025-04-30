@@ -801,18 +801,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (templatesCloseBtn && templatesModal) {
-            templatesCloseBtn.addEventListener('click', function() {
-                console.log("Templates close button clicked");
-                templatesModal.classList.remove('is-visible');
-                // Clear the templates list when modal is closed to prevent rendering outside the modal
-                if (templatesList) {
-                    templatesList.innerHTML = '';
+            console.log('Templates: Adding close button event listener');
+            templatesCloseBtn.addEventListener('click', () => {
+                console.log('Templates: Close button clicked');
+                const templatesModal = document.getElementById('templates-modal');
+                if (templatesModal) {
+                    templatesModal.classList.remove('is-visible');
+                    // Clear the templates list when modal is closed
+                    if (templatesList) {
+                        templatesList.innerHTML = '';
+                        console.log('Templates: Cleared templates list on modal close');
+                    }
                 }
-            });
-        } else {
-            console.error("Templates modal close button or modal not found:", {
-                templatesCloseBtn: templatesCloseBtn ? "Found" : "Missing",
-                templatesModal: templatesModal ? "Found" : "Missing"
             });
         }
         
@@ -879,17 +879,37 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Add window events for closing modals
-        if (templatesModal || templatePreviewModal) {
-            window.addEventListener('click', function(e) {
-                if (templatesModal && e.target === templatesModal) {
+        // Close modal when clicking outside of content
+        const templatesModal = document.getElementById('templates-modal');
+        if (templatesModal) {
+            templatesModal.addEventListener('click', (e) => {
+                // Only close if clicking directly on the modal overlay (not its children)
+                if (e.target === templatesModal) {
                     templatesModal.classList.remove('is-visible');
-                }
-                if (templatePreviewModal && e.target === templatePreviewModal) {
-                    templatePreviewModal.classList.remove('is-visible');
+                    // Clear the templates list when modal is closed
+                    if (templatesList) {
+                        templatesList.innerHTML = '';
+                        console.log('Templates: Cleared templates list on modal background click');
+                    }
                 }
             });
         }
+        
+        // Add keyboard escape handler to close modals
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                console.log('Templates: Escape key pressed');
+                const templatesModal = document.getElementById('templates-modal');
+                if (templatesModal && templatesModal.classList.contains('is-visible')) {
+                    templatesModal.classList.remove('is-visible');
+                    // Clear the templates list when modal is closed
+                    if (templatesList) {
+                        templatesList.innerHTML = '';
+                        console.log('Templates: Cleared templates list on escape key');
+                    }
+                }
+            }
+        });
         
         console.log("Templates module: Event listeners attached");
     }
