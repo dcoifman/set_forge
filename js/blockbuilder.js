@@ -3935,8 +3935,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Event Listeners --- //
-    if (hubCreateNewBtn) {
-        hubCreateNewBtn.addEventListener('click', () => {
+    if (createNewBtn) { // <-- Corrected variable name
+        createNewBtn.addEventListener('click', () => { // <-- Corrected variable name
             console.log("Create New button clicked");
             const modal = document.getElementById('new-block-options-modal');
             if (modal) {
@@ -3948,8 +3948,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (hubBrowseTemplatesBtn) {
-        hubBrowseTemplatesBtn.addEventListener('click', () => {
+    if (browseTemplatesBtn) { // <-- Corrected variable name
+        browseTemplatesBtn.addEventListener('click', () => { // <-- Corrected variable name
             console.log("Browse Templates button clicked (hub)");
             // showToast("Template browser not yet implemented.", "info"); // <<< REMOVE THIS LINE
             const templatesModal = document.getElementById('templates-modal');
