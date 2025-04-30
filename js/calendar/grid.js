@@ -10,6 +10,19 @@ import RecoveryCalendarIndicator from '../components/RecoveryCalendarIndicator.j
 // DOM References (Inject or query as needed)
 const workCanvas = document.getElementById('work-canvas');
 
+// Helper function to generate day IDs in the same format as PeriodizationModelManager
+function generateDayId(weekIndex, dayAbbreviation) {
+    if (typeof weekIndex !== 'number' || weekIndex < 0 || typeof dayAbbreviation !== 'string') {
+        console.warn(`Invalid input for generateDayId: week ${weekIndex}, day ${dayAbbreviation}`);
+        return null;
+    }
+    // Use 3-letter abbreviation for day and ensure lowercase
+    const day = typeof dayAbbreviation === 'string' 
+        ? dayAbbreviation.substring(0, 3).toLowerCase() 
+        : dayAbbreviation;
+    return `wk${weekIndex + 1}-${day}`;
+}
+
 export function generateCalendarGrid(numWeeks) {
     if (!workCanvas) return;
     workCanvas.innerHTML = ''; // Clear existing grid
@@ -46,8 +59,8 @@ export function generateCalendarGrid(numWeeks) {
             cell.className = 'day-cell session-slot';
             cell.dataset.week = week;
             cell.dataset.day = day;
-            // Add the standardized day ID
-            const dayId = PeriodizationModelManager.generateDayId(week - 1, day);
+            // Add the standardized day ID using our helper function
+            const dayId = generateDayId(week - 1, day);
             if (dayId) {
                  cell.dataset.dayId = dayId; // e.g., "wk1-mon"
             } else {
