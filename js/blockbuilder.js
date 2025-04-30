@@ -901,7 +901,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const weeksInput = document.getElementById('new-block-weeks');
         const sessionsSelect = document.getElementById('new-block-sessions');
         const modelSelect = document.getElementById('new-block-model');
-        const nameInput = document.getElementById('new-block-name');
+        const nameInput = document.getElementById('new-block-name-modal');
         
         const weeks = parseInt(weeksInput.value) || 8;
         const sessions = parseInt(sessionsSelect.value) || 3;

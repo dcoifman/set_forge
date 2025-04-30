@@ -28,9 +28,20 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
+    padding: 20px 0;
+    width: 100%;
+    min-height: 200px;
 }
 
 .template-card {
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    width: 100%;
+    min-height: 350px;
     animation: cardAppear 0.5s ease-out forwards;
     opacity: 0;
     transform: translateY(20px);
@@ -61,6 +72,9 @@
 .template-header {
     position: relative;
     overflow: hidden;
+    padding: 20px;
+    color: #ffffff;
+    min-height: 100px;
 }
 
 .template-header::before {
@@ -637,10 +651,10 @@
 
 /* Template Body */
 .template-body {
-    padding: 15px 20px 15px !important;
-    flex-grow: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
 }
 
 .template-description {
@@ -799,4 +813,9 @@
     padding: 3rem !important;
     color: rgba(255, 255, 255, 0.6) !important;
     font-size: 1.1rem !important;
+}
+
+/* Force visibility on cards */
+.template-card * {
+    visibility: visible !important;
 } 

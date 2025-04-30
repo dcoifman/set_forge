@@ -414,6 +414,22 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderTemplates() {
         console.log("renderTemplates: Starting to render templates");
         try {
+            // Check if templatesList exists and is accessible
+            if (!templatesList) {
+                console.error("renderTemplates: templatesList element is null or undefined");
+                return;
+            }
+            
+            console.log("renderTemplates: templatesList element properties:", {
+                id: templatesList.id,
+                className: templatesList.className,
+                offsetWidth: templatesList.offsetWidth,
+                offsetHeight: templatesList.offsetHeight,
+                style: templatesList.getAttribute('style'),
+                display: window.getComputedStyle(templatesList).display,
+                visibility: window.getComputedStyle(templatesList).visibility
+            });
+            
             // Clear existing templates
             console.log("renderTemplates: Clearing templatesList innerHTML");
             templatesList.innerHTML = '';
@@ -441,18 +457,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log(`renderTemplates: Creating card ${index+1}/${filteredTemplates.length} - ${template.title}`);
                 const card = createTemplateCard(template);
                 templatesList.appendChild(card);
+                console.log(`renderTemplates: Card ${index+1} appended, container now has ${templatesList.children.length} children`);
             });
             
             console.log("renderTemplates: All template cards appended");
-            console.dir(templatesList); // Log the DOM element details
+            console.log("renderTemplates: Final templatesList state:", {
+                childCount: templatesList.children.length,
+                offsetWidth: templatesList.offsetWidth,
+                offsetHeight: templatesList.offsetHeight,
+                firstChildVisible: templatesList.firstChild ? 
+                    window.getComputedStyle(templatesList.firstChild).display !== 'none' : 'No children'
+            });
             
             // Force layout calculation for animation
             window.requestAnimationFrame(() => {
                 // Apply staggered entrance animation to cards if needed
                 const cards = templatesList.querySelectorAll('.template-card');
+                console.log(`renderTemplates: Found ${cards.length} cards for animation`);
                 cards.forEach((card, i) => {
                     card.style.animationDelay = `${i * 0.05}s`;
                     card.classList.add('animate-in');
+                    console.log(`renderTemplates: Card ${i+1} animation delay set to ${i * 0.05}s`);
                 });
             });
         } catch (error) {
@@ -518,7 +543,15 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        console.log("createTemplateCard: Card created with dimensions", card.offsetWidth, "x", card.offsetHeight);
+        // Force layout calculation to get accurate dimensions
+        document.body.appendChild(card);
+        const width = card.offsetWidth;
+        const height = card.offsetHeight;
+        document.body.removeChild(card);
+        
+        console.log(`createTemplateCard: Card created with dimensions ${width} x ${height}`);
+        console.log("Card HTML structure:", card.outerHTML.substring(0, 200) + "...");
+        
         return card;
     }
 
