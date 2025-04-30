@@ -897,30 +897,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Function to handle creating a new block from modal options ---
     function handleCreateBlockFromOptions() {
-        const numWeeks = parseInt(newBlockWeeksInput?.value || '8', 10);
-        const blockName = newBlockNameModalInput?.value || 'Untitled Block';
-        const modelType = newBlockModelSelect?.value || 'blank'; // Get selected model type
-        const sessionsPerWeek = parseInt(newBlockSessionsSelect?.value || '3', 10);
-
-        console.log(`Creating new block: ${numWeeks} weeks, ${sessionsPerWeek} sessions/wk, Model: ${modelType}, Name: ${blockName}`);
-
+        // Get values from modal
+        const weeksInput = document.getElementById('new-block-weeks');
+        const sessionsSelect = document.getElementById('new-block-sessions');
+        const modelSelect = document.getElementById('new-block-model');
+        const nameInput = document.getElementById('new-block-name');
+        
+        const weeks = parseInt(weeksInput.value) || 8;
+        const sessions = parseInt(sessionsSelect.value) || 3;
+        const model = modelSelect.value || 'linear';
+        const name = nameInput.value || 'Untitled Block';
+        
+        console.log(`Creating new block: ${weeks} weeks, ${sessions} sessions/wk, Model: ${model}, Name: ${name}`);
+        
+        // Create day IDs ahead of time
+        const dayIds = [];
+        for (let w = 1; w <= weeks; w++) {
+            for (let d = 1; d <= 7; d++) {
+                // Generate day ID helper function instead of using static method
+                const dayId = generateDayId(w, d);
+                dayIds.push({
+                    week: w,
+                    day: d,
+                    id: dayId
+                });
+            }
+        }
+        
         // 1. Generate Grid
-        generateCalendarGrid(numWeeks);
+        generateCalendarGrid(weeks);
 
         // 2. Determine Target Days based on sessionsPerWeek
         let sessionDays = [];
-        if (sessionsPerWeek >= 7) sessionDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-        else if (sessionsPerWeek >= 6) sessionDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-        else if (sessionsPerWeek >= 5) sessionDays = ["Mon", "Tue", "Thu", "Fri", "Sat"];
-        else if (sessionsPerWeek >= 4) sessionDays = ["Mon", "Tue", "Thu", "Fri"];
-        else if (sessionsPerWeek >= 3) sessionDays = ["Mon", "Wed", "Fri"];
-        else if (sessionsPerWeek >= 2) sessionDays = ["Tue", "Thu"];
-        else if (sessionsPerWeek >= 1) sessionDays = ["Wed"];
+        if (sessions >= 7) sessionDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        else if (sessions >= 6) sessionDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        else if (sessions >= 5) sessionDays = ["Mon", "Tue", "Thu", "Fri", "Sat"];
+        else if (sessions >= 4) sessionDays = ["Mon", "Tue", "Thu", "Fri"];
+        else if (sessions >= 3) sessionDays = ["Mon", "Wed", "Fri"];
+        else if (sessions >= 2) sessionDays = ["Tue", "Thu"];
+        else if (sessions >= 1) sessionDays = ["Wed"];
 
         const targetDayIds = [];
-        for (let week = 0; week < numWeeks; week++) {
+        for (let week = 0; week < weeks; week++) {
             sessionDays.forEach(day => {
-                const dayId = PeriodizationModelManager.generateDayId(week, day);
+                const dayId = generateDayId(week + 1, day);
                 if (dayId) targetDayIds.push(dayId);
             });
         }
@@ -928,13 +948,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 3. Create and Apply Model Instance (if not 'blank')
         let instanceId = null;
-        if (modelType !== 'blank') {
+        if (model !== 'blank') {
             // TODO: Get baseParams if needed (e.g., from other modal inputs)
             const baseParams = {}; 
             // <<< MODIFIED: Pass exerciseLibraryData >>>
-            instanceId = PeriodizationModelManager.createAndApplyModel(modelType, baseParams, targetDayIds, exerciseLibraryData);
+            instanceId = PeriodizationModelManager.createAndApplyModel(model, baseParams, targetDayIds, exerciseLibraryData);
             if (!instanceId) {
-                showToast(`Failed to create periodization model: ${modelType}`, 'error');
+                showToast(`Failed to create periodization model: ${model}`, 'error');
                 // Proceed with blank block? Or stop?
                 // For now, just continue without model-driven cards.
             } else {
@@ -960,7 +980,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (settingsTab) {
             settingsTab.querySelectorAll('#prev-planned-rpe, #prev-actual-rpe').forEach(input => input.value = '');
             const nameInput = settingsTab.querySelector('#block-name');
-            if(nameInput) nameInput.value = blockName;
+            if(nameInput) nameInput.value = name;
         }
         saveSettingsToLocalStorage(); // Save cleared/updated settings
 
@@ -972,7 +992,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 7. Close Modal & Switch View
         if (newBlockOptionsModal) newBlockOptionsModal.classList.remove('is-visible');
         showView('builder');
-        showToast(`Created new ${numWeeks}-week block`, 'info', 3000);
+        showToast(`Created new ${weeks}-week block`, 'info', 3000);
 
         // Attach listeners to the newly generated grid
         attachListenersToAllSlots();
@@ -991,6 +1011,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         // --- END Badge Update ---
+    }
+
+    // Helper function to generate day IDs (replacing PeriodizationModelManager.generateDayId)
+    function generateDayId(week, day) {
+        return `w${week}d${day}`;
     }
 
     // --- Function to populate cards based on a model instance ---
