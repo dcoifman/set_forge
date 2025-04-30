@@ -25,30 +25,35 @@
 }
 
 .templates-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-    padding: 20px 0;
-    width: 100%;
-    min-height: 200px;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
+    gap: 20px !important;
+    width: 100% !important;
+    min-height: 200px !important;
+    visibility: visible !important;
 }
 
 .template-card {
-    display: flex;
-    flex-direction: column;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    width: 100%;
-    min-height: 350px;
-    animation: cardAppear 0.5s ease-out forwards;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex !important;
+    flex-direction: column !important;
+    background-color: rgba(30, 32, 40, 0.8) !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    transition: all 0.3s ease !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    width: 100% !important;
+    min-height: 350px !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: translateY(0) !important;
 }
 
 @keyframes cardAppear {
+    from {
+        opacity: 0.5;
+        transform: translateY(20px);
+    }
     to {
         opacity: 1;
         transform: translateY(0);
@@ -651,10 +656,10 @@
 
 /* Template Body */
 .template-body {
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
+    padding: 20px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex-grow: 1 !important;
 }
 
 .template-description {
@@ -818,4 +823,18 @@
 /* Force visibility on cards */
 .template-card * {
     visibility: visible !important;
+}
+
+/* Override the animation with properly visible initial state */
+.template-card.animate-in {
+    animation: cardAppear 0.5s ease-out forwards !important;
+    opacity: 1 !important;
+}
+
+/* Modal override to ensure it's visible when needed */
+.templates-modal.is-visible,
+#templates-modal.is-visible {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 } 

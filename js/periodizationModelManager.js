@@ -145,18 +145,68 @@ class PeriodizationModelManager {
      * @returns {string|null} The generated instance ID, or null on failure.
      */
     createAndApplyModel(modelType, baseParams = {}, targetDayIds = [], exerciseLibrary = []) {
-        const engine = this.dependencies.getPeriodizationEngine();
-        if (!engine || typeof engine.getModelDefaults !== 'function') {
-            console.error("[PeriodizationModelManager] Periodization Engine not available or lacks getModelDefaults.");
-            this.dependencies.showToast?.('Error: Cannot get model defaults from engine.', 'error');
-            return null;
+        // Get the engine if available
+        let modelDefaults = null;
+        let engine = null;
+        
+        try {
+            // Try to get the engine from dependencies
+            if (this.dependencies.getPeriodizationEngine && typeof this.dependencies.getPeriodizationEngine === 'function') {
+                engine = this.dependencies.getPeriodizationEngine();
+                if (engine && typeof engine.getModelDefaults === 'function') {
+                    modelDefaults = engine.getModelDefaults(modelType);
+                }
+            }
+        } catch (error) {
+            console.warn("[PeriodizationModelManager] Error accessing engine:", error);
         }
-
-        const modelDefaults = engine.getModelDefaults(modelType);
+        
+        // If no engine or no defaults from engine, use fallback defaults
         if (!modelDefaults) {
-            console.error(`[PeriodizationModelManager] Unknown model type or no defaults returned: ${modelType}`);
-            this.dependencies.showToast?.(`Error: Unknown periodization model type "${modelType}".`, 'error');
-            return null;
+            console.warn(`[PeriodizationModelManager] Using fallback defaults for model type: ${modelType}`);
+            
+            // Fallback default parameters for different model types
+            const fallbackDefaults = {
+                'linear': {
+                    startIntensity: 65,
+                    endIntensity: 85,
+                    startVolume: 12,
+                    endVolume: 6,
+                    progressionType: 'weekly'
+                },
+                'wave': {
+                    baseIntensity: 70,
+                    peakIntensity: 90,
+                    waveLength: 3, // weeks per wave
+                    startVolume: 15,
+                    endVolume: 9,
+                    progressionType: 'wave'
+                },
+                'block': {
+                    phases: [
+                        { name: 'Accumulation', intensity: 70, volume: 18, weeks: 4 },
+                        { name: 'Intensification', intensity: 80, volume: 12, weeks: 3 },
+                        { name: 'Peak', intensity: 90, volume: 6, weeks: 1 }
+                    ]
+                },
+                'undulating': {
+                    lowDayIntensity: 65,
+                    mediumDayIntensity: 75,
+                    highDayIntensity: 85,
+                    lowDayVolume: 15,
+                    mediumDayVolume: 12,
+                    highDayVolume: 6
+                },
+                // Default catch-all
+                'default': {
+                    intensity: 75,
+                    volume: 12,
+                    progressionType: 'linear'
+                }
+            };
+            
+            // Use model-specific defaults or the default catch-all
+            modelDefaults = fallbackDefaults[modelType] || fallbackDefaults['default'];
         }
 
         const instanceId = this._generateInstanceId(modelType);

@@ -493,6 +493,12 @@ document.addEventListener('DOMContentLoaded', function() {
         card.setAttribute('data-id', template.id);
         card.setAttribute('data-category', template.category);
         
+        // Explicitly set styles to ensure visibility
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+        card.style.display = 'flex';
+        card.style.visibility = 'visible';
+        
         // Create rating stars
         const starFull = '★';
         const starEmpty = '☆';
