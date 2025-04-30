@@ -331,6 +331,20 @@ class PeriodizationModelManager {
         return instanceId ? this.modelInstances[instanceId] : null;
     }
 
+    /**
+     * Sets up event listeners for the manager.
+     * This is a placeholder for future implementation.
+     * @private
+     */
+    _setupEventListeners() {
+        // Placeholder for future event listeners
+        console.log("[PeriodizationModelManager] Setting up event listeners");
+        
+        // Example of potential future implementation:
+        // if (this.dependencies.workCanvas) {
+        //     this.dependencies.workCanvas.addEventListener('forge-assist:model-selected', this._handleModelSelected.bind(this));
+        // }
+    }
 }
 
 // Export the class as the default export
