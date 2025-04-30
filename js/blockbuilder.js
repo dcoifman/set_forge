@@ -50,6 +50,7 @@ import ForgeAssist from './forgeassist.js';
 const hubContainer = document.getElementById('block-builder-hub');
 const blockBuilderContainer = document.querySelector('.block-builder-container');
 const createNewBtn = document.getElementById('hub-create-new'); // Added missing reference
+const browseTemplatesBtn = document.getElementById('hub-browse-templates'); // Added missing reference
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM fully loaded and parsed for blockbuilder.js");
