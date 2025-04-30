@@ -92,7 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Hub View Elements ---
     const blockBuilderHub = document.getElementById('block-builder-hub');
-    const hubCreateNewBtn = document.getElementById('hub-create-new'); // <<< DEFINE THIS
+    const hubContainer = document.getElementById('block-builder-hub'); // <<< ADDED Definition
+    const hubCreateNewBtn = document.getElementById('hub-create-new'); 
     const hubBrowseTemplatesBtn = document.getElementById('hub-browse-templates');
     const recentBlocksList = document.getElementById('recent-blocks-list');
     const backToHubBtn = document.getElementById('back-to-hub-btn');
@@ -156,7 +157,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Periodization Model Manager
     if (typeof PeriodizationModelManager !== 'undefined') {
         const periodizationManagerInstance = new PeriodizationModelManager();
-        periodizationManagerInstance.init({ showToast, createWorkoutCard, getBlockStateHelper, getTotalWeeksHelper });
+        // Pass ALL required dependencies
+        periodizationManagerInstance.init({
+            workCanvas: workCanvas, 
+            showToast: showToast, 
+            createWorkoutCard: createWorkoutCard, // Assuming defined
+            getBlockStateHelper: getBlockStateHelper, // Assuming defined
+            getTotalWeeksHelper: getTotalWeeksHelper, // Assuming defined
+            getPeriodizationEngine: getPeriodizationEngine, // Assuming defined
+            triggerAnalyticsUpdate: triggerAnalyticsUpdate // Assuming defined
+        });
         // Make the instance available globally if needed by other parts (optional)
         window.periodizationManager = periodizationManagerInstance; 
     } else {

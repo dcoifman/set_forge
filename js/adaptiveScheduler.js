@@ -1256,4 +1256,5 @@ const AdaptiveScheduler = (() => {
 
 })();
 
-export default AdaptiveScheduler;
+// Explicitly attach to window for global access
+window.AdaptiveScheduler = AdaptiveScheduler;
