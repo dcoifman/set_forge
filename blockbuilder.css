@@ -731,75 +731,218 @@ body {
 
 /* Base styles for exercise items */
 .exercise-item {
-    /* display: flex; /* Using block for now, flex applied in views */
-    /* align-items: center; */ /* Control alignment within views */
-    /* justify-content: space-between; */ /* Control justification within views */
-    padding: 0.6rem 0.8rem; /* Base padding, adjust in views */
-    margin-bottom: 0.5rem; /* Reduced spacing */
-    border-radius: 6px; /* Slightly larger radius */
-    cursor: grab;
-    font-size: 0.9rem;
-    transition: transform 0.2s ease-out,
-                box-shadow 0.2s ease-out,
-                background-color 0.2s var(--transition-speed);
-    border: 1px solid transparent; /* Reserve space for border */
-    border-bottom: 1px solid rgba(204, 209, 217, 0.1); /* Separator */
-    position: relative; /* For absolute positioning if needed */
-    background-color: var(--card-background); /* Ensure base background */
-    /* Add a thicker left border for category color */
-    border-left: 4px solid transparent; /* Placeholder for category color */
+    display: flex;
+    position: relative;
+    border-left: 4px solid transparent;
+    border-bottom: 1px solid rgba(204, 209, 217, 0.1);
+    padding: 0.75rem 0.5rem 0.75rem 0.5rem;
+    transition: background-color 0.2s, border-color 0.2s;
+    cursor: pointer;
 }
 
-/* Remove generic hover/active affecting layout - handle in views */
-/* .exercise-item:hover { ... } */
-/* .exercise-item:active { ... } */
+.exercise-checkbox-container {
+    display: flex;
+    align-items: center;
+    padding-right: 10px;
+}
+
+.exercise-select-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(204, 209, 217, 0.5);
+    border-radius: 3px;
+    background-color: transparent;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.exercise-select-checkbox:checked {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.exercise-select-checkbox:checked::after {
+    content: "✓";
+    position: absolute;
+    top: -2px;
+    left: 3px;
+    color: #fff;
+    font-size: 11px;
+}
+
+.exercise-item.multi-selected {
+    background-color: rgba(58, 123, 213, 0.1);
+    border-left-color: var(--accent-color);
+}
+
+.exercise-item-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow: hidden;
+}
 
 .exercise-list-name {
-    margin: 0; /* Remove default margins if any */
-    font-weight: 600; /* Slightly bolder */
-    color: white; /* Ensure contrast */
-}
-
-/* Placeholder for description preview - Added via JS */
-.exercise-description-preview {
-    font-size: 0.8rem;
-    color: var(--text-color);
-    margin-top: 0.2rem;
-    display: -webkit-box; /* For line clamping */
-    -webkit-line-clamp: 2; /* Limit to 2 lines */
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    line-height: 1.4;
-}
-
-/* Placeholder for tags container - Added via JS */
-.exercise-tags {
-    display: flex;
-    gap: 0.4rem;
-    flex-wrap: wrap;
-    margin-top: 0.4rem; /* Spacing from name/desc */
-}
-
-/* Placeholder for individual tags - Added via JS */
-.exercise-tag {
-    font-size: 0.7rem;
-    padding: 2px 6px;
-    border-radius: 10px; /* Pill shape */
     font-weight: 600;
+    color: white;
+    margin-bottom: 4px;
+    display: block;
+}
+
+/* New metadata styles */
+.exercise-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 4px;
+    font-size: 0.8rem;
+    color: var(--text-color-light);
+}
+
+.exercise-muscles {
+    display: flex;
+    align-items: center;
+}
+
+.exercise-muscles strong {
+    color: rgba(255, 255, 255, 0.8);
+    margin-right: 4px;
+}
+
+.exercise-difficulty {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.difficulty-beginner {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #8bdc8e;
+}
+
+.difficulty-intermediate {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #ffdb72;
+}
+
+.difficulty-advanced {
+    background-color: rgba(255, 87, 34, 0.2);
+    color: #ff9b78;
+}
+
+.exercise-list-description {
+    font-size: 0.85rem;
+    color: var(--text-color-light);
+    max-height: 40px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* Improved tags */
+.exercise-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.exercise-tag {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: transform 0.15s, opacity 0.15s;
 }
 
 .tag-category {
-    background-color: rgba(255, 112, 59, 0.2); /* Example category color */
-    color: var(--accent-color);
+    background-color: rgba(58, 123, 213, 0.7);
 }
 
 .tag-equipment {
-    background-color: rgba(58, 123, 213, 0.2); /* Example equipment color */
-    color: #8cb4ff; /* Lighter blue text */
-    /* Hide by default in standard view, shown on hover */
-    display: none;
+    background-color: rgba(76, 161, 175, 0.7);
+}
+
+.tag-video {
+    background-color: rgba(204, 43, 94, 0.7);
+    cursor: pointer;
+}
+
+.tag-video:hover {
+    transform: scale(1.05);
+}
+
+.video-icon {
+    font-size: 0.6rem;
+}
+
+/* Multi-select toolbar */
+.multi-select-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: rgba(58, 123, 213, 0.2);
+    border: 1px solid rgba(58, 123, 213, 0.4);
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    color: white;
+    font-weight: 500;
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+    transition: opacity 0.3s, height 0.3s, padding 0.3s, margin 0.3s;
+}
+
+.multi-select-toolbar.active {
+    opacity: 1;
+    height: auto;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+}
+
+.selected-count {
+    font-weight: 700;
+}
+
+.multi-select-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.multi-select-action {
+    background-color: rgba(27, 28, 34, 0.7);
+    border: 1px solid rgba(204, 209, 217, 0.2);
+    border-radius: 4px;
+    padding: 5px 10px;
+    color: white;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.2s;
+}
+
+.multi-select-action:hover {
+    background-color: rgba(58, 123, 213, 0.8);
+}
+
+.multi-select-action .icon {
+    font-size: 0.75rem;
 }
 
 /* --- Standard View Styles (.view-standard on .exercise-list-container) --- */

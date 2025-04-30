@@ -154,6 +154,24 @@ function createExerciseListItem(ex) {
     li.dataset.category = category;
     li.dataset.equipment = (ex.equipmentNeeded || []).join(',');
 
+    // Add multiselect checkbox
+    const checkboxContainer = document.createElement('div');
+    checkboxContainer.className = 'exercise-checkbox-container';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'exercise-select-checkbox';
+    checkbox.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (checkbox.checked) {
+            li.classList.add('multi-selected');
+        } else {
+            li.classList.remove('multi-selected');
+        }
+        updateMultiselectToolbar();
+    });
+    checkboxContainer.appendChild(checkbox);
+    li.appendChild(checkboxContainer);
+
     const categorySlug = category.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     if (categorySlug) {
         li.classList.add(`category-${categorySlug}`);
@@ -167,6 +185,28 @@ function createExerciseListItem(ex) {
     nameSpan.textContent = ex.name;
     contentDiv.appendChild(nameSpan);
 
+    // Create improved metadata row
+    const metadataDiv = document.createElement('div');
+    metadataDiv.className = 'exercise-metadata';
+    
+    // Primary muscles info
+    if (ex.primaryMuscles && ex.primaryMuscles.length > 0) {
+        const musclesSpan = document.createElement('span');
+        musclesSpan.className = 'exercise-muscles';
+        musclesSpan.innerHTML = `<strong>Targets:</strong> ${ex.primaryMuscles.join(', ')}`;
+        metadataDiv.appendChild(musclesSpan);
+    }
+    
+    // Difficulty indicator
+    if (ex.difficulty) {
+        const difficultySpan = document.createElement('span');
+        difficultySpan.className = `exercise-difficulty difficulty-${ex.difficulty.toLowerCase()}`;
+        difficultySpan.textContent = ex.difficulty;
+        metadataDiv.appendChild(difficultySpan);
+    }
+    
+    contentDiv.appendChild(metadataDiv);
+
     if (ex.description) {
         const descriptionSpan = document.createElement('span');
         descriptionSpan.className = 'exercise-list-description';
@@ -174,6 +214,7 @@ function createExerciseListItem(ex) {
         contentDiv.appendChild(descriptionSpan);
     }
 
+    // Improved tags display
     const tagsDiv = document.createElement('div');
     tagsDiv.className = 'exercise-tags';
 
@@ -188,6 +229,19 @@ function createExerciseListItem(ex) {
          equipTag.textContent = ex.equipmentNeeded[0];
          tagsDiv.appendChild(equipTag);
     }
+    
+    // Add video indicator if available
+    if (ex.videoUrl) {
+        const videoTag = document.createElement('span');
+        videoTag.className = 'exercise-tag tag-video';
+        videoTag.innerHTML = '<i class="video-icon">▶</i> Video';
+        videoTag.addEventListener('click', (e) => {
+            e.stopPropagation();
+            window.open(ex.videoUrl, '_blank');
+        });
+        tagsDiv.appendChild(videoTag);
+    }
+    
     if (tagsDiv.children.length > 0) {
         contentDiv.appendChild(tagsDiv);
     }
@@ -239,22 +293,21 @@ function createExerciseListItem(ex) {
     }
     li.appendChild(actionsDiv);
 
-    // <<< NEW: Add click listener to show detail modal >>>
+    // Click listener for showing detail modal
     li.addEventListener('click', (e) => {
         // Prevent interfering with button clicks inside the item
-        if (e.target.closest('button')) return; 
+        if (e.target.closest('button') || e.target.closest('.exercise-tag.tag-video')) return; 
         
         console.log(`Library item clicked: ${ex.id}`);
         // Dispatch a custom event with the exercise ID
         const detailEvent = new CustomEvent('forge-library:show-detail', { 
             detail: { exerciseId: ex.id },
-            bubbles: true, // Allow event to bubble up
-            composed: true // Allow event to cross shadow DOM boundaries (if any)
+            bubbles: true,
+            composed: true
         });
         li.dispatchEvent(detailEvent);
         console.log(`Dispatched forge-library:show-detail for ${ex.id}`);
     });
-    // <<< END NEW >>>
 
     return li;
 }
@@ -577,6 +630,87 @@ export function loadViewMode() {
     exerciseListContainerElement.classList.add(`view-${savedMode}`);
 }
 
+// Add this new function for multiselect functionality
+function updateMultiselectToolbar() {
+    const toolbar = document.querySelector('.multi-select-toolbar') || createMultiselectToolbar();
+    const selectedItems = document.querySelectorAll('.exercise-item.multi-selected');
+    
+    if (selectedItems.length > 0) {
+        toolbar.classList.add('active');
+        toolbar.querySelector('.selected-count').textContent = selectedItems.length;
+    } else {
+        toolbar.classList.remove('active');
+    }
+}
+
+// Create multiselect toolbar 
+function createMultiselectToolbar() {
+    const toolbar = document.createElement('div');
+    toolbar.className = 'multi-select-toolbar';
+    
+    const countSpan = document.createElement('span');
+    countSpan.className = 'selected-count';
+    countSpan.textContent = '0';
+    
+    const selectionText = document.createElement('span');
+    selectionText.textContent = ' exercises selected';
+    
+    toolbar.appendChild(countSpan);
+    toolbar.appendChild(selectionText);
+    
+    // Add action buttons
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'multi-select-actions';
+    
+    // Add to workout button
+    const addToWorkoutBtn = document.createElement('button');
+    addToWorkoutBtn.className = 'multi-select-action';
+    addToWorkoutBtn.innerHTML = '<span class="icon">+</span> Add to Workout';
+    addToWorkoutBtn.addEventListener('click', () => {
+        const selectedIds = Array.from(document.querySelectorAll('.exercise-item.multi-selected'))
+            .map(item => item.dataset.exerciseId);
+        console.log('Add to workout:', selectedIds);
+        // Dispatch event or implement functionality
+    });
+    actionsDiv.appendChild(addToWorkoutBtn);
+    
+    // Create superset button
+    const createSupersetBtn = document.createElement('button');
+    createSupersetBtn.className = 'multi-select-action';
+    createSupersetBtn.innerHTML = '<span class="icon">🔄</span> Create Superset';
+    createSupersetBtn.addEventListener('click', () => {
+        const selectedIds = Array.from(document.querySelectorAll('.exercise-item.multi-selected'))
+            .map(item => item.dataset.exerciseId);
+        console.log('Create superset with:', selectedIds);
+        // Dispatch event or implement functionality
+    });
+    actionsDiv.appendChild(createSupersetBtn);
+    
+    // Clear selection button
+    const clearSelectionBtn = document.createElement('button');
+    clearSelectionBtn.className = 'multi-select-action';
+    clearSelectionBtn.innerHTML = '<span class="icon">✕</span> Clear';
+    clearSelectionBtn.addEventListener('click', () => {
+        document.querySelectorAll('.exercise-select-checkbox').forEach(cb => {
+            cb.checked = false;
+        });
+        document.querySelectorAll('.exercise-item.multi-selected').forEach(item => {
+            item.classList.remove('multi-selected');
+        });
+        updateMultiselectToolbar();
+    });
+    actionsDiv.appendChild(clearSelectionBtn);
+    
+    toolbar.appendChild(actionsDiv);
+    
+    // Append toolbar to the library tab content
+    const libraryTab = document.getElementById('library');
+    if (libraryTab) {
+        libraryTab.insertBefore(toolbar, libraryTab.firstChild);
+    }
+    
+    return toolbar;
+}
 
 // Dependencies:
 // - Browser Globals: fetch, localStorage, JSON, console, setTimeout, URL, Blob, FileReader, confirm, Date, Math
