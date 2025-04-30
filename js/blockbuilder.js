@@ -3888,4 +3888,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.blockBuilder = window.blockBuilder || {};
     window.blockBuilder.loadTemplateBlock = loadTemplateBlock;
 
+    // Signal that the block builder is ready
+    window.dispatchEvent(new CustomEvent('blockbuilderReady'));
+    
 }); // End DOMContentLoaded 

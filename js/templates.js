@@ -544,26 +544,53 @@ document.addEventListener('DOMContentLoaded', function() {
     function useTemplate(templateId) {
         const template = trainingTemplates.find(t => t.id === templateId);
         if (!template) return;
-        
-        // Here we would integrate with the blockbuilder to apply the template
-        // This depends on how the blockbuilder handles block creation
+
         console.log(`Using template: ${template.title}`);
-        
-        // Close the modals
+
+        // Close the modals first
         templatesModal.classList.remove('is-visible');
-        templatePreviewModal.classList.remove('is-visible');
-        
-        // Show builder view
-        document.body.classList.remove('show-hub');
-        document.body.classList.add('show-builder');
-        
-        // Trigger block builder's template loading function (to be implemented)
-        if (typeof window.blockBuilder !== 'undefined' && 
-            typeof window.blockBuilder.loadTemplateBlock === 'function') {
-            window.blockBuilder.loadTemplateBlock(template);
+        if (templatePreviewModal) templatePreviewModal.classList.remove('is-visible');
+
+        // Function to actually load the block
+        const executeLoad = () => {
+            if (typeof window.blockBuilder !== 'undefined' && 
+                typeof window.blockBuilder.loadTemplateBlock === 'function') {
+                window.blockBuilder.loadTemplateBlock(template);
+                // No need to manually switch view here, loadTemplateBlock handles it
+            } else {
+                // Fallback if integration still fails after waiting
+                console.error("Block builder or loadTemplateBlock function not available even after event.");
+                alert(`Error: Could not load template ${template.title}. Block builder unavailable.`);
+                 // Revert to hub view on error
+                 document.body.classList.add('show-hub');
+                 document.body.classList.remove('show-builder');
+            }
+        };
+
+        // Check if blockBuilder is ready, otherwise wait for the event
+        if (typeof window.blockBuilder !== 'undefined' && typeof window.blockBuilder.loadTemplateBlock === 'function') {
+            console.log("Block builder ready immediately.");
+            executeLoad();
         } else {
-            // Fallback if integration not available
-            alert(`Template selected: ${template.title}\n\nThis would create a new ${template.weeks}-week training block based on this template.`);
+            console.log("Block builder not ready, waiting for 'blockbuilderReady' event...");
+            const readyHandler = () => {
+                console.log("'blockbuilderReady' event received.");
+                window.removeEventListener('blockbuilderReady', readyHandler);
+                executeLoad();
+            };
+            window.addEventListener('blockbuilderReady', readyHandler);
+            
+            // Timeout fallback in case the event never fires (e.g., blockbuilder.js error)
+            setTimeout(() => {
+                window.removeEventListener('blockbuilderReady', readyHandler);
+                if (!(typeof window.blockBuilder !== 'undefined' && typeof window.blockBuilder.loadTemplateBlock === 'function')) {
+                   console.error("Timeout waiting for blockbuilderReady event.");
+                   alert(`Error: Could not load template ${template.title}. Block builder did not initialize.`);
+                   // Revert to hub view on timeout
+                   document.body.classList.add('show-hub');
+                   document.body.classList.remove('show-builder');
+                }
+            }, 3000); // Wait 3 seconds
         }
     }
 
