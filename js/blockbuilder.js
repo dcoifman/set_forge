@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return {
                 slots: {}, // Populate from workCanvas
                 phases: [], // Populate from phaseRibbon
-                periodizationModels: PeriodizationModelManager.getState() // Get from manager
+                periodizationModels: window.periodizationManager?.getState() || {} // Get from manager
             };
         }
 
@@ -1525,11 +1525,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const dayId = dayCellElement.dataset.dayId;
         if (!dayId) return;
 
-        const instanceId = PeriodizationModelManager.getModelForDay(dayId);
+        const instanceId = window.periodizationManager?.getModelForDay(dayId) || null;
         // console.log(`[updateDayBadge] Model instanceId for day ${dayId}: ${instanceId}`);
         
         if (instanceId) {
-            const model = PeriodizationModelManager.getModelInstance(instanceId);
+            const model = window.periodizationManager?.getModelInstance(instanceId);
             // console.log(`[updateDayBadge] Fetched model instance:`, model);
             if (!model) {
                 // console.log(`[updateDayBadge] Model instance not found, removing badge.`);
@@ -3016,7 +3016,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const dayId = dayCellElement.dataset.dayId;
         if (!dayId) return;
 
-        const instanceId = PeriodizationModelManager.getModelForDay(dayId);
+        const instanceId = window.periodizationManager?.getModelForDay(dayId) || null;
 
         // Always remove existing classes first
         dayCellElement.classList.remove('has-model');
@@ -3024,7 +3024,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dayCellElement.classList.remove(...existingModelTypeClasses);
 
         if (instanceId) {
-            const model = PeriodizationModelManager.getModelInstance(instanceId);
+            const model = window.periodizationManager?.getModelInstance(instanceId);
             if (model) {
                 // Check if any card within the cell is actually model-driven
                 // This prevents styling the cell if only independent cards remain after edits
@@ -3050,7 +3050,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return {
             slots: {}, // Populate from workCanvas
             phases: [], // Populate from phaseRibbon
-            periodizationModels: PeriodizationModelManager.getState() // Get from manager
+            periodizationModels: window.periodizationManager?.getState() || {} // Get from manager
         };
     }
 
