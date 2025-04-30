@@ -2361,12 +2361,248 @@ const ForgeAssist = (() => {
         updateContext,
         getContextualActions,
         processCommand,
-        checkAnalyticsThresholds, // Expose for potential external triggers
-        handleProposalActionClick // Allow external trigger if needed
+        handleSuggestSwap,
+        suggestSwapById,
+        updateProgressState,
+        clearContext,
+        simulateOneSession,
+        simulateAndConfirm,
+        handleChangeIntensity, // Expose this function
+        findExerciseIdByName,  // Was already public, unchanged
+        
+        // Recovery module accessor functions
+        getBiomechanicalAnalyzer: () => biomechanicalAnalyzer,
+        getRecoveryAwareAlternatives
     };
-})();
 
-// Explicitly attach to window for global access
-window.ForgeAssist = ForgeAssist;
+})(); // End IIFE
 
 export { __Rewire__, __ResetDependency__ }; 
+export default ForgeAssist; // <<< Add default export
+
+/**
+ * Add recovery-aware capability to exercise recommendations
+ * @param {Array} recommendations - Original recommendations
+ * @param {Object} options - Recommendation options
+ * @returns {Array} - Enhanced recommendations
+ */
+function enhanceRecommendationsWithRecovery(recommendations, options = {}) {
+    if (!recoveryRecommender) {
+        return recommendations; // Can't enhance without recommender
+    }
+    
+    // Get recovery data
+    const stressLevels = biomechanicalAnalyzer.getCurrentStressLevels();
+    const muscleRecovery = {};
+    for (const [muscle, stress] of Object.entries(stressLevels)) {
+        muscleRecovery[muscle] = 1 - stress;
+    }
+    
+    // Enhance recommendations with recovery data
+    return recommendations.map(rec => {
+        // Calculate recovery score
+        const recoveryScore = recoveryRecommender.calculateExerciseRecoveryScore(
+            rec.exercise,
+            muscleRecovery
+        );
+        
+        // Get muscle-specific recovery data
+        const muscleRecoveryData = recoveryRecommender.getExerciseMuscleRecovery(
+            rec.exercise,
+            muscleRecovery
+        );
+        
+        // Add recovery data to recommendation
+        return {
+            ...rec,
+            recoveryScore,
+            muscleRecovery: muscleRecoveryData,
+            isRecoveryOptimal: recoveryScore >= 0.8, // 80% or higher is optimal
+            recoveryWarning: recoveryScore < 0.4 // Warning if under 40%
+        };
+    })
+    .sort((a, b) => {
+        // If recovery-first sorting is enabled
+        if (options.prioritizeRecovery) {
+            return b.recoveryScore - a.recoveryScore;
+        }
+        return b.score - a.score; // Normal sorting
+    });
+}
+
+/**
+ * Get recovery-optimized exercise alternatives
+ * @param {string} exerciseId - Original exercise ID
+ * @param {Object} options - Options for alternatives
+ * @returns {Array} - Alternative exercises
+ */
+export function getRecoveryAwareAlternatives(exerciseId, options = {}) {
+    if (!recoveryRecommender || !dependencies.exerciseLibrary) {
+        return []; // Can't provide alternatives without components
+    }
+    
+    // Get exercise data
+    const exercise = dependencies.exerciseLibrary.getExerciseById(exerciseId);
+    if (!exercise) {
+        return []; // Exercise not found
+    }
+    
+    // Get alternatives
+    const alternatives = recoveryRecommender.getSimilarExercises(exercise, {
+        count: options.count || 3,
+        minRecoveryScore: options.minRecoveryScore || 0.6
+    });
+    
+    return alternatives.map(alt => ({
+        id: alt.exercise.id,
+        name: alt.exercise.name,
+        recoveryScore: alt.recoveryScore,
+        effectivenessScore: alt.effectivenessScore,
+        recoveryPercentage: Math.round(alt.recoveryScore * 100),
+        muscleRecovery: alt.muscleRecovery,
+        isRecoveryOptimal: alt.recoveryScore >= 0.8
+    }));
+}
+
+/**
+ * Create a workout that respects muscle recovery
+ * @param {Object} options - Workout creation options
+ * @returns {Object} - Generated workout
+ */
+export function createRecoveryAwareWorkout(options = {}) {
+    if (!recoveryRecommender || !biomechanicalAnalyzer) {
+        return null; // Can't create workout without components
+    }
+    
+    const {
+        targetMuscleGroups = [],
+        equipment = [],
+        difficulty = 'intermediate',
+        duration = 60, // minutes
+        exerciseCount = 5,
+        restBetweenExercises = 60, // seconds
+        prioritizeRecovery = true
+    } = options;
+    
+    // Get exercise recommendations with recovery awareness
+    const recommendedExercises = recoveryRecommender.getRecommendations({
+        count: exerciseCount * 2, // Get more options to choose from
+        preferredMuscleGroups: targetMuscleGroups,
+        equipment,
+        difficulty,
+        sortBy: prioritizeRecovery ? 'recovery' : 'effectiveness'
+    });
+    
+    // Select exercises for the workout
+    const selectedExercises = [];
+    const selectedMuscles = new Set();
+    
+    // First, add exercises for target muscle groups with high recovery
+    for (const group of targetMuscleGroups) {
+        const bestForGroup = recommendedExercises.find(rec => 
+            recoveryRecommender.exerciseTargetsMuscleGroup(rec.exercise, group) &&
+            rec.recoveryScore >= 0.7 &&
+            !selectedExercises.includes(rec.exercise)
+        );
+        
+        if (bestForGroup) {
+            selectedExercises.push(bestForGroup.exercise);
+            
+            // Track targeted muscles
+            const muscles = recoveryRecommender.getExerciseTargetedMuscles(bestForGroup.exercise);
+            muscles.forEach(m => selectedMuscles.add(m));
+        }
+    }
+    
+    // Fill remaining slots with diverse exercises
+    while (selectedExercises.length < exerciseCount && recommendedExercises.length > 0) {
+        // Find exercise with least overlap with already selected muscles
+        let bestOption = null;
+        let lowestOverlap = Infinity;
+        
+        for (const rec of recommendedExercises) {
+            if (selectedExercises.includes(rec.exercise)) {
+                continue; // Skip already selected
+            }
+            
+            // Count muscle overlap
+            const targetedMuscles = recoveryRecommender.getExerciseTargetedMuscles(rec.exercise);
+            const overlap = targetedMuscles.filter(m => selectedMuscles.has(m)).length;
+            
+            // If better option (less overlap or higher recovery score if equal)
+            if (overlap < lowestOverlap || 
+                (overlap === lowestOverlap && 
+                 (!bestOption || rec.recoveryScore > bestOption.recoveryScore))) {
+                bestOption = rec;
+                lowestOverlap = overlap;
+            }
+        }
+        
+        if (bestOption) {
+            selectedExercises.push(bestOption.exercise);
+            
+            // Track targeted muscles
+            const muscles = recoveryRecommender.getExerciseTargetedMuscles(bestOption.exercise);
+            muscles.forEach(m => selectedMuscles.add(m));
+            
+            // Remove from candidates
+            const index = recommendedExercises.findIndex(r => r.exercise.id === bestOption.exercise.id);
+            if (index >= 0) {
+                recommendedExercises.splice(index, 1);
+            }
+        } else {
+            break; // No more suitable exercises
+        }
+    }
+    
+    // Create workout structure
+    return {
+        name: `Recovery-Optimized ${targetMuscleGroups.join('/')} Workout`,
+        exercises: selectedExercises.map(ex => ({
+            id: ex.id,
+            name: ex.name,
+            sets: getRecommendedSets(ex, difficulty),
+            reps: getRecommendedReps(ex, difficulty),
+            rest: restBetweenExercises,
+            recoveryScore: recommendedExercises.find(r => r.exercise.id === ex.id)?.recoveryScore || 1
+        })),
+        duration,
+        targetMuscleGroups,
+        recoveryOptimized: true,
+        difficulty
+    };
+}
+
+/**
+ * Get recommended sets based on exercise and difficulty
+ * @param {Object} exercise - Exercise data
+ * @param {string} difficulty - Workout difficulty
+ * @returns {number} - Recommended sets
+ */
+function getRecommendedSets(exercise, difficulty) {
+    const baseSets = {
+        'beginner': 2,
+        'intermediate': 3,
+        'advanced': 4
+    };
+    
+    return baseSets[difficulty] || 3;
+}
+
+/**
+ * Get recommended reps based on exercise and difficulty
+ * @param {Object} exercise - Exercise data
+ * @param {string} difficulty - Workout difficulty
+ * @returns {number} - Recommended reps
+ */
+function getRecommendedReps(exercise, difficulty) {
+    // This would be more sophisticated in a real implementation
+    // For now, return standard rep ranges
+    const defaultReps = {
+        'beginner': 10,
+        'intermediate': 8,
+        'advanced': 6
+    };
+    
+    return defaultReps[difficulty] || 8;
+}
