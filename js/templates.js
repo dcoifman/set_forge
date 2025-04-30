@@ -572,24 +572,36 @@ document.addEventListener('DOMContentLoaded', function() {
         rating.appendChild(stars);
         rating.appendChild(ratingValue);
         
-        // Footer
+        // Footer with buttons
         const footer = document.createElement('div');
         footer.className = 'template-footer';
         
         const previewBtn = document.createElement('button');
         previewBtn.className = 'template-preview-btn';
-        previewBtn.setAttribute('data-id', template.id);
         previewBtn.textContent = 'Preview';
+        previewBtn.setAttribute('data-id', template.id);
+        previewBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log("Preview button clicked for template:", template.id);
+            showTemplatePreview(template.id);
+        };
         
         const useBtn = document.createElement('button');
         useBtn.className = 'template-use-btn';
-        useBtn.setAttribute('data-id', template.id);
         useBtn.textContent = 'Use';
+        useBtn.setAttribute('data-id', template.id);
+        useBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log("Use button clicked for template:", template.id);
+            useTemplate(template.id);
+        };
         
         footer.appendChild(previewBtn);
         footer.appendChild(useBtn);
         
-        // Assemble card
+        // Add all elements to card
         body.appendChild(description);
         body.appendChild(metadata);
         body.appendChild(focusAreas);
@@ -721,52 +733,64 @@ document.addEventListener('DOMContentLoaded', function() {
     // Use selected template to create new block
     function useTemplate(templateId) {
         const template = trainingTemplates.find(t => t.id === templateId);
-        if (!template) return;
+        if (!template) {
+            console.error(`Template with ID ${templateId} not found`);
+            return;
+        }
 
         console.log(`Using template: ${template.title}`);
 
         // Close the modals first
-        templatesModal.classList.remove('is-visible');
-        if (templatePreviewModal) templatePreviewModal.classList.remove('is-visible');
+        const templatesModal = document.getElementById('templates-modal');
+        if (templatesModal) {
+            templatesModal.classList.remove('is-visible');
+        }
+        
+        const templatePreviewModal = document.getElementById('template-preview-modal');
+        if (templatePreviewModal) {
+            templatePreviewModal.classList.remove('is-visible');
+        }
 
         // Function to actually load the block
         const executeLoad = () => {
-            if (typeof window.blockBuilder !== 'undefined' && 
-                typeof window.blockBuilder.loadTemplateBlock === 'function') {
+            if (window.blockBuilder && typeof window.blockBuilder.loadTemplateBlock === 'function') {
+                console.log("Calling blockBuilder.loadTemplateBlock with template:", template.title);
                 window.blockBuilder.loadTemplateBlock(template);
-                // No need to manually switch view here, loadTemplateBlock handles it
             } else {
                 // Fallback if integration still fails after waiting
-                console.error("Block builder or loadTemplateBlock function not available even after event.");
+                console.error("Block builder or loadTemplateBlock function not available.");
                 alert(`Error: Could not load template ${template.title}. Block builder unavailable.`);
-                 // Revert to hub view on error
-                 document.body.classList.add('show-hub');
-                 document.body.classList.remove('show-builder');
+                // Revert to hub view on error
+                document.body.classList.add('show-hub');
+                document.body.classList.remove('show-builder');
             }
         };
 
         // Check if blockBuilder is ready, otherwise wait for the event
-        if (typeof window.blockBuilder !== 'undefined' && typeof window.blockBuilder.loadTemplateBlock === 'function') {
+        if (window.blockBuilder && typeof window.blockBuilder.loadTemplateBlock === 'function') {
             console.log("Block builder ready immediately.");
             executeLoad();
         } else {
             console.log("Block builder not ready, waiting for 'blockbuilderReady' event...");
+            
+            // Listen for the blockbuilderReady event
             const readyHandler = () => {
                 console.log("'blockbuilderReady' event received.");
                 window.removeEventListener('blockbuilderReady', readyHandler);
                 executeLoad();
             };
+            
             window.addEventListener('blockbuilderReady', readyHandler);
             
-            // Timeout fallback in case the event never fires (e.g., blockbuilder.js error)
+            // Timeout fallback in case the event never fires
             setTimeout(() => {
                 window.removeEventListener('blockbuilderReady', readyHandler);
-                if (!(typeof window.blockBuilder !== 'undefined' && typeof window.blockBuilder.loadTemplateBlock === 'function')) {
-                   console.error("Timeout waiting for blockbuilderReady event.");
-                   alert(`Error: Could not load template ${template.title}. Block builder did not initialize.`);
-                   // Revert to hub view on timeout
-                   document.body.classList.add('show-hub');
-                   document.body.classList.remove('show-builder');
+                if (!(window.blockBuilder && typeof window.blockBuilder.loadTemplateBlock === 'function')) {
+                    console.error("Timeout waiting for blockbuilderReady event.");
+                    alert(`Error: Could not load template ${template.title}. Block builder did not initialize.`);
+                    // Revert to hub view on timeout
+                    document.body.classList.add('show-hub');
+                    document.body.classList.remove('show-builder');
                 }
             }, 3000); // Wait 3 seconds
         }
