@@ -1,100 +1,6 @@
-    }
-    .scope-selection .radio-group {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-    }
-    .scope-selection .radio-group input[type="radio"] {
-        margin-right: 0.3rem;
-    }
-    .scope-selection .radio-group label {
-        margin-bottom: 0; /* Reset margin for radio labels */
-        font-weight: normal;
-        color: var(--text-color);
-        font-size: 0.9rem;
-    }
-    #preview-config-changes:disabled,
-    #preview-model-swap:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        background-color: rgba(255, 255, 255, 0.05);
-    }
-    `; // <<< Added missing closing backtick
-    document.head.appendChild(configStyle);
-
-    // --- Periodization Model Visuals (Day Cell Classes) --- // Renamed section
-
-    /**
-     * Updates the CSS classes on a day cell to reflect its model governance.
-     * @param {HTMLElement} dayCellElement - The day cell DOM element.
-     */
-    function updateDayCellModelClasses(dayCellElement) {
-        if (!dayCellElement) return;
-        const dayId = dayCellElement.dataset.dayId;
-        if (!dayId) return;
-
-        const instanceId = PeriodizationModelManager.getModelForDay(dayId);
-
-        // Always remove existing classes first
-        dayCellElement.classList.remove('has-model');
-        const existingModelTypeClasses = Array.from(dayCellElement.classList).filter(cls => cls.startsWith('model-type-'));
-        dayCellElement.classList.remove(...existingModelTypeClasses);
-
-        if (instanceId) {
-            const model = PeriodizationModelManager.getModelInstance(instanceId);
-            if (model) {
-                // Check if any card within the cell is actually model-driven
-                // This prevents styling the cell if only independent cards remain after edits
-                const modelDrivenCard = dayCellElement.querySelector('.workout-card[data-model-driven="true"]');
 import acwr from './acwr.js';
-                if (modelDrivenCard) {
-                    const modelType = model.type.toLowerCase();
-                    dayCellElement.classList.add('has-model');
-                    dayCellElement.classList.add(`model-type-${modelType}`); // Ensure template literal interpolation is correct
-                }
-            }
-        }
-    }
-
-    // --- Helper Functions for Dependencies ---
-    function getTotalWeeksHelper() {
-        return workCanvas.querySelectorAll('.week-label').length;
-    }
-    
-    function getBlockStateHelper() {
-        // Placeholder: Needs implementation to gather state from DOM/manager
-        // This is complex and depends on how state is managed elsewhere
-        console.warn('[ForgeAssist Init] getBlockStateHelper not fully implemented.');
-        return {
-            slots: {}, // Populate from workCanvas
-            phases: [], // Populate from phaseRibbon
-            periodizationModels: PeriodizationModelManager.getState() // Get from manager
-        };
-    }
-
-    // --- Initialize ForgeAssist --- 
-    console.log('[BlockBuilder] Initializing ForgeAssist...');
-    try {
-        ForgeAssist.init({
-            workCanvas: workCanvas,
-            showToast: showToast, // Assumes showToast is available in this scope
-            triggerAnalyticsUpdate: triggerAnalyticsUpdate, // Assumes triggerAnalyticsUpdate is available
-            getTotalWeeks: getTotalWeeksHelper,
-            getBlockState: getBlockStateHelper,
-            exerciseLibrary: exerciseLibraryData, // Assumes exerciseLibraryData holds the loaded library
-            // Pass analytics functions
-            acwrFunction: acwr, 
-            monotonyFunction: monotony,
-            // Ensure getCurrentBlockLoads receives workCanvas when called by ForgeAssist/AdaptiveScheduler
-            getCurrentBlockLoads: () => getCurrentBlockLoads(workCanvas), // <<< MODIFIED HERE
-            simulatedPastLoad: window.simulatedPastLoad || [] // Get from global or default
-        });
-         console.log('[BlockBuilder] ForgeAssist Initialized.');
-    } catch (error) {
-        console.error('[BlockBuilder] Error initializing ForgeAssist:', error);
-        showToast('ForgeAssist failed to initialize!', 'error');
-    }
 import monotony from './monotony.js';
+import AdaptiveScheduler from './adaptiveScheduler.js';
 // Import the engine module as an object
 import * as PeriodizationEngine from './periodizationEngine.js'; 
 import vbtAdjust from './velocityAutoReg.js'; // Import VBT adjustment logic
@@ -140,23 +46,10 @@ import {
     loadViewMode // Add view mode function
 } from './exercises/library.js'; // <-- Added Library import
 import ForgeAssist from './forgeassist.js';
-import AdaptiveScheduler from './adaptiveScheduler.js';
 
 const hubContainer = document.getElementById('block-builder-hub');
 const blockBuilderContainer = document.querySelector('.block-builder-container');
-
-    // --- Inspector Update Logic ---
-
-    // <<< NEW: Listen for event to re-render assist actions >>>
-    const inspectorElement = document.getElementById('inspector');
-    
-    // Listen for the select-model event from ForgeAssist
-    document.addEventListener('forge-assist:select-model', (event) => {
-        if (event.detail && event.detail.modelId && event.detail.dayId) {
-            console.log(`[forge-assist:select-model] Selecting model ${event.detail.modelId} for day ${event.detail.dayId}`);
-            handleModelContextSelection(event.detail.modelId, event.detail.dayId);
-        } else {
-            console.error('[forge-assist:select-model] Event missing modelId or dayId', event.detail);
+const createNewBtn = document.getElementById('hub-create-new'); // Added missing reference
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM fully loaded and parsed for blockbuilder.js");
@@ -205,7 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Hub View Elements ---
     const blockBuilderHub = document.getElementById('block-builder-hub');
-    const hubCreateNewBtn = document.getElementById('hub-create-new'); // <<< DEFINE THIS
     const hubBrowseTemplatesBtn = document.getElementById('hub-browse-templates');
     const recentBlocksList = document.getElementById('recent-blocks-list');
     const backToHubBtn = document.getElementById('back-to-hub-btn');
@@ -1270,44 +1162,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // <<<--- ADD EVENT LISTENERS HERE --- >>>
     // --- Hub Button Event Listeners ---
-    if (hubCreateNewBtn) {
-        hubCreateNewBtn.addEventListener('click', () => {
-            console.log("Create New button clicked");
-        }
-    });
-    
-    // --- Register event listeners for inspector tabs ---
-
-    // <<< NEW: Function to handle workout card clicks (opens modal) >>>
-    function handleCardClick(cardElement, isShiftKey) {
-        // First handle the selection state
-        handleSelection(cardElement, isShiftKey);
-        
-        // Update the selected context
-            const modal = document.getElementById('new-block-options-modal');
-            if (modal) {
-                modal.classList.add('is-visible');
-            }
-            // Previously, this might have directly shown the builder view
-            // showView('builder'); 
-            // generateCalendarGrid(8); // Default 8 weeks
-        });
+    if (createNewBtn && newBlockOptionsModal) {
+        createNewBtn.addEventListener('click', () => {
+            console.log("Create New Block button clicked - showing options modal.");
+            newBlockOptionsModal.classList.add('is-visible');
+                     });
+                } else {
+        if (!createNewBtn) console.error("Create New button not found!");
+        if (!newBlockOptionsModal) console.error("New Block Options Modal not found!");
     }
 
-    if (hubBrowseTemplatesBtn) {
-        hubBrowseTemplatesBtn.addEventListener('click', () => {
-            console.log("Browse Templates button clicked (hub)");
-            // showToast("Template browser not yet implemented.", "info"); // <<< REMOVE THIS LINE
-            const templatesModal = document.getElementById('templates-modal');
-            if (templatesModal) {
-                templatesModal.classList.add('is-visible');
-            } else {
-                console.error("Templates modal not found!");
-            }
-        });
-    }
-
-    // Listener for the button *within* the new block modal
     if (createBlockFromOptionsBtn) {
         createBlockFromOptionsBtn.addEventListener('click', () => {
              console.log("Create button inside modal clicked.");
@@ -1317,19 +1181,8 @@ document.addEventListener('DOMContentLoaded', () => {
          console.error("Create Block From Options button not found!");
     }
 
-    if (newBlockOptionsCloseBtn && newBlockOptionsModal) {
+     if (newBlockOptionsCloseBtn && newBlockOptionsModal) {
         newBlockOptionsCloseBtn.addEventListener('click', () => {
-        const { selectedElement, selectedElements } = getSelectionState();
-        selectedContext.type = 'exercise';
-        selectedContext.elements = new Set(selectedElements);
-        
-        // Update multi-select toolbar visibility
-        updateMultiSelectToolbarVisibility();
-        
-        // Update ForgeAssist context to ensure it has the latest selection
-        ForgeAssist.updateContext(selectedElement, selectedElements);
-        
-        // Open inspector based on selection count
             console.log("Modal close button clicked.");
                  newBlockOptionsModal.classList.remove('is-visible');
              });
@@ -1339,13 +1192,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (browseTemplatesBtn) {
          browseTemplatesBtn.addEventListener('click', () => {
-        if (selectedContext.elements.size === 1 && !isShiftKey) {
-            // Single selection - show exercise details
-            updateInspectorForSelection(); // Ensure details are updated before opening
-            openInspector(cardElement);
-        } else if (selectedContext.elements.size > 1) {
-            // Multi-selection - show multi-select inspector
-            openMultiSelectInspector();
             console.log("Browse Templates button clicked");
             const templatesModal = document.getElementById('templates-modal');
             if (templatesModal) {
@@ -1358,20 +1204,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("Browse Templates button not found!");
     }
     // <<<--- END ADDED EVENT LISTENERS --- >>>
-        } else {
-            // No selection - close inspector
-            closeInspector();
-        }
-    }
-    // <<< END MODIFIED Handler >>>
-
-    // <<< Add Exercise Detail Modal Close Listener >>>
-    function closeExerciseDetailModal() {
-        if (exerciseDetailModal) {
-            exerciseDetailModal.classList.remove('is-visible');
-            
-            // Stop any playing videos when closing the modal
-            const videoIframe = exerciseDetailModal.querySelector('iframe');
 
     // --- Helper Functions Now Defined INSIDE DOMContentLoaded ---
 
@@ -1382,18 +1214,6 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function createWorkoutCard(exerciseName, details, options = {}) { 
         const card = document.createElement('div');
-            if (videoIframe && videoIframe.src) {
-                // Pause YouTube videos by reloading the iframe
-                const currentSrc = videoIframe.src;
-                videoIframe.src = currentSrc;
-            }
-        }
-    }
-    
-    // Make sure we have all necessary elements before attaching listeners
-    if (exerciseDetailCloseBtn) {
-        exerciseDetailCloseBtn.addEventListener('click', closeExerciseDetailModal);
-    }
         card.className = 'workout-card';
         card.draggable = true;
         card.id = options.id || `workout-${Date.now()}-${Math.random().toString(16).slice(2)}`; 
@@ -1401,18 +1221,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- MODIFIED: Use options directly, remove getStructuredDetails call --- 
         // Set dataset attributes directly from options or use defaults
         card.dataset.sets = options.sets || '';
-    
-    // Also close modal on overlay click
-    if (exerciseDetailModal) {
-        exerciseDetailModal.addEventListener('click', (e) => {
-            if (e.target === exerciseDetailModal) { // Clicked on the overlay itself
-                closeExerciseDetailModal();
-            }
-        });
-        
-        // Add escape key listener for better UX
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && exerciseDetailModal.classList.contains('is-visible')) {
         card.dataset.reps = options.reps || '';
         card.dataset.loadType = options.loadType || 'rpe'; // Default to RPE or empty? Let's keep RPE default for now
         card.dataset.loadValue = options.loadValue || '';
@@ -1420,18 +1228,6 @@ document.addEventListener('DOMContentLoaded', () => {
         card.dataset.exerciseId = options.exerciseId || ''; // <<< ADDED exerciseId
         // Use provided notes from options, fall back to original details string if notes aren't in options
         card.dataset.notes = options.notes || details || ''; 
-                closeExerciseDetailModal();
-            }
-        });
-    }
-    // <<< End Close Listener >>>
-
-    // <<< NEW: Listener for library item clicks >>>
-    const inspectorPanelElement = document.getElementById('inspector-panel');
-    if (inspectorPanelElement) {
-        inspectorPanelElement.addEventListener('forge-library:show-detail', (e) => {
-            const exerciseId = e.detail.exerciseId;
-            console.log(`[BlockBuilder] Caught forge-library:show-detail event for ID: ${exerciseId}`);
         // Calculate or use provided load
         card.dataset.load = options.load || calculateEstimatedLoad(card.dataset);
         // --- END MODIFICATION --- 
@@ -1445,8 +1241,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- Card Content ---
         card.innerHTML = `
-            if (exerciseId) {
-                const libraryData = exerciseLibraryData.find(ex => ex.id === exerciseId);
             <div class="card-face card-front">
                 <!-- Badge Placeholder - content added dynamically -->
                 <div class="card-model-badge-indicator" style="display: none;"></div> 
@@ -1457,35 +1251,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="load">${card.dataset.loadType} ${card.dataset.loadValue}</span>
                 </div>
                 <!-- card-main-content wrapper removed -->
-                if (libraryData) {
-                    // Call the modal population function, passing only library data
-                    populateAndShowExerciseDetailModal(libraryData, null); 
-                } else {
-                    console.warn(`Exercise data not found in library for ID: ${exerciseId}`);
-                    showToast('Could not find exercise details.', 'warning');
-                }
-            } else {
-                console.error('forge-library:show-detail event missing exerciseId.');
-            }
-        });
-    }
-    // <<< END NEW LISTENER >>>
-
-    // <<< NEW: Central function to populate and show the modal >>>
-    function populateAndShowExerciseDetailModal(libraryData, cardData) {
                 <div class="card-actions">
                     <button class="card-action-btn edit-btn" title="Edit Exercise">✏️</button>
                     <button class="card-action-btn delete-btn" title="Delete Exercise">🗑️</button>
                 </div>
                  <div class="vbt-indicator" style="display: none;" title="Velocity Loss Target"></div>
-        if (!libraryData) return;
-
-        const exerciseName = libraryData.name || 'Exercise';
-        if (exerciseDetailTitle) exerciseDetailTitle.textContent = exerciseName;
-
-        // Populate Library Info (Always available)
-        if (detailLibraryCategory) detailLibraryCategory.textContent = libraryData.category || '-';
-        if (detailLibraryDescription) detailLibraryDescription.textContent = libraryData.description || '-';
             </div>
             <div class="card-face card-back" style="display: none;">
                 <!-- Back content for editing/details -->
@@ -1497,12 +1267,6 @@ document.addEventListener('DOMContentLoaded', () => {
         card.querySelector('.delete-btn').addEventListener('click', (e) => {
             e.stopPropagation(); // Prevent triggering cell selection
             // deleteWorkoutCard(card); // Assuming deleteWorkoutCard is available in this scope or imported
-        if (detailLibraryMuscles) detailLibraryMuscles.textContent = (libraryData.primaryMuscles || []).join(', ') || '-';
-        if (detailLibraryEquipment) detailLibraryEquipment.textContent = (libraryData.equipmentNeeded || []).join(', ') || '-';
-        if (detailLibraryDifficulty) detailLibraryDifficulty.textContent = libraryData.difficulty || '-';
-        
-        // Enhanced YouTube Video Handling
-        const videoContainer = document.getElementById('exercise-video-container');
              if (typeof deleteWorkoutCard === 'function') {
                  deleteWorkoutCard(card);
              } else {
@@ -1514,15 +1278,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         // Needs handleSelection, openInspector 
-        if (videoContainer) {
-            videoContainer.innerHTML = ''; // Clear previous video
-            
-            if (libraryData.videoUrl && (libraryData.videoUrl.includes('youtube.com') || libraryData.videoUrl.includes('youtu.be'))) {
-                let videoId = null;
-                
-                try {
-                    // Extract YouTube video ID from different URL formats
-                    const url = new URL(libraryData.videoUrl);
         card.querySelector('.edit-btn').addEventListener('click', (e) => {
             e.stopPropagation(); 
             handleSelection(card, false); // Select only this card
@@ -1532,13 +1287,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // NEW: Make clicking the card (not edit/delete) open inspector and select
         card.addEventListener('click', (e) => {
             if (e.target.closest('.edit-btn') || e.target.closest('.delete-btn')) return;
-                    
-                    if (url.hostname === 'youtu.be') {
-                        videoId = url.pathname.substring(1); // Get path after hostname
-                    } else if (url.hostname.includes('youtube.com')) {
-                        if (url.searchParams.has('v')) {
-                            videoId = url.searchParams.get('v');
-                        } else if (url.pathname.includes('/embed/')) {
             handleCardClick(card, e.shiftKey);
         });
 
@@ -1551,18 +1299,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function calculateEstimatedLoad(dataset) {
         let estimatedLoad = 300; // Base load
         const sets = parseInt(dataset.sets, 10) || 1;
-                            videoId = url.pathname.split('/embed/')[1];
-                        } else if (url.pathname.includes('/v/')) {
-                            videoId = url.pathname.split('/v/')[1];
-                        }
-                    }
-                    
-                    // Handle any additional parameters in the videoId
-                    if (videoId && videoId.includes('&')) {
-                        videoId = videoId.split('&')[0];
-                    }
-                    if (videoId && videoId.includes('?')) {
-                        videoId = videoId.split('?')[0];
         const reps = parseInt(String(dataset.reps).split('-')[0], 10) || 5; // Take first number if range
         const loadVal = parseFloat(dataset.loadValue) || 0;
         estimatedLoad += sets * reps * 5;
@@ -1571,17 +1307,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (loadVal > 0) {
             estimatedLoad += loadVal;
         }
-                    }
-                    
-                } catch (e) {
-                    console.error("Error parsing video URL:", libraryData.videoUrl, e);
-                }
-
-                if (videoId) {
-                    // Create enhanced iframe with additional parameters for better UX
-                    const iframe = document.createElement('iframe');
-                    iframe.width = '100%';
-                    iframe.height = '100%';
         return Math.round(estimatedLoad).toString();
     }
 
@@ -1591,15 +1316,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // createWorkoutCard, updateCardVbtIndicator, attachListenersToAllSlots, triggerAnalyticsUpdate
     function loadBlockIntoDOM() {
         console.log("Forcing Hub view on initial load.");
-                    
-                    // Add params for better playback experience
-                    const params = new URLSearchParams({
-                        rel: '0',              // Don't show related videos from other channels
-                        modestbranding: '1',   // Hide YouTube logo
-                        enablejsapi: '1',      // Enable JavaScript API
-                        origin: window.location.origin, // Security: specify origin
-                        playsinline: '1',      // Play inline on mobile devices
-                        autoplay: '0',         // Don't autoplay
         showView('hub');
         // --- REMOVE STATE LOADING LOGIC --- 
         /* 
@@ -1610,27 +1326,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Check not just if state exists, but if it contains meaningful data
         const isValidState = state && 
                            ( (state.slots && Object.keys(state.slots).length > 0) || 
-                        fs: '1',               // Show fullscreen button
-                        color: 'white',        // Use white progress bar
-                        hl: 'en',              // English interface
-                        iv_load_policy: '3'    // Hide annotations
-                    });
-                    
-                    iframe.src = `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
-                    iframe.title = `${exerciseName} video demonstration`;
-                    iframe.loading = "lazy"; // Lazy load iframe for performance
-                    iframe.frameBorder = '0';
-                    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen';
-                    iframe.allowFullscreen = true;
-                    
-                    // Add a loading animation while the video loads
-                    const loadingWrapper = document.createElement('div');
-                    loadingWrapper.className = 'video-loading-wrapper';
-                    
-                    // Create the loading animation
-                    const loadingAnimation = document.createElement('div');
-                    loadingAnimation.className = 'video-loading-animation';
-                    loadingAnimation.innerHTML = '<div></div><div></div><div></div>';
                              (state.phases && state.phases.length > 0) ||
                              (state.periodizationModels && Object.keys(state.periodizationModels.modelInstances || {}).length > 0)
                            );
@@ -1639,19 +1334,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("No valid saved state found or error loading. Showing Hub.");
             showView('hub'); // Show hub if no *valid* state
             // Populate recent blocks for the hub view even if no active state
-                    
-                    loadingWrapper.appendChild(loadingAnimation);
-                    loadingWrapper.appendChild(iframe);
-                    videoContainer.appendChild(loadingWrapper);
-                    
-                    // Hide loading animation when iframe loads
-                    iframe.onload = () => {
-                        loadingAnimation.style.display = 'none';
-                    };
-                } else {
-                    // Show placeholder with error message
-                    videoContainer.innerHTML = `
-                        <div class="video-placeholder">
             // This might need adjustment depending on where populateRecentBlocks is called
             // if (typeof populateRecentBlocks === 'function') populateRecentBlocks(); 
             return;
@@ -1682,9 +1364,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 3. Restore Phases
         if (state.phases && state.phases.length > 0 && phaseRibbon) {
-                            <div class="video-icon-placeholder">
-                                <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="1.5"/>
             const phaseBars = phaseRibbon.querySelectorAll('.phase-bar');
             if (phaseBars.length === state.phases.length) {
                 state.phases.forEach((phaseData, index) => {
@@ -1696,10 +1375,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-                                    <path d="M15 9L9 15M9 9L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                                </svg>
-                            </div>
-                            <p>Could not extract video ID</p>
         // 4. Load Periodization Model State
         if (state.periodizationModels) {
             PeriodizationModelManager.loadState(state.periodizationModels);
@@ -1718,31 +1393,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (cell) {
                         cardsData.forEach(cardData => {
                             const newCard = createWorkoutCard(cardData.name, cardData.notes, { 
-                        </div>
-                    `;
-                }
-            } else {
-                // No video available placeholder
-                videoContainer.innerHTML = `
-                    <div class="video-placeholder">
-                        <div class="video-icon-placeholder">
-                            <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="1.5"/>
                                 id: cardData.id,
                                 sets: cardData.sets,
                                 reps: cardData.reps,
                                 loadType: cardData.loadType,
                                 loadValue: cardData.loadValue,
-                                <path d="M15.5 12L10 16V8L15.5 12Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <p>No video available</p>
-                    </div>
-                `;
-            }
-        }
-
-        // Populate Current Specs & Footer Buttons based on context (card or library)
                                 rest: cardData.rest,
                                 load: cardData.load,
                                 modelDriven: cardData.modelDriven,
@@ -1754,11 +1409,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 updateCardVbtIndicator(newCard, newCard.dataset.vbtTarget);
         } else {
                                 // console.warn("updateCardVbtIndicator not available");
-        const currentSpecsSection = exerciseDetailModal.querySelector('.current-specs');
-        if (cardData) { // Clicked from a card on the canvas
-            if (currentSpecsSection) currentSpecsSection.style.display = ''; // Show
-            if (detailCurrentSets) detailCurrentSets.textContent = cardData.sets || '-';
-            if (detailCurrentReps) detailCurrentReps.textContent = cardData.reps || '-';
                             }
                             // Update icon state after loading card
                             updateCardIcon(newCard); 
@@ -1770,10 +1420,6 @@ document.addEventListener('DOMContentLoaded', () => {
                      console.warn(`Could not parse slot key: ${slotKey}`);
                 }
             });
-            if (detailCurrentLoadType) detailCurrentLoadType.textContent = cardData.loadType || '-';
-            if (detailCurrentLoadValue) detailCurrentLoadValue.textContent = cardData.loadValue || '-';
-            if (detailCurrentRest) detailCurrentRest.textContent = cardData.rest || '-';
-            if (detailCurrentNotes) detailCurrentNotes.textContent = cardData.notes || '-';
         }
 
         // 6. Update Day Cell DOM Attributes from Loaded Model Manager State
@@ -1782,14 +1428,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Updating day cell DOM attributes from loaded model manager state...");
             Object.entries(loadedMapping).forEach(([dayId, instanceId]) => {
                 const cellElement = workCanvas.querySelector(`[data-day-id="${dayId}"]`);
-
-            // Configure buttons for card context
-            if (detailModalEditBtn) detailModalEditBtn.style.display = ''; // Show
-            if (detailModalSwapBtn) detailModalSwapBtn.textContent = 'Suggest Swap'; // Reset text
-            detailModalEditBtn.onclick = () => {
-                closeExerciseDetailModal();
-                openInspector(document.getElementById(cardData.id)); // Find card by ID
-                activateTab('details');
                 if (cellElement) {
                     PeriodizationModelManager.updateDayCellDOMAttributes(cellElement, instanceId);
                     // Call updateDayBadge AFTER attributes are set
@@ -1799,12 +1437,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-            };
-            detailModalSwapBtn.onclick = () => {
-                closeExerciseDetailModal();
-                // Get the specific card element for context
-                const cardElement = document.getElementById(cardData.id);
-                if(cardElement) ForgeAssist.updateContext(cardElement, new Set([cardElement])); // Ensure context is set
 
         // 7. Re-attach listeners
         attachListenersToAllSlots(); // Uses attachDragDropListeners
@@ -1822,12 +1454,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Load Settings Into DOM ---
     // Uses loadSettingsDataFromLocalStorage
     function loadSettingsIntoDOM() {
-                const action = ForgeAssist.getContextualActions().find(a => a.id === 'suggest_swap' || a.id === 'find-alternative');
-                if (action?.handler) action.handler();
-                else showToast('Could not trigger swap suggestion.', 'warning');
-            };
-
-        } else { // Clicked from the library list
         console.log("Attempting to load settings into DOM...");
         const settings = loadSettingsDataFromLocalStorage();
         if (!settings) {
@@ -1837,9 +1463,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Saved settings loaded:", settings);
         
         // Apply settings (Example: block name)
-            if (currentSpecsSection) currentSpecsSection.style.display = 'none'; // Hide
-            // Clear current specs just in case
-            if (detailCurrentSets) detailCurrentSets.textContent = '-';
         if (blockNameInput && settings.blockName) { // blockNameInput is defined in outer scope
             blockNameInput.value = settings.blockName;
         }
@@ -1848,11 +1471,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Example: RPE drift - Need element references
         const prevPlannedRpeInput = document.getElementById('prev-planned-rpe');
         const prevActualRpeInput = document.getElementById('prev-actual-rpe');
-            if (detailCurrentReps) detailCurrentReps.textContent = '-';
-            if (detailCurrentLoadType) detailCurrentLoadType.textContent = '-';
-            if (detailCurrentLoadValue) detailCurrentLoadValue.textContent = '-';
-            if (detailCurrentRest) detailCurrentRest.textContent = '-';
-            if (detailCurrentNotes) detailCurrentNotes.textContent = '-';
         if (prevPlannedRpeInput && settings.prevPlannedRpe) {
             prevPlannedRpeInput.value = settings.prevPlannedRpe;
         }
@@ -1861,14 +1479,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         console.log("Settings applied to DOM.");
-
-            // Configure buttons for library context
-            if (detailModalEditBtn) detailModalEditBtn.style.display = 'none'; // Hide
-            if (detailModalSwapBtn) detailModalSwapBtn.textContent = 'Find Alternatives'; // Change text
-            detailModalSwapBtn.onclick = () => {
-                closeExerciseDetailModal();
-                // Trigger swap using only the ID
-                 ForgeAssist.updateContext(null, new Set()); // Clear card context
     }
 
     // --- Periodization Model Visuals (Badges) ---
@@ -1878,17 +1488,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {HTMLElement} dayCellElement - The day cell DOM element.
      */
     function updateDayBadge(dayCellElement) {
-                 // Directly call the handler if possible (assuming ForgeAssist is accessible)
-                 // It might be better to have a dedicated ForgeAssist function that accepts only an ID
-                 console.warn('Triggering swap from library context - handler might expect a card element.');
-                 const swapAction = ForgeAssist.getContextualActions().find(a => a.id === 'suggest_swap' || a.id === 'find-alternative');
         // console.log(`[updateDayBadge] Updating badge for cell:`, dayCellElement?.dataset.dayId);
-                 if(swapAction && typeof swapAction.handler === 'function'){
-                    // The handler currently expects currentContext.selectedElement to be the card
-                    // This won't work perfectly without refactoring handleSuggestSwap.
-                    // For now, we can *try* calling it but it might fail gracefully or require a selected card.
-                    // A better approach: ForgeAssist.suggestSwapById(libraryData.id);
-                    // Let's just show a toast for now.
         if (!dayCellElement) return;
         const dayId = dayCellElement.dataset.dayId;
         if (!dayId) return;
@@ -1901,40 +1501,17 @@ document.addEventListener('DOMContentLoaded', () => {
             // console.log(`[updateDayBadge] Fetched model instance:`, model);
             if (!model) {
                 // console.log(`[updateDayBadge] Model instance not found, removing badge.`);
-                    showToast(`Alternative suggestions for ${libraryData.name} would appear here. (Needs handler update)`, 'info');
-                 } else {
-                    showToast('Could not trigger alternative suggestion.', 'warning');
-                 }
-            };
-        }
-
-        // Show Modal
-        if (exerciseDetailModal) exerciseDetailModal.classList.add('is-visible');
-    }
                 removeDayBadgeAndClasses(dayCellElement);
                 return;
             }
 
             // Check if any card within the cell is actually model-driven
             const modelDrivenCard = dayCellElement.querySelector('.workout-card[data-model-driven="true"]');
-    // <<< END Central function >>>
-
-    /**
-     * Creates a superset container and adds the selected exercise cards to it
-     * @param {Array} exerciseCards - Array of workout card DOM elements to group into a superset
-     * @returns {HTMLElement} The superset container element 
-     */
-    function createSuperset(exerciseCards) {
             const hasModelDrivenCard = !!modelDrivenCard;
             // console.log(`[updateDayBadge] Cell has model-driven card: ${hasModelDrivenCard}`, modelDrivenCard);
             
             if (hasModelDrivenCard) {
                 let badge = dayCellElement.querySelector('.model-badge');
-        if (!exerciseCards || exerciseCards.length < 2) {
-            console.error('At least 2 exercise cards are required to create a superset');
-            showToast('Select at least 2 exercises to create a superset', 'error');
-            return null;
-        }
                 let createdBadge = false;
                 if (!badge) {
                     badge = document.createElement('div');
@@ -1943,46 +1520,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     badge.addEventListener('click', handleModelBadgeClick);
                     createdBadge = true;
                 }
-
-        // Create the superset container
-        const supersetContainer = document.createElement('div');
-        supersetContainer.className = 'superset-container';
-        supersetContainer.id = `superset-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-        
-        // Create the header with label and controls
                 // console.log(`[updateDayBadge] Badge element ${createdBadge ? 'created' : 'found'}:`, badge);
 
                 const modelType = model.type.toLowerCase();
                 const shortType = modelType.substring(0, 3).toUpperCase();
                 const icon = getIconForModelType(modelType);
-        const supersetHeader = document.createElement('div');
-        supersetHeader.className = 'superset-header';
-        supersetHeader.innerHTML = `
-            <div class="superset-label">Superset</div>
-            <div class="superset-controls">
-                <button class="superset-edit-btn" title="Edit Superset">✏️</button>
                 // console.log(`[updateDayBadge] Model type: ${modelType}, Icon: ${icon}, ShortType: ${shortType}`);
                 
                 // Update badge content and attributes
                 badge.className = `model-badge model-type-${modelType}`; 
                 badge.dataset.modelId = instanceId;
-                <button class="superset-remove-btn" title="Break Superset">❌</button>
-            </div>
-        `;
-        
-        supersetContainer.appendChild(supersetHeader);
-        
-        // Get the parent element (day cell) of the first card
                 badge.innerHTML = `<span class="badge-icon">${icon}</span><span class="badge-text">${shortType}</span>`;
                 badge.title = `Model: ${model.type} (${instanceId})\nParams: ${JSON.stringify(model.params)}`;
                 badge.style.display = ''; // Ensure badge is visible
-        const parentCell = exerciseCards[0].closest('.day-cell');
-        if (!parentCell) {
-            console.error('Parent day cell not found for exercise cards');
-            return null;
-        }
-        
-        // Remove cards from their current location and add to the superset container
                 
                 // Add classes to the day cell itself for styling
                 dayCellElement.classList.add('has-model');
@@ -1990,12 +1540,6 @@ document.addEventListener('DOMContentLoaded', () => {
  
             } else {
                 // console.log(`[updateDayBadge] Model assigned, but no model-driven cards found. Removing badge.`);
-        exerciseCards.forEach(card => {
-            // If card is already in a superset, remove it from that superset first
-            const existingSuperset = card.closest('.superset-container');
-            if (existingSuperset) {
-                // If this is the only card in the superset, remove the entire superset
-                const cardsInExistingSuperset = existingSuperset.querySelectorAll('.workout-card');
                 removeDayBadgeAndClasses(dayCellElement);
             }
 
@@ -2007,44 +1551,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Removes the model badge and related classes from a day cell.
-                if (cardsInExistingSuperset.length <= 2) {
-                    // Move the other card out of the superset before removing it
-                    Array.from(cardsInExistingSuperset).forEach(c => {
-                        if (c !== card) {
-                            existingSuperset.parentNode.insertBefore(c, existingSuperset);
-                        }
-                    });
-                    existingSuperset.remove();
      * @param {HTMLElement} dayCellElement - The day cell DOM element.
      */
     function removeDayBadgeAndClasses(dayCellElement) {
         const badge = dayCellElement?.querySelector('.model-badge');
         if (badge) {
             badge.removeEventListener('click', handleModelBadgeClick);
-                } else {
-                    // Just remove this card from the existing superset
-                    existingSuperset.removeChild(card);
-                }
-            } else if (card.parentNode) {
-                card.parentNode.removeChild(card);
-            }
-            
-            // Add card to new superset container
             badge.remove();
         }
         // Remove classes from the cell itself
         dayCellElement.classList.remove('has-model');
         // Remove any model-type-* class
         const modelTypeClasses = Array.from(dayCellElement.classList).filter(cls => cls.startsWith('model-type-'));
-            supersetContainer.appendChild(card);
-            
-            // Update the card styling for superset
-            card.classList.add('in-superset');
-        });
-        
-        // Add event listeners to the superset controls
-        supersetContainer.querySelector('.superset-edit-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
         dayCellElement.classList.remove(...modelTypeClasses);
     }
 
@@ -2055,39 +1573,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleModelBadgeClick(event) {
         event.stopPropagation(); // Prevent day cell click
         const badge = event.currentTarget;
-            // Open inspector for superset editing
-            // This will need to be implemented as part of the inspector functionality
-            showToast('Superset editing coming soon!', 'info');
-        });
-        
-        supersetContainer.querySelector('.superset-remove-btn').addEventListener('click', (e) => {
         const instanceId = badge.dataset.modelId;
         const dayCell = badge.closest('.day-cell');
         const dayId = dayCell?.dataset.dayId;
 
         if (instanceId && dayId && dayCell) {
-            e.stopPropagation();
-            breakSuperset(supersetContainer);
-        });
-        
-        // Insert the superset container into the day cell
-        parentCell.appendChild(supersetContainer);
-        
-        // Trigger updates
             console.log(`Model badge clicked: Instance ${instanceId}, Day ${dayId}`);
             handleModelContextSelection(instanceId, dayId, dayCell);
         } else {
             console.warn("Could not get modelId, dayId, or dayCell from badge click event.");
-        triggerSaveState();
-        triggerAnalyticsUpdate(workCanvas);
-        
-        showToast('Superset created', 'success');
-        return supersetContainer;
-    }
-
-    /**
-     * Breaks a superset, removing the container and returning individual exercise cards to the day cell
-     * @param {HTMLElement} supersetContainer - The superset container element to break
         }
     }
 
@@ -2098,20 +1592,6 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {HTMLElement} dayCellElement - The DOM element of the day cell.
      */
     function handleModelContextSelection(instanceId, dayId, dayCellElement) {
-     */
-    function breakSuperset(supersetContainer) {
-        if (!supersetContainer || !supersetContainer.classList.contains('superset-container')) {
-            console.error('Invalid superset container provided');
-            return;
-        }
-        
-        const parentCell = supersetContainer.closest('.day-cell');
-        if (!parentCell) {
-            console.error('Parent day cell not found for superset');
-            return;
-        }
-        
-        // Get all workout cards in the superset
         try {
             clearSelectionStyles();
         } catch (error) {
@@ -2120,15 +1600,6 @@ document.addEventListener('DOMContentLoaded', () => {
         handleSelection(dayCellElement, false);
         syncSelectedContext('model', { modelId: instanceId, dayId });
         ForgeAssist.updateContext(dayCellElement, selectedContext.elements);
-        const exerciseCards = Array.from(supersetContainer.querySelectorAll('.workout-card'));
-        
-        // Move cards back to day cell and remove superset container
-        exerciseCards.forEach(card => {
-            card.classList.remove('in-superset');
-            parentCell.appendChild(card);
-        });
-        
-        supersetContainer.remove();
         dayCellElement.classList.add('model-context-selected');
         updateInspectorForSelection();
     }
@@ -2138,16 +1609,6 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function clearSelectionStyles() {
         document.querySelectorAll('.selected, .model-context-selected').forEach(el => {
-        
-        // Trigger updates
-        triggerSaveState();
-        triggerAnalyticsUpdate(workCanvas);
-        
-        showToast('Superset removed', 'success');
-    }
-
-    // Add context menu and multi-select toolbar elements
-    let contextMenu = null;
             el.classList.remove('selected', 'model-context-selected');
         });
     }
@@ -2158,31 +1619,12 @@ document.addEventListener('DOMContentLoaded', () => {
      * @returns {string} Emoji icon string
      */
     function getIconForModelType(modelType) {
-    let multiSelectToolbar = null;
-    
-    // Initialize the context menu for workout cards
-    function initializeContextMenu() {
-        // Create context menu element if it doesn't exist
-        if (!contextMenu) {
-            contextMenu = document.createElement('div');
-            contextMenu.className = 'context-menu';
-            contextMenu.style.display = 'none';
-            document.body.appendChild(contextMenu);
         switch (modelType.toLowerCase()) {
             case 'linear': return '📈';
             case 'wave': return '🌊';
             case 'triphasic': return '🧱'; // Or maybe ⚡️ ?
             case 'undulating': return '📊';
             default: return '⚙️';
-            
-            // Close menu on document click
-            document.addEventListener('click', (e) => {
-                if (!contextMenu.contains(e.target)) {
-                    contextMenu.style.display = 'none';
-                }
-            });
-        }
-    }
         }
     }
 
@@ -2193,19 +1635,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const clickedPhase = e.target.closest('.phase-bar');
         if (clickedPhase) {
-    
-    // Show context menu for workout card
-    function showContextMenu(x, y, items) {
-        if (!contextMenu) {
-            initializeContextMenu();
-        }
-        
-        // Clear previous items
-        contextMenu.innerHTML = '';
-        
-        // Add menu items
-        items.forEach(item => {
-            const menuItem = document.createElement('div');
             try {
                 clearSelectionStyles();
             } catch (error) {
@@ -2214,14 +1643,6 @@ document.addEventListener('DOMContentLoaded', () => {
             handleSelection(clickedPhase, false);
             syncSelectedContext('phase');
             ForgeAssist.updateContext(clickedPhase, selectedContext.elements);
-            menuItem.className = 'context-menu-item';
-            menuItem.innerHTML = `<span class="icon">${item.icon}</span> ${item.label}`;
-            menuItem.addEventListener('click', () => {
-                contextMenu.style.display = 'none';
-                item.action();
-            });
-            contextMenu.appendChild(menuItem);
-        });
             updateInspectorForSelection();
             openInspector(clickedPhase);
         }
@@ -2231,13 +1652,6 @@ document.addEventListener('DOMContentLoaded', () => {
     workCanvas.addEventListener('click', (e) => {
         if (e.target.closest('.model-badge')) {
             return;
-        
-        // Position menu
-        contextMenu.style.left = `${x}px`;
-        contextMenu.style.top = `${y}px`;
-        contextMenu.style.display = 'block';
-        
-        // Ensure menu is within viewport
         }
         if (e.target.closest('.card-action-btn')) {
             return;
@@ -2245,15 +1659,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const clickedCard = e.target.closest('.workout-card');
         const clickedCell = e.target.closest('.day-cell');
         if (clickedCard) {
-        const rect = contextMenu.getBoundingClientRect();
-        if (rect.right > window.innerWidth) {
-            contextMenu.style.left = `${window.innerWidth - rect.width - 5}px`;
-        }
-        if (rect.bottom > window.innerHeight) {
-            contextMenu.style.top = `${y - rect.height}px`;
-        }
-    }
-    
             handleCardClick(clickedCard, e.shiftKey);
             return;
         }
@@ -2262,13 +1667,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearSelectionStyles();
             } catch (error) {
                 console.error('[BlockBuilder] Error in clearSelectionStyles (Cell Click):', error);
-    // Initialize multi-select toolbar
-    function initializeMultiSelectToolbar() {
-        if (!multiSelectToolbar) {
-            multiSelectToolbar = document.createElement('div');
-            multiSelectToolbar.className = 'multi-select-toolbar';
-            multiSelectToolbar.innerHTML = `
-                <button class="multi-select-action" id="create-superset-btn">
             }
             handleSelection(clickedCell, e.shiftKey);
             syncSelectedContext('day', { dayId: clickedCell.dataset.dayId });
@@ -2278,15 +1676,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         if (!e.target.closest('.inspector-panel') && !e.target.closest('.phase-bar')) {
-                    <span class="icon">⚡</span> Create Superset
-                </button>
-                <button class="multi-select-action" id="delete-selected-btn">
-                    <span class="icon">🗑️</span> Delete Selected
-                </button>
-            `;
-            document.body.appendChild(multiSelectToolbar);
-            
-            // Add event listeners
             try {
                 clearSelectionStyles();
             } catch (error) {
@@ -2295,13 +1684,6 @@ document.addEventListener('DOMContentLoaded', () => {
             handleSelection(null, false);
             syncSelectedContext('none');
             ForgeAssist.updateContext(null, selectedContext.elements);
-            document.getElementById('create-superset-btn').addEventListener('click', () => {
-                const selectedCards = Array.from(selectedContext.elements);
-                if (selectedCards.length >= 2) {
-                    createSuperset(selectedCards);
-                    // Clear selection after creating superset
-                    clearSelectionStyles();
-                    selectedContext = { type: 'none', elements: new Set(), modelId: null, dayId: null };
             updateInspectorForSelection();
             closeInspector();
         }
@@ -2312,13 +1694,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Needs getStructuredDetails, showToast, ForgeAssist // <<< Added ForgeAssist dependency note
     function renderAssistTabContent() {
         const assistTabContent = document.getElementById('assist');
-                    updateMultiSelectToolbarVisibility();
-                }
-            });
-            
-            document.getElementById('delete-selected-btn').addEventListener('click', () => {
-                const selectedCards = Array.from(selectedContext.elements);
-                selectedCards.forEach(card => {
         if (!assistTabContent) return;
 
         // Get actions directly from ForgeAssist
@@ -2327,15 +1702,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!actions || actions.length === 0) {
             assistTabContent.innerHTML = '<p><i>No contextual actions available.</i></p>';
             return;
-                    card.remove();
-                });
-                // Clear selection after deleting
-                clearSelectionStyles();
-                selectedContext = { type: 'none', elements: new Set(), modelId: null, dayId: null };
-                updateMultiSelectToolbarVisibility();
-                triggerSaveState();
-                triggerAnalyticsUpdate(workCanvas);
-                showToast(`Deleted ${selectedCards.length} exercises`, 'success');
         }
 
         let contentHtml = '<h4>ForgeAssist™ Actions</h4><ul>';
@@ -2343,17 +1709,6 @@ document.addEventListener('DOMContentLoaded', () => {
             contentHtml += `<li><button class="assist-action cta-button secondary-cta" 
                                     data-action-id="${action.id}" 
                                     ${action.disabled ? 'disabled' : ''}>
-            });
-        }
-    }
-    
-    // Update toolbar visibility based on selection
-    function updateMultiSelectToolbarVisibility() {
-        if (!multiSelectToolbar) {
-            initializeMultiSelectToolbar();
-        }
-        
-        if (selectedContext.type === 'exercise' && selectedContext.elements.size >= 2) {
                                 ${action.label}
                            </button></li>`;
         });
@@ -2363,29 +1718,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add specific listeners that call the correct handler
         assistTabContent.querySelectorAll('.assist-action').forEach(button => {
             button.addEventListener('click', (e) => {
-            multiSelectToolbar.classList.add('active');
-        } else {
-            multiSelectToolbar.classList.remove('active');
-        }
-    }
-    
-    // Enhance the handleCardClick function to support multi-select and context menu
-    function handleCardClick(cardElement, isShiftKey) {
-        // Original selection handling logic
-        handleSelection(cardElement, isShiftKey);
-        
                 e.stopPropagation(); // Prevent other inspector clicks
                 const actionId = e.target.dataset.actionId;
                 // Find the original action object
-        // Update the selected context
-        const { selectedElement, selectedElements } = getSelectionState();
-        selectedContext.type = 'exercise';
-        selectedContext.elements = new Set(selectedElements);
-        
-        // Update multi-select toolbar visibility
-        updateMultiSelectToolbarVisibility();
-        
-        // If it's a single card selection, open inspector
                 const action = actions.find(a => a.id === actionId);
                 
                 if (action && action.handler) {
@@ -2393,16 +1728,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.log(`Executing handler function for action: ${actionId}`);
                         action.handler(); // Execute the function directly
                     } else if (typeof action.handler === 'string') {
-        if (selectedContext.elements.size === 1 && !isShiftKey) {
-            openInspector(cardElement);
-        } else if (selectedContext.elements.size > 1) {
-            openMultiSelectInspector();
-        }
-    }
-    
-    // Add context menu to workout cards via right-click
-    function attachContextMenuToCards() {
-        // Use event delegation on workCanvas
                         console.log(`Processing command string for action: ${actionId}`);
                         ForgeAssist.processCommand(action.handler); // Process as command string
                     } else {
@@ -2411,14 +1736,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } else {
                     console.error(`Handler not found for action: ${actionId}`);
-        workCanvas.addEventListener('contextmenu', (e) => {
-            // Check if right-click happened on a workout card
-            const card = e.target.closest('.workout-card');
-            if (card) {
-                e.preventDefault(); // Prevent default context menu
-                
-                // Add this card to selection if not already selected
-                if (!selectedContext.elements.has(card)) {
                     showToast(`Action '${action.label || actionId}' could not be executed.`, 'error');
                 }
             });
@@ -2431,30 +1748,11 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function renderRecoveryTabContent() {
         const recoveryTabContent = document.getElementById('recovery');
-                    handleCardClick(card, false);
-                }
-                
-                const menuItems = [
-                    {
-                        icon: '⚡',
-                        label: 'Create Superset',
-                        action: () => {
-                            if (selectedContext.elements.size >= 2) {
-                                createSuperset(Array.from(selectedContext.elements));
         if (!recoveryTabContent) return;
 
         // Default content when no selection
         if (!selectedContext || selectedContext.type === 'none' || selectedContext.elements.size === 0) {
             recoveryTabContent.innerHTML = '<p><i>Select an exercise to see recovery information.</i></p>';
-                                clearSelectionStyles();
-                                selectedContext = { type: 'none', elements: new Set(), modelId: null, dayId: null };
-                                updateMultiSelectToolbarVisibility();
-                            } else {
-                                showToast('Select at least 2 exercises to create a superset', 'warning');
-                            }
-                        }
-                    },
-                    {
             return;
         }
 
@@ -2462,13 +1760,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const biomechanicalAnalyzer = ForgeAssist.getBiomechanicalAnalyzer?.();
         if (!biomechanicalAnalyzer) {
             recoveryTabContent.innerHTML = '<p><i>Recovery analysis not available.</i></p>';
-                        icon: '📋',
-                        label: 'Duplicate',
-                        action: () => {
-                            const clone = card.cloneNode(true);
-                            clone.id = `workout-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-                            // Add event listeners to the cloned card
-                            clone.querySelector('.delete-btn').addEventListener('click', (e) => {
             return;
         }
 
@@ -2479,27 +1770,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Convert stress to recovery (1 - stress)
         for (const [muscle, stress] of Object.entries(stressLevels)) {
             recoveryLevels[muscle] = Math.max(0, Math.min(1, 1 - stress));
-                                e.stopPropagation();
-                                clone.remove();
-                                triggerSaveState();
-                                triggerAnalyticsUpdate(workCanvas);
-                            });
-                            
-                            clone.querySelector('.edit-btn').addEventListener('click', (e) => {
-                                e.stopPropagation();
-                                handleSelection(clone, false);
         }
 
         // Generate content based on selection type
         if (selectedContext.type === 'exercise') {
             const cardElement = selectedContext.elements.size === 1 ? 
                 Array.from(selectedContext.elements)[0] : null;
-                                openInspector(clone);
-                            });
-                            
-                            clone.addEventListener('click', (e) => {
-                                if (e.target.closest('.edit-btn') || e.target.closest('.delete-btn')) return;
-                                handleCardClick(clone, e.shiftKey);
             
             if (!cardElement) {
                 recoveryTabContent.innerHTML = '<p><i>No exercise selected.</i></p>';
@@ -2508,17 +1784,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Get exercise ID and find in library
             const exerciseId = cardElement.dataset.exerciseId;
-                            });
-                            
-                            // Insert after original card
-                            card.parentNode.insertBefore(clone, card.nextSibling);
-                            triggerSaveState();
-                            triggerAnalyticsUpdate(workCanvas);
-                            showToast('Exercise duplicated', 'success');
-                        }
-                    },
-                    {
-                        icon: '🔄',
             const exerciseName = cardElement.querySelector('.exercise-name')?.textContent || 'Exercise';
             
             if (!exerciseId) {
@@ -2528,18 +1793,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Get recovery recommendation
             const exerciseRecovery = biomechanicalAnalyzer.getExerciseReadiness(exerciseId);
-                        label: 'Find Progression',
-                        action: () => {
-                            showProgressionModal(card);
-                        }
-                    },
-                    {
-                        icon: '🗑️',
-                        label: 'Delete',
-                        action: () => {
-                            card.remove();
-                            triggerSaveState();
-                            triggerAnalyticsUpdate(workCanvas);
             const isReady = exerciseRecovery.isReady;
             const readinessScore = exerciseRecovery.readinessScore;
             const limitingMuscles = exerciseRecovery.limitingMuscles || [];
@@ -2591,7 +1844,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <hr class="detail-separator">
                 
                 <h4>Recommendations</h4>
-                            showToast('Exercise deleted', 'success');
             `;
 
             if (!isReady) {
@@ -2606,21 +1858,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div class="recommendation-content">
                                     <strong>${alt.name}</strong>
                                     <div>Recovery: ${alt.recoveryPercentage}%</div>
-                        }
-                    }
-                ];
-                
-                showContextMenu(e.pageX, e.pageY, menuItems);
-            }
-        });
-    }
-    
-    // Call initialization functions
-    initializeContextMenu();
-    initializeMultiSelectToolbar();
-    
-    // Attach context menu to workout cards when calendar is loaded
-    attachContextMenuToCards();
                                 </div>
                                 <button class="swap-to-btn cta-button micro-cta" data-exercise-id="${alt.id}">Use</button>
                             </div>
@@ -2630,15 +1867,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     html += `
                         <p>Consider reducing the intensity or volume for this exercise.</p>
-
-    // Show progression options for an exercise card
-    function showProgressionModal(exerciseCard) {
-        // Create modal if it doesn't exist
-        let progressionModal = document.getElementById('progression-modal');
-        if (!progressionModal) {
-            progressionModal = document.createElement('div');
-            progressionModal.id = 'progression-modal';
-            progressionModal.className = 'modal-overlay';
                         <button id="reduce-intensity-btn" class="cta-button secondary-cta">Reduce Intensity</button>
                     `;
                 }
@@ -2651,36 +1879,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Add event listeners
             recoveryTabContent.querySelectorAll('.swap-to-btn').forEach(btn => {
-            
-            // Create modal content
-            const modalContent = document.createElement('div');
-            modalContent.className = 'modal-content progression-modal-content';
-            
-            // Add close button
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'modal-close-btn';
-            closeBtn.innerHTML = '&times;';
-            closeBtn.addEventListener('click', () => {
-                progressionModal.classList.remove('is-visible');
                 btn.addEventListener('click', e => {
                     const newExerciseId = e.target.dataset.exerciseId;
                     if (newExerciseId) {
                         // Call ForgeAssist to handle the swap
                         ForgeAssist.handleSuggestSwap(newExerciseId);
                     }
-            });
-            
-            modalContent.appendChild(closeBtn);
-            progressionModal.appendChild(modalContent);
-            document.body.appendChild(progressionModal);
-        }
-        
-        // Get the modal content element
-        const modalContent = progressionModal.querySelector('.progression-modal-content');
-        
-        // Get exercise details
-        const exerciseName = exerciseCard.querySelector('.exercise-name').textContent;
-        const exerciseId = exerciseCard.dataset.exerciseId || '';
                 });
             });
 
@@ -2696,15 +1900,6 @@ document.addEventListener('DOMContentLoaded', () => {
             recoveryTabContent.innerHTML = `
                 <h4>Current Recovery Status</h4>
                 <div class="global-recovery-status">
-        
-        // Populate modal content
-        modalContent.innerHTML = `
-            <button class="modal-close-btn">&times;</button>
-            <h4>Exercise Progressions</h4>
-            <div class="exercise-header">${exerciseName}</div>
-            
-            <div class="progression-path">
-                <div class="progression-title">Choose a Progression Path</div>
                     <p>Select a specific exercise to see detailed recovery recommendations.</p>
                 </div>
                 
@@ -2715,15 +1910,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             // Show general muscle recovery
-                <div id="progression-options" class="progression-options">
-                    <div class="progression-loading">Loading progression options...</div>
-                </div>
-            </div>
-        `;
-        
-        // Add event listener to close button
-        modalContent.querySelector('.modal-close-btn').addEventListener('click', () => {
-            progressionModal.classList.remove('is-visible');
             const majorMuscleGroups = [
                 'Quadriceps', 'Hamstrings', 'Glutes', 
                 'Chest', 'Back', 'Shoulders', 
@@ -2733,34 +1919,12 @@ document.addEventListener('DOMContentLoaded', () => {
             majorMuscleGroups.forEach(muscle => {
                 const recoveryPercent = Math.round((recoveryLevels[muscle] || 0.9) * 100);
                 const statusClass = recoveryPercent < 50 ? 'fatigued' : 
-        });
-        
-        // Show the modal
-        progressionModal.classList.add('is-visible');
-        
-        // Mock load progression options (would be replaced with actual data)
-        setTimeout(() => {
-            const progressionOptions = modalContent.querySelector('#progression-options');
-            
-            // Example progression path based on basic bodyweight progressions
-            const mockProgressions = [
                                    recoveryPercent < 80 ? 'recovering' : 'recovered';
                 
                 recoveryTabContent.innerHTML += `
                     <div class="muscle-recovery-item ${statusClass}">
                         <div class="muscle-name">${muscle}</div>
                         <div class="recovery-bar-container">
-                {
-                    id: 'easier_variation',
-                    name: 'Easier Variation',
-                    difficulty: 'Beginner',
-                    description: 'A simpler version of this exercise with reduced range of motion or leverage.'
-                },
-                {
-                    id: 'harder_variation',
-                    name: 'Harder Variation',
-                    difficulty: 'Advanced',
-                    description: 'A more challenging version with increased range of motion or leverage.'
                             <div class="recovery-bar" style="width: ${recoveryPercent}%"></div>
                         </div>
                         <div class="recovery-percentage">${recoveryPercent}%</div>
@@ -2773,18 +1937,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Needs activateTab, setTabVisibility 
-                },
-                {
-                    id: 'weighted_variation',
-                    name: 'Add Weight',
-                    difficulty: 'Intermediate',
-                    description: 'Same exercise pattern with added external resistance.'
-                }
-            ];
-            
-            // Generate HTML for progression options
-            progressionOptions.innerHTML = mockProgressions.map(progression => `
-                <div class="progression-option" data-id="${progression.id}">
     function updateInspectorPhaseDetails(phaseElement) {
         const detailsTabContent = document.getElementById('details');
         if (!detailsTabContent || !phaseElement) return;
@@ -2793,12 +1945,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const phaseName = phaseElement.dataset.phaseName || 'Unnamed Phase';
         const startWeek = phaseElement.dataset.startWeek;
         const endWeek = phaseElement.dataset.endWeek;
-                    <div class="progression-option-header">
-                        <div class="progression-name">${progression.name}</div>
-                        <div class="progression-difficulty">${progression.difficulty}</div>
-                    </div>
-                    <div class="progression-description">${progression.description}</div>
-                    <button class="swap-button" data-id="${progression.id}">Swap Exercise</button>
         const goal = phaseElement.dataset.goal || 'Not Set';
         const notes = phaseElement.dataset.notes || '';
 
@@ -2808,125 +1954,42 @@ document.addEventListener('DOMContentLoaded', () => {
             <h4>${phaseName}</h4>
             <p><small>ID: ${phaseId}</small></p>
             <p><strong>Weeks:</strong> ${startWeek} - ${endWeek}</p>
-                </div>
-            `).join('');
-            
-            // Add event listeners to swap buttons
-            progressionOptions.querySelectorAll('.swap-button').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const progressionId = e.target.dataset.id;
-                    const progressionName = mockProgressions.find(p => p.id === progressionId).name;
             <div class="form-group full-width">
                 <label for="inspector-phase-name">Phase Name</label>
                 <input type="text" id="inspector-phase-name" value="${phaseName}">
             </div>
             <div class="form-group full-width">
                 <label for="inspector-phase-goal">Goal</label>
-                    
-                    // Update the exercise card with the new progression
-                    exerciseCard.querySelector('.exercise-name').textContent = `${exerciseName} (${progressionName})`;
-                    
-                    // Close the modal
-                    progressionModal.classList.remove('is-visible');
-                    
-                    // Show success toast
-                    showToast(`Exercise progressed to: ${progressionName}`, 'success');
-                    
                 <select id="inspector-phase-goal">
                     <option value="" ${goal === 'Not Set' ? 'selected' : ''}>Not Set</option>
                     <option value="hypertrophy" ${goal === 'hypertrophy' ? 'selected' : ''}>Hypertrophy</option>
                     <option value="strength" ${goal === 'strength' ? 'selected' : ''}>Strength</option>
-                    // Trigger save state and analytics update
-                    triggerSaveState();
-                    triggerAnalyticsUpdate(workCanvas);
-                });
-            });
-        }, 500); // Simulate loading delay
-    }
-
-    // Update context menu to use the new progression modal
-    function showContextMenu(x, y, items) {
-        if (!contextMenu) {
-            initializeContextMenu();
-        }
-        
-        // Clear previous items
                     <option value="power" ${goal === 'power' ? 'selected' : ''}>Power</option>
                     <option value="endurance" ${goal === 'endurance' ? 'selected' : ''}>Endurance</option>
                     <option value="peaking" ${goal === 'peaking' ? 'selected' : ''}>Peaking</option>
                     <option value="maintenance" ${goal === 'maintenance' ? 'selected' : ''}>Maintenance</option>
-        contextMenu.innerHTML = '';
-        
-        // Add menu items
-        items.forEach(item => {
-            const menuItem = document.createElement('div');
-            menuItem.className = 'context-menu-item';
-            menuItem.innerHTML = `<span class="icon">${item.icon}</span> ${item.label}`;
-            menuItem.addEventListener('click', () => {
                      <option value="other" ${goal === 'other' ? 'selected' : ''}>Other</option>
                  </select>
             </div>
             <div class="form-group full-width">
                  <label for="inspector-phase-notes">Notes</label>
                 <textarea id="inspector-phase-notes" rows="3">${notes}</textarea>
-                contextMenu.style.display = 'none';
-                item.action();
-            });
-            contextMenu.appendChild(menuItem);
-        });
-        
-        // Position menu
-        contextMenu.style.left = `${x}px`;
-        contextMenu.style.top = `${y}px`;
-        contextMenu.style.display = 'block';
-        
-        // Ensure menu is within viewport
             </div>
             <hr class="detail-separator">
             <button id="save-phase-details" class="cta-button primary-cta">Save Phase</button>
             <button id="delete-phase" class="cta-button secondary-cta" style="margin-top: 10px; background-color: #555;">Delete Phase</button>
-        const rect = contextMenu.getBoundingClientRect();
-        if (rect.right > window.innerWidth) {
-            contextMenu.style.left = `${window.innerWidth - rect.width - 5}px`;
-        }
-        if (rect.bottom > window.innerHeight) {
-            contextMenu.style.top = `${y - rect.height}px`;
             <button id="split-phase" class="cta-button secondary-cta" style="margin-top: 10px;">Split Phase Here</button>
             `;
 
          // Add event listeners (needs save/delete/split functions)
          document.getElementById('save-phase-details')?.addEventListener('click', () => {
              console.log('Save Phase clicked'); // Placeholder
-        }
-    }
-
-    // Update context menu handler for cards to include progression
-    function attachContextMenuToCards() {
-        // Use event delegation on workCanvas
-        workCanvas.addEventListener('contextmenu', (e) => {
-            // Check if right-click happened on a workout card
-            const card = e.target.closest('.workout-card');
-            if (card) {
-                e.preventDefault(); // Prevent default context menu
-                
-                // Add this card to selection if not already selected
              // Call actual save function: savePhaseDetails(phaseElement);
              showToast('Save Phase functionality pending.', 'info');
          });
         document.getElementById('delete-phase')?.addEventListener('click', () => {
              console.log('Delete Phase clicked'); // Placeholder
              // Call actual delete function: deletePhase(phaseElement);
-                if (!selectedContext.elements.has(card)) {
-                    handleCardClick(card, false);
-                }
-                
-                const menuItems = [
-                    {
-                        icon: '⚡',
-                        label: 'Create Superset',
-                        action: () => {
-                            if (selectedContext.elements.size >= 2) {
-                                createSuperset(Array.from(selectedContext.elements));
              showToast('Delete Phase functionality pending.', 'info');
          });
         document.getElementById('split-phase')?.addEventListener('click', () => {
@@ -2937,16 +2000,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Needs activateTab, setTabVisibility, deleteSelectedWorkoutCard (needs import/def)
-                                clearSelectionStyles();
-                                selectedContext = { type: 'none', elements: new Set(), modelId: null, dayId: null };
-                                updateMultiSelectToolbarVisibility();
-                            } else {
-                                showToast('Select at least 2 exercises to create a superset', 'warning');
-                            }
-                        }
-                    },
-                    {
-                        icon: '📋',
     function openMultiSelectInspector() {
         if (!inspectorPanel.classList.contains('is-visible')) {
             openInspector(); // Open with default view first if closed
@@ -2954,11 +2007,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const detailsTab = document.getElementById('details');
         if (!detailsTab) return;
-                        label: 'Duplicate',
-                        action: () => {
-                            const clone = card.cloneNode(true);
-                            clone.id = `workout-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-                            // Add event listeners to the cloned card
 
         activateTab('details'); 
 
@@ -2968,42 +2016,15 @@ document.addEventListener('DOMContentLoaded', () => {
         detailsTab.innerHTML = `
             <h4>Multiple Items Selected (${selectionSize})</h4>
             <p>Apply bulk actions:</p>
-                            clone.querySelector('.delete-btn').addEventListener('click', (e) => {
-                                e.stopPropagation();
-                                clone.remove();
-                                triggerSaveState();
-                                triggerAnalyticsUpdate(workCanvas);
-                            });
-                            
-                            clone.querySelector('.edit-btn').addEventListener('click', (e) => {
             <button id="delete-selected-items" class="cta-button secondary-cta" style="background-color: #555;">Delete Selected Cards</button>
             <hr class="detail-separator">
             <p><em>More bulk actions coming soon (e.g., copy, tag).</em></p>
-                                e.stopPropagation();
-                                handleSelection(clone, false);
-                                openInspector(clone);
-                            });
-                            
-                            clone.addEventListener('click', (e) => {
-                                if (e.target.closest('.edit-btn') || e.target.closest('.delete-btn')) return;
-                                handleCardClick(clone, e.shiftKey);
         `;
 
         const deleteBtn = detailsTab.querySelector('#delete-selected-items');
         if (deleteBtn) {
             const cardsSelected = Array.from(selectedContext.elements).some(el => el.classList.contains('workout-card'));
             deleteBtn.disabled = !cardsSelected;
-                            });
-                            
-                            // Insert after original card
-                            card.parentNode.insertBefore(clone, card.nextSibling);
-                            triggerSaveState();
-                            triggerAnalyticsUpdate(workCanvas);
-                            showToast('Exercise duplicated', 'success');
-                        }
-                    },
-                    {
-                        icon: '🔄',
             if (cardsSelected) {
                 deleteBtn.addEventListener('click', () => {
                     // Call delete helper, needs reference
@@ -3011,18 +2032,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         deleteSelectedWorkoutCard(); // Assumes it uses the selection context
         } else {
                         console.warn("deleteSelectedWorkoutCard not available for bulk delete");
-                        label: 'Find Progression',
-                        action: () => {
-                            showProgressionModal(card);
-                        }
-                    },
-                    {
-                        icon: '🗑️',
-                        label: 'Delete',
-                        action: () => {
-                            card.remove();
-                            triggerSaveState();
-                            triggerAnalyticsUpdate(workCanvas);
                     }
         });
             } else {
@@ -3033,18 +2042,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Needs clearInspectorFocusMessage, getStructuredDetails, updateLoadValueExplanation, 
-                            showToast('Exercise deleted', 'success');
-                        }
-                    }
-                ];
-                
-                showContextMenu(e.pageX, e.pageY, menuItems);
-            }
-        });
-    }
-
-    // --- Event Listeners --- //
-    if (hubCreateNewBtn) {
     // saveWorkoutCardDetails, deleteSelectedWorkoutCard, renderAssistTabContent, 
     // updateInspectorPhaseDetails, openMultiSelectInspector, populateInspectorModelView (new)
     function updateInspectorForSelection() {
@@ -3053,13 +2050,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Get the details tab content element
         const detailsTabContent = document.getElementById('details');
-        hubCreateNewBtn.addEventListener('click', () => {
-            console.log("Create New button clicked");
-            const modal = document.getElementById('new-block-options-modal');
-            if (modal) {
-                modal.classList.add('is-visible');
-            }
-            // Previously, this might have directly shown the builder view
         
         // Render the ForgeAssist tab content
         renderAssistTabContent();
@@ -3070,15 +2060,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Render the Adaptive tab content with the selected element
         const selectedElement = selectedContext.elements.size === 1 ? 
             Array.from(selectedContext.elements)[0] : null;
-            // showView('builder'); 
-            // generateCalendarGrid(8); // Default 8 weeks
-        });
-    }
-
-    if (hubBrowseTemplatesBtn) {
-        hubBrowseTemplatesBtn.addEventListener('click', () => {
-            console.log("Browse Templates button clicked (hub)");
-            // showToast("Template browser not yet implemented.", "info"); // <<< REMOVE THIS LINE
         populateAdaptiveTab(selectedElement);
         
         // No selection, show default view
@@ -3086,14 +2067,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Only make changes if the inspector is visible
             if (inspectorPanel.classList.contains('is-visible')) {
                 // Hide model-specific tabs, show standard tabs
-            const templatesModal = document.getElementById('templates-modal');
-            if (templatesModal) {
-                templatesModal.classList.add('is-visible');
-            } else {
-                console.error("Templates modal not found!");
-            }
-        });
-    }
                 setTabVisibility(['library', 'details', 'assist', 'recovery', 'adaptive', 'analytics', 'settings']);
                 
                 // Show block settings in title
@@ -3105,14 +2078,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-
-    // Listener for the button *within* the new block modal
-    if (createBlockFromOptionsBtn) {
-        createBlockFromOptionsBtn.addEventListener('click', () => {
-             console.log("Create button inside modal clicked.");
-             handleCreateBlockFromOptions(); // Call the function to create the block & switch view
-        });
-        } else {
         // Ensure inspector is visible if we have a valid single selection type
         if (!inspectorPanel.classList.contains('is-visible')) {
             openInspector(selectedElement); // Make sure openInspector is available
@@ -3129,6 +2094,1879 @@ document.addEventListener('DOMContentLoaded', () => {
                 const parentCell = cardElement.closest('.day-cell');
                 const week = parentCell?.dataset.week || '?';
                 const day = parentCell?.dataset.day || '?';
+                const cardLoad = parseInt(cardElement.dataset.load || '0', 10);
+
+                // Update title and details content
+                if (inspectorTitle) inspectorTitle.textContent = `Edit: ${structuredDetails.name}`;
+
+                detailsTabContent.innerHTML = `
+                    <p><small>Location: Week ${week}, ${day}</small></p>
+                    <p><small>Est. Load Contribution: ${cardLoad} units</small></p>
+                    <hr class="detail-separator">
+                    <div class="form-group full-width">
+                       <label for="inspector-exercise-name">Exercise Name</label>
+                       <input type="text" id="inspector-exercise-name" value="${structuredDetails.name}">
+                    </div>
+                    <div class="structured-inputs" style="display: flex; flex-wrap: wrap; gap: 0 1rem;">
+                       <div style="display: flex; gap: 1rem; width: 100%; margin-bottom: 1rem;">
+                           <div class="form-group" style="flex: 1;">
+                               <label for="inspector-sets">Sets</label>
+                               <input type="number" id="inspector-sets" value="${structuredDetails.sets}" min="1">
+                           </div>
+                           <div class="form-group" style="flex: 1;">
+                               <label for="inspector-reps">Reps</label>
+                               <input type="text" id="inspector-reps" value="${structuredDetails.reps}" placeholder="e.g., 5 or 8-12">
+                           </div>
+                       </div>
+                       <div class="form-group" style="flex-basis: 50%; flex-grow: 1;">
+                           <label for="inspector-load-type">Load Type</label>
+                           <select id="inspector-load-type">
+                               <option value="rpe" ${structuredDetails.loadType === 'rpe' ? 'selected' : ''}>RPE</option>
+                               <option value="percent" ${structuredDetails.loadType === 'percent' ? 'selected' : ''}>% 1RM</option>
+                               <option value="weight" ${structuredDetails.loadType === 'weight' ? 'selected' : ''}>Weight (kg)</option>
+                               <option value="text" ${structuredDetails.loadType === 'text' ? 'selected' : ''}>Text</option>
+                           </select>
+                       </div>
+                       <div class="form-group" style="flex-basis: calc(50% - 1rem); flex-grow: 1;">
+                           <label for="inspector-load-value">Load Value</label>
+                           <input type="text" id="inspector-load-value" value="${structuredDetails.loadValue}" placeholder="e.g., 8 or 75">
+                           <div id="load-value-explanation" style="font-size: 0.75rem; color: var(--text-color); margin-top: 4px; min-height: 1em;"></div>
+                       </div>
+                       <div class="form-group" style="flex-basis: 100%;">
+                           <label for="inspector-rest">Rest</label>
+                           <input type="text" id="inspector-rest" value="${structuredDetails.rest}" placeholder="e.g., 90s or 2m">
+                       </div>
+                    </div>
+                    <div class="form-group full-width">
+                       <label for="inspector-notes">Notes</label>
+                       <textarea id="inspector-notes" rows="3">${structuredDetails.notes}</textarea>
+                    </div>
+                    <hr class="detail-separator">
+                    <button id="save-card-details" class="cta-button primary-cta">Save Details</button>
+                    <button id="delete-card" class="cta-button secondary-cta" style="margin-top: 10px; background-color: #555;">Delete Card</button>
+               `;
+                // Add listeners
+                document.getElementById('save-card-details')?.addEventListener('click', saveWorkoutCardDetails); 
+                document.getElementById('delete-card')?.addEventListener('click', () => {
+                    if(typeof deleteSelectedWorkoutCard === 'function') deleteSelectedWorkoutCard(cardElement);
+                    else console.warn('deleteSelectedWorkoutCard not available');
+                }); 
+                const loadTypeSelect = document.getElementById('inspector-load-type');
+                if (loadTypeSelect && typeof updateLoadValueExplanation === 'function') {
+                    loadTypeSelect.addEventListener('change', updateLoadValueExplanation);
+                    updateLoadValueExplanation(); 
+                }
+                break;
+
+            case 'day':
+                // Add the recovery tab to the visible tabs
+                setTabVisibility(['library', 'details', 'assist', 'recovery', 'adaptive', 'analytics', 'settings']);
+                activateTab('details');
+                const dayCellElement = selectedElement;
+                const week_day = dayCellElement.dataset.week;
+                const day_day = dayCellElement.dataset.day;
+
+                if (inspectorTitle) inspectorTitle.textContent = `Day Details: Wk ${week_day}, ${day_day}`;
+
+                let totalDayLoad = 0;
+                let cardCount = 0;
+                let exerciseNames = [];
+                dayCellElement.querySelectorAll('.workout-card:not(.session-placeholder-card)').forEach(card => {
+                    const name = card.querySelector('.exercise-name')?.textContent || '';
+                    if(name) exerciseNames.push(name.toLowerCase());
+                    totalDayLoad += parseInt(card.dataset.load || '0', 10);
+                    cardCount++;
+                });
+                let focus = 'Mixed';
+                 if (cardCount > 0) {
+                     if (exerciseNames.every(name => name.includes('squat') || name.includes('deadlift') || name.includes('leg'))) focus = 'Lower Body';
+                     else if (exerciseNames.every(name => name.includes('press') || name.includes('row') || name.includes('pull'))) focus = 'Upper Body';
+                     else if (exerciseNames.every(name => name.includes('run') || name.includes('sprint') || name.includes('jump'))) focus = 'Conditioning/Plyo';
+                 }
+                detailsTabContent.innerHTML = `<h4>Week ${week_day}, ${day_day}</h4>`;
+                if (cardCount > 0) {
+                   detailsTabContent.innerHTML += '<ul>' + exerciseNames.map(name => `<li>${name}</li>`).join('') + '</ul>';
+                }
+                detailsTabContent.innerHTML += `
+                    <hr class="detail-separator">
+                    <p><small>Card Count: ${cardCount}</small></p>
+                    <p><small>Est. Daily Load: ${totalDayLoad} units</small></p>
+                    <p><small>Focus: ${focus}</small></p>
+                    <p><small>Phase: [Needs Phase Info]</small></p> 
+                `;
+                break;
+
+            case 'phase':
+                // Add the recovery tab to the visible tabs
+                setTabVisibility(['library', 'details', 'assist', 'recovery', 'adaptive', 'analytics', 'settings']);
+                activateTab('details');
+                updateInspectorPhaseDetails(selectedElement); 
+                break;
+           
+            case 'model':
+                 // New case for model context selection
+                 console.log("Updating inspector for MODEL context");
+                 // Explicitly clear/hide the standard details tab content
+                 if (detailsTabContent) {
+                    detailsTabContent.innerHTML = ''; 
+                    detailsTabContent.classList.remove('active');
+                 }
+                 // Set visibility for model tabs - USE CORRECT IDs WITH -content
+                 setTabVisibility(['model-status-content', 'model-config-content', 'model-sim-content']);
+                 activateTab('model-status-content'); // Default to status tab - USE CORRECT ID
+                 // Call a new function to populate the model-specific view
+                 populateInspectorModelView(selectedContext.modelId, selectedContext.dayId);
+                 break;
+
+            default: // Includes 'none'
+                 if (inspectorPanel.classList.contains('is-visible')) {
+                    detailsTabContent.innerHTML = '<p>Select an item on the canvas to see details.</p>';
+                    if (inspectorTitle) inspectorTitle.textContent = 'Block Settings';
+                    setTabVisibility(['library', 'details', 'assist', 'analytics', 'settings']);
+                    activateTab('settings'); 
+                }
+                break;
+        }
+
+        // Update ForgeAssist Contextual Actions for all valid selections
+        // <<< REMOVED call from here, moved to top of function >>>
+        // renderAssistTabContent(); 
+    }
+
+    // Save function for workout card details (Local function)
+    // Needs triggerAnalyticsUpdate, triggerSaveState references
+    function saveWorkoutCardDetails() {
+        // Use selectedContext to find the card (should be type 'exercise' with 1 element)
+        if (selectedContext.type !== 'exercise' || selectedContext.elements.size !== 1) {
+             console.warn("Save called without a single exercise card selected.");
+             return;
+         }
+        const cardElement = Array.from(selectedContext.elements)[0];
+        if (!cardElement || !cardElement.classList.contains('workout-card')) return;
+
+        const nameInput = document.getElementById('inspector-exercise-name');
+        const setsInput = document.getElementById('inspector-sets');
+        const repsInput = document.getElementById('inspector-reps');
+        const loadTypeSelect = document.getElementById('inspector-load-type');
+        const loadValueInput = document.getElementById('inspector-load-value');
+        const restInput = document.getElementById('inspector-rest');
+        const notesInput = document.getElementById('inspector-notes');
+
+        // Gather updated data from the form
+        const updatedData = {
+            name: nameInput?.value,
+            sets: setsInput?.value,
+            reps: repsInput?.value,
+            loadType: loadTypeSelect?.value,
+            loadValue: loadValueInput?.value,
+            rest: restInput?.value,
+            notes: notesInput?.value
+        };
+
+        // --- Phase 12: Edit Tracking ---
+        let madeIndependent = false;
+        if (cardElement.dataset.modelDriven === 'true') {
+            console.log("[Edit Tracking] Checking model-driven card:", cardElement.id);
+            // Define which fields trigger detachment
+            const fieldsToCheck = ['name', 'sets', 'reps', 'loadType', 'loadValue'];
+            let changed = false;
+            for (const field of fieldsToCheck) {
+                let currentValue = '';
+                if (field === 'name') {
+                    currentValue = cardElement.querySelector('.exercise-name')?.textContent || '';
+             } else {
+                    currentValue = cardElement.dataset[field] || '';
+                }
+                const newValue = updatedData[field] || ''; // Ensure newValue is defined
+                
+                // Log values being compared
+                // console.log(`[Edit Tracking] Comparing field '${field}': Current='${currentValue}' (${typeof currentValue}), New='${newValue}' (${typeof newValue})`);
+                
+                // Use strict inequality check (!==) after ensuring types are comparable if necessary
+                // For simplicity, start with != but log types, switch to !== if needed.
+                if (newValue != currentValue) { 
+                    console.log(`[Edit Tracking] Change DETECTED in field '${field}': '${currentValue}' -> '${newValue}'`);
+                    changed = true;
+                    break; // Stop checking once a change is found
+                }
+            }
+
+            if (changed) {
+                console.log(`[Edit Tracking] Model-driven card ${cardElement.id} edited. Setting modelDriven=false.`);
+                cardElement.dataset.modelDriven = 'false';
+                madeIndependent = true;
+                updateCardIcon(cardElement); // Hide icon
+                const dayCell = cardElement.closest('.day-cell');
+                if (dayCell) {
+                    updateDayBadge(dayCell); // Update badge (might hide if last model card)
+             }
+         } else {
+                 console.log("[Edit Tracking] No changes detected in key fields.");
+            }
+        }
+        // --- End Phase 12 ---
+
+        // Call the imported, aliased function from inspector.js
+        if (typeof saveDetailsFromInspector === 'function') {
+            saveDetailsFromInspector(cardElement, updatedData);
+            console.log("Called imported saveDetailsFromInspector with:", updatedData);
+             } else {
+            console.error("Imported saveDetailsFromInspector function not found!");
+            showToast("Error saving card details.", "error");
+        }
+    }
+
+    // Placeholder for the function that populates the model inspector view
+    function populateInspectorModelView(modelId, dayId) {
+        console.log(`[populateInspectorModelView] Populating for model ${modelId}, day ${dayId}`);
+        
+        // Find the model configuration in our stored models
+        const modelConfig = PeriodizationModelManager.getModelById(modelId);
+        if (!modelConfig) {
+            console.error(`[populateInspectorModelView] Model config not found for ID: ${modelId}`);
+            return;
+        }
+
+        // Find the day cell that has this model applied
+        const dayCell = document.querySelector(`.day-cell[data-day-id="${dayId}"][data-periodization-model-id="${modelId}"]`);
+        if (!dayCell) {
+            console.error(`[populateInspectorModelView] Day cell not found for day ID: ${dayId}`);
+            return;
+        }
+
+        // Get all workout cards in this day - separate model-driven from independent
+        const allCards = Array.from(dayCell.querySelectorAll('.workout-card'));
+        const modelDrivenCards = allCards.filter(card => card.dataset.modelDriven === "true");
+        const independentCards = allCards.filter(card => card.dataset.modelDriven !== "true");
+        
+        // Get tab elements
+        const modelStatusTab = document.getElementById('model-status-content');
+        const modelConfigTab = document.getElementById('model-config-content');
+        const modelSimTab = document.getElementById('model-sim-content');
+        
+        // Update inspectorTitle
+        if (inspectorTitle) {
+            const dayData = dayCell.dataset;
+            inspectorTitle.textContent = `Model: ${modelConfig.type} (${dayData.week}, ${dayData.day})`;
+        }
+        
+        // Populate the status tab (summary of current state)
+        if (modelStatusTab) {
+            // Extract model parameters from dayCell dataset
+            const params = JSON.parse(dayCell.dataset.periodizationParams || '{}');
+            const weeklyStructure = params.weeklyStructure || [];
+            const currentDayConfig = weeklyStructure.find(day => 
+                day.dayOfWeek.toLowerCase() === dayCell.dataset.day.toLowerCase().slice(0,3)
+            ) || {};
+            
+            // Get more detailed information about exercises
+            const mainExercise = currentDayConfig.mainExercise || 'None specified';
+            
+            // Create HTML content with expanded information and highlighting the current exercise information
+            let statusHTML = `
+                <h4>Model Status</h4>
+                <div class="model-summary">
+                    <p><strong>Type:</strong> ${modelConfig.type}</p>
+                    <p><strong>Day:</strong> Week ${dayCell.dataset.week}, ${dayCell.dataset.day}</p>
+                    <p><strong>Main Exercise:</strong> ${mainExercise}</p>
+                    <p><strong>Wave Position:</strong> 
+                        ${params.wavePatternDefinitions ? 
+                            `Week ${dayCell.dataset.week} (${
+                                (parseInt(dayCell.dataset.week) % 3) === 1 ? 'Light' : 
+                                (parseInt(dayCell.dataset.week) % 3) === 2 ? 'Medium' : 'Heavy'
+                            })` 
+                            : 'N/A'}
+                    </p>
+                </div>
+                    
+                    <div class="exercise-list-container">
+                    <h6>Model-Driven Exercises (${modelDrivenCards.length}) <span class="status-icon model-icon" title="Driven by Periodization Model">⚙️</span></h6>
+                    <div class="exercise-list-scroll">
+                        ${modelDrivenCards.length > 0 ? `
+                        <ul class="inspector-card-list model-driven-list">
+                            ${modelDrivenCards.map(card => {
+                                const name = card.querySelector('.exercise-name')?.textContent || 'Unknown';
+                                const sets = card.dataset.sets || '?';
+                                const reps = card.dataset.reps || '?';
+                                const loadType = card.dataset.loadType || '';
+                                const loadValue = card.dataset.loadValue || '';
+                                const details = `${sets}x${reps} ${loadType ? (loadType + ' ' + loadValue) : ''}`.trim();
+                                return `<li data-card-id="${card.id}" class="model-card-item" title="Click to highlight on canvas">
+                                            <span class="exercise-item-name">${name}</span> 
+                                            <small class="exercise-item-details">${details}</small>
+                                            <div class="card-item-hover-actions">
+                                                <button class="card-action-btn edit-override" title="Override settings">Edit</button>
+                                                <button class="card-action-btn view-details" title="View exercise details">Info</button>
+                                            </div>
+                                        </li>`;
+                            }).join('')}
+                        </ul>
+                        ` : '<p><small>No model-driven exercises found.</small></p>'}
+                    </div>
+
+                    <div class="exercise-list-container">
+                        <h6>Independent (${independentCards.length}) <span class="status-icon independent-icon" title="Manually Edited/Added">✏️</span></h6>
+                        <div class="exercise-list-scroll">
+                         ${independentCards.length > 0 ? `
+                        <ul class="inspector-card-list independent-list">
+                             ${independentCards.map(card => {
+                                const name = card.querySelector('.exercise-name')?.textContent || 'Unknown';
+                                    const details = card.dataset.notes || '';
+                                return `<li data-card-id="${card.id}" title="Click to highlight on canvas">
+                                             <span class="exercise-item-name">${name}</span> 
+                                             <small class="exercise-item-details">${details}</small>
+                                         </li>`;
+                            }).join('')}
+                         </ul>
+                            ` : '<p><small>No independent exercises found.</small></p>'}
+                        </div>
+                     </div>
+                </div>
+
+                <div class="model-actions">
+                    <button id="regenerate-model-btn" class="cta-button primary-cta">Regenerate Exercises</button>
+                    <button id="modify-model-btn" class="cta-button secondary-cta">Modify Model</button>
+                </div>
+            `;
+            
+            modelStatusTab.innerHTML = statusHTML;
+            
+            // Add event listeners for the model-driven card items
+            modelStatusTab.querySelectorAll('.model-card-item').forEach(item => {
+                const cardId = item.dataset.cardId;
+                const cardElement = document.getElementById(cardId);
+                
+                // Highlight the card when clicked
+                item.addEventListener('click', () => {
+                    // Remove highlight from all cards
+                    document.querySelectorAll('.workout-card.highlighted').forEach(c => 
+                        c.classList.remove('highlighted')
+                    );
+                    
+                    // Highlight this card
+                    if (cardElement) {
+                        cardElement.classList.add('highlighted');
+                        cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+                
+                // Edit override button
+                item.querySelector('.edit-override')?.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (cardElement) {
+                        cardElement.dataset.modelOverride = "true";
+                        handleSelection(cardElement);
+                        openInspector(cardElement);
+                    }
+                });
+                
+                // View details button
+                item.querySelector('.view-details')?.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (cardElement) {
+                        // Show exercise details modal or info panel
+                        const exerciseName = cardElement.querySelector('.exercise-name')?.textContent;
+                        const exerciseId = cardElement.dataset.exerciseId;
+                        if (exerciseId) {
+                            const exerciseData = dependencies.exerciseLibrary.find(ex => ex.id === exerciseId);
+                            if (exerciseData) {
+                                // Use existing function to show modal if available
+                                if (typeof showExerciseDetailModal === 'function') {
+                                    showExerciseDetailModal(exerciseData);
+                                } else {
+                                    // Or show basic info
+                                    showToast(`Exercise: ${exerciseName}`, 'info');
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+            
+            // Add event listeners for the action buttons
+            modelStatusTab.querySelector('#regenerate-model-btn')?.addEventListener('click', () => {
+                if (confirm('Regenerate all model-driven exercises for this day? This will reset any overrides.')) {
+                    // Call model regeneration function
+                    PeriodizationModelManager.regenerateDay(modelId, dayId);
+                    // Update the inspector view
+                    populateInspectorModelView(modelId, dayId);
+                    showToast('Model exercises regenerated', 'success');
+                }
+            });
+            
+            modelStatusTab.querySelector('#modify-model-btn')?.addEventListener('click', () => {
+                // Show model configuration interface
+                activateTab('model-config-content');
+            });
+        }
+        
+        // Populate the config tab (editable parameters)
+        if (modelConfigTab) {
+            // Extract model parameters for editing
+            const params = JSON.parse(dayCell.dataset.periodizationParams || '{}');
+            
+            let configHTML = `
+                <h4>Model Configuration</h4>
+                <p class="description-text">Adjust the model parameters below to customize the periodization. Changes will affect all days using this model.</p>
+                
+                <form id="model-config-form" class="model-config-form">
+                    <div class="form-group">
+                        <label for="model-base-metric">Base Load Metric</label>
+                        <select id="model-base-metric" name="baseLoadMetric">
+                            <option value="1rm" ${params.baseLoadMetric === '1rm' ? 'selected' : ''}>1RM (One Rep Max)</option>
+                            <option value="rpe" ${params.baseLoadMetric === 'rpe' ? 'selected' : ''}>RPE (Rate of Perceived Exertion)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="model-increment-value">Increment Value</label>
+                        <input type="number" id="model-increment-value" name="incrementValue" value="${params.incrementValue || 0}" min="0" max="10" step="0.5">
+                </div>
+                    
+                    <div class="form-group">
+                        <label for="model-increment-unit">Increment Unit</label>
+                        <select id="model-increment-unit" name="incrementUnit">
+                            <option value="%" ${params.incrementUnit === '%' ? 'selected' : ''}>Percent (%)</option>
+                            <option value="kg" ${params.incrementUnit === 'kg' ? 'selected' : ''}>Kilograms (kg)</option>
+                            <option value="lb" ${params.incrementUnit === 'lb' ? 'selected' : ''}>Pounds (lb)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="model-increment-frequency">Increment Frequency</label>
+                        <select id="model-increment-frequency" name="incrementFrequency">
+                            <option value="weekly" ${params.incrementFrequency === 'weekly' ? 'selected' : ''}>Weekly</option>
+                            <option value="biweekly" ${params.incrementFrequency === 'biweekly' ? 'selected' : ''}>Bi-weekly</option>
+                            <option value="monthly" ${params.incrementFrequency === 'monthly' ? 'selected' : ''}>Monthly</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="cta-button primary-cta">Save Changes</button>
+                        <button type="button" id="cancel-model-config" class="cta-button secondary-cta">Cancel</button>
+                    </div>
+                </form>
+            `;
+            
+            modelConfigTab.innerHTML = configHTML;
+            
+            // Add event listeners for the form
+            modelConfigTab.querySelector('#model-config-form')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                // Collect form data
+                const formData = new FormData(e.target);
+                const updatedParams = { ...params };
+                
+                // Update params object with form values
+                for (const [key, value] of formData.entries()) {
+                    if (key === 'incrementValue') {
+                        updatedParams[key] = parseFloat(value);
+                    } else {
+                        updatedParams[key] = value;
+                    }
+                }
+                
+                // Update the model
+                PeriodizationModelManager.updateModelParams(modelId, updatedParams);
+                
+                // Return to status tab
+                activateTab('model-status-content');
+                showToast('Model configuration updated', 'success');
+            });
+            
+            modelConfigTab.querySelector('#cancel-model-config')?.addEventListener('click', () => {
+                activateTab('model-status-content');
+            });
+        }
+        
+        // Populate the simulation tab (future projections)
+        if (modelSimTab) {
+            let simHTML = `
+                <h4>Model Simulation</h4>
+                <p class="description-text">View projected loads and progress over time for this periodization model.</p>
+                
+                <div class="sim-chart-container">
+                    <p><small>Simulation feature coming soon...</small></p>
+                    <div class="placeholder-chart" style="height: 200px; background: rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <span>Projection Chart Placeholder</span>
+                    </div>
+                </div>
+            `;
+            
+            modelSimTab.innerHTML = simHTML;
+        }
+    }
+
+    // --- Helper Function to Add Config Tab Listeners (Phase 7) ---
+    function addConfigTabListeners(configTabContent, instanceId) {
+        const form = configTabContent.querySelector('#model-params-form');
+        const previewConfigBtn = configTabContent.querySelector('#preview-config-changes');
+        const swapTypeSelect = configTabContent.querySelector('#swap-model-type');
+        const previewSwapBtn = configTabContent.querySelector('#preview-model-swap');
+
+        // Listener for parameter form inputs
+        if (form && previewConfigBtn) {
+            form.addEventListener('input', () => {
+                // Basic check: enable button if any value differs from its original value
+                let changed = false;
+                form.querySelectorAll('input, select').forEach(input => {
+                    if (input.value != input.dataset.originalValue) { // Use != for type coercion comparison initially
+                        changed = true;
+                    }
+                });
+                previewConfigBtn.disabled = !changed;
+            });
+        }
+
+        // Listener for swap model type selection
+        if (swapTypeSelect && previewSwapBtn) {
+            swapTypeSelect.addEventListener('change', () => {
+                previewSwapBtn.disabled = !swapTypeSelect.value; // Enable if a type is selected
+            });
+        }
+
+        // Listener for Preview Config Changes button
+        if (previewConfigBtn) {
+            previewConfigBtn.addEventListener('click', () => {
+                const formData = new FormData(form);
+                const newParams = Object.fromEntries(formData.entries());
+                const scope = configTabContent.querySelector('input[name="param-scope"]:checked')?.value || 'day';
+                console.log("Preview Config Changes Clicked", { instanceId, newParams, scope });
+                showToast("Configuration change simulation not yet implemented.", "info");
+                // TODO: Implement Phase 7 - Simulation & Confirmation Logic
+                // 1. Call engine.simulateParameterChange(instanceId, currentDayId, newParams, scope)
+                // 2. Display simulation results (modal or toast)
+                // 3. If confirmed:
+                //    - Call PeriodizationModelManager.updateModelParams(instanceId, newParams, scope)
+                //    - Trigger recalculation/DOM updates for affected days/cards
+                //    - Re-populate inspector
+                //    - triggerAnalyticsUpdate(), triggerSaveState()
+            });
+        }
+
+        // Listener for Preview Model Swap button
+        if (previewSwapBtn) {
+            previewSwapBtn.addEventListener('click', () => {
+                const newModelType = swapTypeSelect.value;
+                const scope = configTabContent.querySelector('input[name="swap-scope"]:checked')?.value || 'day';
+                const currentDayId = selectedContext.dayId; // Get dayId from current selection context
+                
+                console.log("Preview Model Swap Clicked", { instanceId, currentDayId, newModelType, scope });
+                if (!currentDayId) {
+                     console.error("Cannot perform swap: Current dayId context is missing.");
+                     showToast("Error: Missing day context for swap.", "error");
+             return;
+        }
+
+                // 1. Call simulation (placeholder)
+                const engine = getPeriodizationEngine();
+                let simulationResult = { summary: "Swap simulation not implemented.", changes: [] };
+                if (engine && typeof engine.simulateModelSwap === 'function') {
+                    try {
+                         simulationResult = engine.simulateModelSwap(instanceId, currentDayId, newModelType, scope);
+                    } catch (error) {
+                         console.error("Error during model swap simulation:", error);
+                         showToast("Error simulating model swap.", "error");
+                         simulationResult.summary = "Error during simulation.";
+                    }
+        } else {
+                    console.warn("simulateModelSwap function not found on engine.");
+                }
+
+                // 2. Display simulation results and confirm
+                // Ensure variables are interpolated correctly within the template literal
+                const confirmationMessage = `Simulated Impact: ${simulationResult.summary}\n\nProceed with swapping to ${newModelType} model for scope: ${scope}?`;
+                
+                if (confirm(confirmationMessage)) {
+                     console.log("User confirmed model swap. Proceeding with execution...");
+                    // TODO: Implement Execution Logic (Phase 11)
+                    // a. Identify affected dayIds based on scope and currentDayId
+                    // b. Get parameters for the new model (use defaults for now)
+                    // c. Detach old model for scope (PeriodizationModelManager.detachModelFromDay for each affected dayId)
+                    // d. Create new model instance (PeriodizationModelManager.createAndApplyModel)
+                    // e. Generate new cards (populateModelDrivenCards or similar, clearing old cards first)
+                    // f. Update Inspector view
+                    // g. triggerAnalyticsUpdate(), triggerSaveState()
+                    // Ensure template literal interpolation is correct
+                    showToast(`Model swap execution logic not yet implemented for ${newModelType}.`, "info");
+
+                } else {
+                     console.log("User cancelled model swap.");
+                     showToast("Model swap cancelled.", "info");
+                 }
+            });
+        }
+    }
+
+    // --- Action Button Handler for Model Inspector ---
+    function handleModelActionButtonClick(event) {
+        const button = event.currentTarget;
+        const action = button.dataset.action;
+        const instanceId = button.dataset.instanceId;
+        const dayId = button.dataset.dayId;
+
+        console.log(`[Model Action] Clicked: ${action}, Instance: ${instanceId}, Day: ${dayId}`);
+
+        if (!instanceId || !dayId) {
+            console.error("Missing instanceId or dayId for model action button.");
+            showToast("Error performing action: Missing context.", "error");
+             return;
+        }
+
+        // Find the day cell element - ensure template literal is correct
+        const dayCell = workCanvas.querySelector(`[data-day-id="${dayId}"]`);
+        if (!dayCell) {
+            console.error(`Could not find day cell for ${dayId}`); // Ensure template literal is correct
+            showToast("Error performing action: Day cell not found.", "error");
+            return;
+        }
+
+        switch (action) {
+            case 'revert-to-model':
+                if (confirm("Revert all independently edited exercises on this day back to the model's calculated state?")) {
+                    console.log("TODO: Implement Revert to Model logic");
+                    showToast("Revert functionality not yet implemented.", "info");
+                    // 1. Find independent cards in dayCell
+                    // 2. For each, call engine.calculateExercisesForDay(modelInstance, week, day)
+                    // 3. Update card DOM (name, details, dataset)
+                    // 4. Set card.dataset.modelDriven = 'true'
+                    // 5. Call updateCardIcon(card)
+                    // 6. Call updateDayBadge(dayCell)
+                    // 7. Re-populate inspector: populateInspectorModelView(instanceId, dayId)
+                    // 8. triggerSaveState(), triggerAnalyticsUpdate()
+                }
+                break;
+
+            case 'make-all-independent':
+                 if (confirm("Make all exercises on this day independent from the model? They will no longer automatically update.")) {
+                    console.log("Making all cards independent for day", dayId);
+                    let changed = false;
+                    dayCell.querySelectorAll('.workout-card[data-model-driven="true"]').forEach(card => {
+                        card.dataset.modelDriven = 'false';
+                        updateCardIcon(card);
+                        changed = true;
+                    });
+                    if (changed) {
+                        updateDayBadge(dayCell); // Badge might disappear if no model-driven cards remain
+                        populateInspectorModelView(instanceId, dayId); // Refresh the inspector view
+                        triggerSaveState();
+                        showToast("All cards on this day are now independent.", "success");
+                } else {
+                        showToast("No model-driven cards found to make independent.", "info");
+                    }
+                 }
+                break;
+
+            case 'detach-day':
+                if (confirm("Completely detach this day from the periodization model? All exercises will become independent.")) {
+                    // Call the manager function. The event listener will handle UI updates.
+                    const detached = PeriodizationModelManager.detachModelFromDay(dayId);
+                    if (detached) {
+                         console.log(`[Model Action] Successfully initiated detachment for day ${dayId}`); // Ensure template literal is correct
+                         showToast(`Day ${dayId} detached from model ${instanceId}.`, "success"); // Ensure template literal is correct
+                         // UI updates are handled by the event listener
+        } else {
+                         console.error(`[Model Action] Failed to detach day ${dayId}.`); // Ensure template literal is correct
+                         showToast(`Error detaching day ${dayId} from model.`, "error"); // Ensure template literal is correct
+                    }
+                 }
+                break;
+
+            default:
+                console.warn(`Unknown model action: ${action}`); // Ensure template literal is correct
+        }
+    }
+
+    // --- Card List Click Handler for Inspector ---
+    function handleInspectorCardListClick(event) {
+        const listItem = event.currentTarget;
+        const cardId = listItem.dataset.cardId;
+        if (!cardId) return;
+
+        const cardElement = document.getElementById(cardId);
+        if (cardElement) {
+            console.log(`Highlighting card: ${cardId}`); // Ensure template literal is correct
+            // Remove previous highlights
+            document.querySelectorAll('.highlight-card').forEach(el => el.classList.remove('highlight-card'));
+            // Add highlight
+            cardElement.classList.add('highlight-card');
+            // Scroll into view
+            cardElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // Remove highlight after a delay
+            setTimeout(() => { 
+                cardElement.classList.remove('highlight-card'); 
+            }, 1500); // Highlight for 1.5 seconds
+        } else {
+            console.warn(`Card element with ID ${cardId} not found on canvas.`); // Ensure template literal is correct
+        }
+    }
+
+    // Helper function to delete the currently selected workout card (if single selection)
+    // Needs selectedContext, closeInspector, triggerSaveState, triggerAnalyticsUpdate
+    function deleteSelectedWorkoutCard() {
+         if (selectedContext.type === 'exercise' && selectedContext.elements.size === 1) {
+            const cardElement = Array.from(selectedContext.elements)[0];
+            console.log(`Deleting selected card: ${cardElement.id}`); // Ensure template literal is correct
+            cardElement.remove();
+            selectedContext = { type: 'none', elements: new Set(), modelId: null, dayId: null }; // Reset selection
+            closeInspector();
+            triggerSaveState();
+            triggerAnalyticsUpdate(workCanvas); // Pass workCanvas if needed by the function
+            showToast("Workout card deleted.", "success");
+            } else {
+            console.warn("Delete called but no single exercise card selected.");
+            showToast("Select a single card to delete.", "warning");
+        }
+    }
+
+    // Add a temporary CSS rule for highlighting
+    const highlightStyle = document.createElement('style');
+    highlightStyle.innerHTML = `
+    /* Existing highlight */
+    .highlight-card {
+        outline: 3px solid var(--accent-color) !important;
+        box-shadow: 0 0 15px var(--accent-color) !important;
+        transition: outline 0.2s ease-out, box-shadow 0.2s ease-out;
+    }
+    /* Model Inspector Status Styles */
+    .model-status-section { margin-bottom: 1.5rem; }
+    .model-status-section .section-header { 
+        display: flex; justify-content: space-between; align-items: center; 
+        margin-bottom: 0.5rem; border-bottom: 1px solid rgba(204, 209, 217, 0.1); padding-bottom: 0.5rem;
+    }
+    .model-status-section .section-header h4 { margin: 0; color: var(--primary-accent); }
+    .model-status-section .instance-id { font-size: 0.8rem; opacity: 0.7; cursor: help; }
+    .model-status-section h5 { 
+        margin-top: 0; margin-bottom: 0.8rem; color: var(--accent-color); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .model-status-section h6 {
+        margin-top: 0.5rem; margin-bottom: 0.3rem; font-size: 0.85rem; color: var(--cool-steel); display: flex; align-items: center; gap: 0.5em;
+    }
+    .status-details { display: flex; flex-direction: column; gap: 0.5rem; }
+    .status-item { display: flex; justify-content: space-between; font-size: 0.9rem; }
+    .status-item strong { color: var(--text-color); opacity: 0.8; }
+    .status-item .status-value { font-weight: 500; }
+
+    /* Wave Specific */
+    .wave-pattern-info h5 { margin-bottom: 0.5rem; font-size: 0.9rem; }
+    .wave-pattern-info .pattern-name { font-weight: normal; color: var(--primary-accent); background-color: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 3px; }
+    .wave-pattern-display { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; padding: 5px; background-color: rgba(0,0,0,0.1); border-radius: 4px; }
+    .wave-step { 
+        flex: 1; /* Try to make them equal width */
+        min-width: 60px; /* Prevent shrinking too much */
+        padding: 6px 8px; border: 1px solid rgba(204, 209, 217, 0.2); border-radius: 3px; font-size: 0.8em; 
+        text-align: center; cursor: help; transition: all 0.2s ease; background-color: rgba(27, 28, 34, 0.7);
+    }
+    .wave-step .step-number { display: block; font-weight: bold; margin-bottom: 2px; font-size: 0.9em; }
+    .wave-step .step-details { display: block; font-size: 0.85em; opacity: 0.8; }
+    .wave-step.active { 
+        background-color: var(--accent-color); color: var(--bg-color); border-color: var(--accent-color); font-weight: bold;
+        transform: scale(1.05); box-shadow: 0 0 8px rgba(255, 112, 59, 0.3);
+    }
+    .wave-step.active .step-details { opacity: 1; }
+    .wave-summary { display: flex; justify-content: space-around; font-size: 0.85rem; margin-top: 5px; padding-top: 5px; border-top: 1px dashed rgba(204, 209, 217, 0.1); }
+    .wave-summary span { opacity: 0.9; }
+    .wave-summary strong { color: var(--text-color); }
+
+    /* Inspector Card List */
+    .exercise-list-container { margin-bottom: 1rem; }
+    ul.inspector-card-list {
+        list-style: none; padding: 0; margin: 0; max-height: 150px; overflow-y: auto; 
+        background-color: rgba(0,0,0,0.15); border-radius: 4px; padding: 5px;
+    }
+    ul.inspector-card-list li {
+        padding: 0.4rem 0.6rem; margin-bottom: 3px; background-color: rgba(27, 28, 34, 0.7);
+        border-radius: 3px; cursor: pointer; font-size: 0.85rem; transition: background-color 0.2s;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    ul.inspector-card-list li:hover { background-color: rgba(255, 112, 59, 0.15); }
+    .exercise-item-name { font-weight: 500; }
+    .exercise-item-details { opacity: 0.7; font-size: 0.9em; }
+    .status-icon { font-size: 0.9em; opacity: 0.7; cursor: help; }
+
+    /* Action Buttons */
+    .action-buttons-container { display: flex; flex-direction: column; gap: 0.5rem; }
+    .model-action-btn {
+        /*display: block; width: 100%; margin-bottom: 0.5rem; Now handled by flex gap */
+        padding: 0.6rem 0.8rem; background-color: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(204, 209, 217, 0.2); color: var(--text-color);
+        border-radius: 4px; cursor: pointer; font-size: 0.85rem; text-align: left; transition: all 0.2s ease;
+    }
+    .model-action-btn:hover { background-color: rgba(255, 255, 255, 0.15); border-color: rgba(204, 209, 217, 0.4); }
+    .model-action-btn.detach-btn:hover { background-color: rgba(255, 80, 80, 0.2); border-color: rgba(255, 80, 80, 0.5); color: #ffcccc; }
+    `; // <<< Added missing closing backtick
+    document.head.appendChild(highlightStyle);
+
+    /* Add styles for the new config elements */
+    const configStyle = document.createElement('style');
+    configStyle.innerHTML = `
+    .config-section h5 {
+        margin-top: 0;
+        margin-bottom: 0.8rem;
+        color: var(--accent-color);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+    }
+    .form-group.small-margin {
+        margin-bottom: 0.8rem;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 0.3rem;
+        font-weight: 500;
+        color: var(--cool-steel);
+        font-size: 0.85rem;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group select {
+        width: 100%;
+        padding: 0.5rem 0.7rem;
+        border-radius: 4px;
+        border: 1px solid rgba(204, 209, 217, 0.2);
+        background-color: rgba(27, 28, 34, 0.7);
+        color: var(--text-color);
+        font-size: 0.9rem;
+    }
+    .form-group select {
+        appearance: none;
+        background-image: url('data:image/svg+xml;utf8,<svg fill="%23CCD1D9" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        background-size: 1em;
+        padding-right: 2em;
+    }
+    .param-description {
+        font-size: 0.75rem;
+        color: var(--text-color);
+        opacity: 0.7;
+        display: block;
+        margin-top: 3px;
+    }
+    .scope-selection label {
+        display: inline-block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--cool-steel);
+    }
+    .scope-selection .radio-group {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    .scope-selection .radio-group input[type="radio"] {
+        margin-right: 0.3rem;
+    }
+    .scope-selection .radio-group label {
+        margin-bottom: 0; /* Reset margin for radio labels */
+        font-weight: normal;
+        color: var(--text-color);
+        font-size: 0.9rem;
+    }
+    #preview-config-changes:disabled,
+    #preview-model-swap:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+    `; // <<< Added missing closing backtick
+    document.head.appendChild(configStyle);
+
+    // --- Periodization Model Visuals (Day Cell Classes) --- // Renamed section
+
+    /**
+     * Updates the CSS classes on a day cell to reflect its model governance.
+     * @param {HTMLElement} dayCellElement - The day cell DOM element.
+     */
+    function updateDayCellModelClasses(dayCellElement) {
+        if (!dayCellElement) return;
+        const dayId = dayCellElement.dataset.dayId;
+        if (!dayId) return;
+
+        const instanceId = PeriodizationModelManager.getModelForDay(dayId);
+
+        // Always remove existing classes first
+        dayCellElement.classList.remove('has-model');
+        const existingModelTypeClasses = Array.from(dayCellElement.classList).filter(cls => cls.startsWith('model-type-'));
+        dayCellElement.classList.remove(...existingModelTypeClasses);
+
+        if (instanceId) {
+            const model = PeriodizationModelManager.getModelInstance(instanceId);
+            if (model) {
+                // Check if any card within the cell is actually model-driven
+                // This prevents styling the cell if only independent cards remain after edits
+                const modelDrivenCard = dayCellElement.querySelector('.workout-card[data-model-driven="true"]');
+                if (modelDrivenCard) {
+                    const modelType = model.type.toLowerCase();
+                    dayCellElement.classList.add('has-model');
+                    dayCellElement.classList.add(`model-type-${modelType}`); // Ensure template literal interpolation is correct
+                }
+            }
+        }
+    }
+
+    // --- Helper Functions for Dependencies ---
+    function getTotalWeeksHelper() {
+        return workCanvas.querySelectorAll('.week-label').length;
+    }
+    
+    function getBlockStateHelper() {
+        // Placeholder: Needs implementation to gather state from DOM/manager
+        // This is complex and depends on how state is managed elsewhere
+        console.warn('[ForgeAssist Init] getBlockStateHelper not fully implemented.');
+        return {
+            slots: {}, // Populate from workCanvas
+            phases: [], // Populate from phaseRibbon
+            periodizationModels: PeriodizationModelManager.getState() // Get from manager
+        };
+    }
+
+    // --- Initialize ForgeAssist --- 
+    console.log('[BlockBuilder] Initializing ForgeAssist...');
+    try {
+        ForgeAssist.init({
+            workCanvas: workCanvas,
+            showToast: showToast, // Assumes showToast is available in this scope
+            triggerAnalyticsUpdate: triggerAnalyticsUpdate, // Assumes triggerAnalyticsUpdate is available
+            getTotalWeeks: getTotalWeeksHelper,
+            getBlockState: getBlockStateHelper,
+            exerciseLibrary: exerciseLibraryData, // Assumes exerciseLibraryData holds the loaded library
+            // Pass analytics functions
+            acwrFunction: acwr, 
+            monotonyFunction: monotony,
+            // Ensure getCurrentBlockLoads receives workCanvas when called by ForgeAssist/AdaptiveScheduler
+            getCurrentBlockLoads: () => getCurrentBlockLoads(workCanvas), // <<< MODIFIED HERE
+            simulatedPastLoad: window.simulatedPastLoad || [] // Get from global or default
+        });
+         console.log('[BlockBuilder] ForgeAssist Initialized.');
+    } catch (error) {
+        console.error('[BlockBuilder] Error initializing ForgeAssist:', error);
+        showToast('ForgeAssist failed to initialize!', 'error');
+    }
+
+    // --- Inspector Update Logic ---
+
+    // <<< NEW: Listen for event to re-render assist actions >>>
+    const inspectorElement = document.getElementById('inspector');
+    
+    // Listen for the select-model event from ForgeAssist
+    document.addEventListener('forge-assist:select-model', (event) => {
+        if (event.detail && event.detail.modelId && event.detail.dayId) {
+            console.log(`[forge-assist:select-model] Selecting model ${event.detail.modelId} for day ${event.detail.dayId}`);
+            handleModelContextSelection(event.detail.modelId, event.detail.dayId);
+        } else {
+            console.error('[forge-assist:select-model] Event missing modelId or dayId', event.detail);
+        }
+    });
+    
+    // --- Register event listeners for inspector tabs ---
+
+    // <<< NEW: Function to handle workout card clicks (opens modal) >>>
+    function handleCardClick(cardElement, isShiftKey) {
+        // First handle the selection state
+        handleSelection(cardElement, isShiftKey);
+        
+        // Update the selected context
+        const { selectedElement, selectedElements } = getSelectionState();
+        selectedContext.type = 'exercise';
+        selectedContext.elements = new Set(selectedElements);
+        
+        // Update multi-select toolbar visibility
+        updateMultiSelectToolbarVisibility();
+        
+        // Update ForgeAssist context to ensure it has the latest selection
+        ForgeAssist.updateContext(selectedElement, selectedElements);
+        
+        // Open inspector based on selection count
+        if (selectedContext.elements.size === 1 && !isShiftKey) {
+            // Single selection - show exercise details
+            updateInspectorForSelection(); // Ensure details are updated before opening
+            openInspector(cardElement);
+        } else if (selectedContext.elements.size > 1) {
+            // Multi-selection - show multi-select inspector
+            openMultiSelectInspector();
+        } else {
+            // No selection - close inspector
+            closeInspector();
+        }
+    }
+    // <<< END MODIFIED Handler >>>
+
+    // <<< Add Exercise Detail Modal Close Listener >>>
+    function closeExerciseDetailModal() {
+        if (exerciseDetailModal) {
+            exerciseDetailModal.classList.remove('is-visible');
+            
+            // Stop any playing videos when closing the modal
+            const videoIframe = exerciseDetailModal.querySelector('iframe');
+            if (videoIframe && videoIframe.src) {
+                // Pause YouTube videos by reloading the iframe
+                const currentSrc = videoIframe.src;
+                videoIframe.src = currentSrc;
+            }
+        }
+    }
+    
+    // Make sure we have all necessary elements before attaching listeners
+    if (exerciseDetailCloseBtn) {
+        exerciseDetailCloseBtn.addEventListener('click', closeExerciseDetailModal);
+    }
+    
+    // Also close modal on overlay click
+    if (exerciseDetailModal) {
+        exerciseDetailModal.addEventListener('click', (e) => {
+            if (e.target === exerciseDetailModal) { // Clicked on the overlay itself
+                closeExerciseDetailModal();
+            }
+        });
+        
+        // Add escape key listener for better UX
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && exerciseDetailModal.classList.contains('is-visible')) {
+                closeExerciseDetailModal();
+            }
+        });
+    }
+    // <<< End Close Listener >>>
+
+    // <<< NEW: Listener for library item clicks >>>
+    const inspectorPanelElement = document.getElementById('inspector-panel');
+    if (inspectorPanelElement) {
+        inspectorPanelElement.addEventListener('forge-library:show-detail', (e) => {
+            const exerciseId = e.detail.exerciseId;
+            console.log(`[BlockBuilder] Caught forge-library:show-detail event for ID: ${exerciseId}`);
+            if (exerciseId) {
+                const libraryData = exerciseLibraryData.find(ex => ex.id === exerciseId);
+                if (libraryData) {
+                    // Call the modal population function, passing only library data
+                    populateAndShowExerciseDetailModal(libraryData, null); 
+                } else {
+                    console.warn(`Exercise data not found in library for ID: ${exerciseId}`);
+                    showToast('Could not find exercise details.', 'warning');
+                }
+            } else {
+                console.error('forge-library:show-detail event missing exerciseId.');
+            }
+        });
+    }
+    // <<< END NEW LISTENER >>>
+
+    // <<< NEW: Central function to populate and show the modal >>>
+    function populateAndShowExerciseDetailModal(libraryData, cardData) {
+        if (!libraryData) return;
+
+        const exerciseName = libraryData.name || 'Exercise';
+        if (exerciseDetailTitle) exerciseDetailTitle.textContent = exerciseName;
+
+        // Populate Library Info (Always available)
+        if (detailLibraryCategory) detailLibraryCategory.textContent = libraryData.category || '-';
+        if (detailLibraryDescription) detailLibraryDescription.textContent = libraryData.description || '-';
+        if (detailLibraryMuscles) detailLibraryMuscles.textContent = (libraryData.primaryMuscles || []).join(', ') || '-';
+        if (detailLibraryEquipment) detailLibraryEquipment.textContent = (libraryData.equipmentNeeded || []).join(', ') || '-';
+        if (detailLibraryDifficulty) detailLibraryDifficulty.textContent = libraryData.difficulty || '-';
+        
+        // Enhanced YouTube Video Handling
+        const videoContainer = document.getElementById('exercise-video-container');
+        if (videoContainer) {
+            videoContainer.innerHTML = ''; // Clear previous video
+            
+            if (libraryData.videoUrl && (libraryData.videoUrl.includes('youtube.com') || libraryData.videoUrl.includes('youtu.be'))) {
+                let videoId = null;
+                
+                try {
+                    // Extract YouTube video ID from different URL formats
+                    const url = new URL(libraryData.videoUrl);
+                    
+                    if (url.hostname === 'youtu.be') {
+                        videoId = url.pathname.substring(1); // Get path after hostname
+                    } else if (url.hostname.includes('youtube.com')) {
+                        if (url.searchParams.has('v')) {
+                            videoId = url.searchParams.get('v');
+                        } else if (url.pathname.includes('/embed/')) {
+                            videoId = url.pathname.split('/embed/')[1];
+                        } else if (url.pathname.includes('/v/')) {
+                            videoId = url.pathname.split('/v/')[1];
+                        }
+                    }
+                    
+                    // Handle any additional parameters in the videoId
+                    if (videoId && videoId.includes('&')) {
+                        videoId = videoId.split('&')[0];
+                    }
+                    if (videoId && videoId.includes('?')) {
+                        videoId = videoId.split('?')[0];
+                    }
+                    
+                } catch (e) {
+                    console.error("Error parsing video URL:", libraryData.videoUrl, e);
+                }
+
+                if (videoId) {
+                    // Create enhanced iframe with additional parameters for better UX
+                    const iframe = document.createElement('iframe');
+                    iframe.width = '100%';
+                    iframe.height = '100%';
+                    
+                    // Add params for better playback experience
+                    const params = new URLSearchParams({
+                        rel: '0',              // Don't show related videos from other channels
+                        modestbranding: '1',   // Hide YouTube logo
+                        enablejsapi: '1',      // Enable JavaScript API
+                        origin: window.location.origin, // Security: specify origin
+                        playsinline: '1',      // Play inline on mobile devices
+                        autoplay: '0',         // Don't autoplay
+                        fs: '1',               // Show fullscreen button
+                        color: 'white',        // Use white progress bar
+                        hl: 'en',              // English interface
+                        iv_load_policy: '3'    // Hide annotations
+                    });
+                    
+                    iframe.src = `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+                    iframe.title = `${exerciseName} video demonstration`;
+                    iframe.loading = "lazy"; // Lazy load iframe for performance
+                    iframe.frameBorder = '0';
+                    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen';
+                    iframe.allowFullscreen = true;
+                    
+                    // Add a loading animation while the video loads
+                    const loadingWrapper = document.createElement('div');
+                    loadingWrapper.className = 'video-loading-wrapper';
+                    
+                    // Create the loading animation
+                    const loadingAnimation = document.createElement('div');
+                    loadingAnimation.className = 'video-loading-animation';
+                    loadingAnimation.innerHTML = '<div></div><div></div><div></div>';
+                    
+                    loadingWrapper.appendChild(loadingAnimation);
+                    loadingWrapper.appendChild(iframe);
+                    videoContainer.appendChild(loadingWrapper);
+                    
+                    // Hide loading animation when iframe loads
+                    iframe.onload = () => {
+                        loadingAnimation.style.display = 'none';
+                    };
+                } else {
+                    // Show placeholder with error message
+                    videoContainer.innerHTML = `
+                        <div class="video-placeholder">
+                            <div class="video-icon-placeholder">
+                                <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="1.5"/>
+                                    <path d="M15 9L9 15M9 9L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <p>Could not extract video ID</p>
+                        </div>
+                    `;
+                }
+            } else {
+                // No video available placeholder
+                videoContainer.innerHTML = `
+                    <div class="video-placeholder">
+                        <div class="video-icon-placeholder">
+                            <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="1.5"/>
+                                <path d="M15.5 12L10 16V8L15.5 12Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <p>No video available</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Populate Current Specs & Footer Buttons based on context (card or library)
+        const currentSpecsSection = exerciseDetailModal.querySelector('.current-specs');
+        if (cardData) { // Clicked from a card on the canvas
+            if (currentSpecsSection) currentSpecsSection.style.display = ''; // Show
+            if (detailCurrentSets) detailCurrentSets.textContent = cardData.sets || '-';
+            if (detailCurrentReps) detailCurrentReps.textContent = cardData.reps || '-';
+            if (detailCurrentLoadType) detailCurrentLoadType.textContent = cardData.loadType || '-';
+            if (detailCurrentLoadValue) detailCurrentLoadValue.textContent = cardData.loadValue || '-';
+            if (detailCurrentRest) detailCurrentRest.textContent = cardData.rest || '-';
+            if (detailCurrentNotes) detailCurrentNotes.textContent = cardData.notes || '-';
+
+            // Configure buttons for card context
+            if (detailModalEditBtn) detailModalEditBtn.style.display = ''; // Show
+            if (detailModalSwapBtn) detailModalSwapBtn.textContent = 'Suggest Swap'; // Reset text
+            detailModalEditBtn.onclick = () => {
+                closeExerciseDetailModal();
+                openInspector(document.getElementById(cardData.id)); // Find card by ID
+                activateTab('details');
+            };
+            detailModalSwapBtn.onclick = () => {
+                closeExerciseDetailModal();
+                // Get the specific card element for context
+                const cardElement = document.getElementById(cardData.id);
+                if(cardElement) ForgeAssist.updateContext(cardElement, new Set([cardElement])); // Ensure context is set
+                const action = ForgeAssist.getContextualActions().find(a => a.id === 'suggest_swap' || a.id === 'find-alternative');
+                if (action?.handler) action.handler();
+                else showToast('Could not trigger swap suggestion.', 'warning');
+            };
+
+        } else { // Clicked from the library list
+            if (currentSpecsSection) currentSpecsSection.style.display = 'none'; // Hide
+            // Clear current specs just in case
+            if (detailCurrentSets) detailCurrentSets.textContent = '-';
+            if (detailCurrentReps) detailCurrentReps.textContent = '-';
+            if (detailCurrentLoadType) detailCurrentLoadType.textContent = '-';
+            if (detailCurrentLoadValue) detailCurrentLoadValue.textContent = '-';
+            if (detailCurrentRest) detailCurrentRest.textContent = '-';
+            if (detailCurrentNotes) detailCurrentNotes.textContent = '-';
+
+            // Configure buttons for library context
+            if (detailModalEditBtn) detailModalEditBtn.style.display = 'none'; // Hide
+            if (detailModalSwapBtn) detailModalSwapBtn.textContent = 'Find Alternatives'; // Change text
+            detailModalSwapBtn.onclick = () => {
+                closeExerciseDetailModal();
+                // Trigger swap using only the ID
+                 ForgeAssist.updateContext(null, new Set()); // Clear card context
+                 // Directly call the handler if possible (assuming ForgeAssist is accessible)
+                 // It might be better to have a dedicated ForgeAssist function that accepts only an ID
+                 console.warn('Triggering swap from library context - handler might expect a card element.');
+                 const swapAction = ForgeAssist.getContextualActions().find(a => a.id === 'suggest_swap' || a.id === 'find-alternative');
+                 if(swapAction && typeof swapAction.handler === 'function'){
+                    // The handler currently expects currentContext.selectedElement to be the card
+                    // This won't work perfectly without refactoring handleSuggestSwap.
+                    // For now, we can *try* calling it but it might fail gracefully or require a selected card.
+                    // A better approach: ForgeAssist.suggestSwapById(libraryData.id);
+                    // Let's just show a toast for now.
+                    showToast(`Alternative suggestions for ${libraryData.name} would appear here. (Needs handler update)`, 'info');
+                 } else {
+                    showToast('Could not trigger alternative suggestion.', 'warning');
+                 }
+            };
+        }
+
+        // Show Modal
+        if (exerciseDetailModal) exerciseDetailModal.classList.add('is-visible');
+    }
+    // <<< END Central function >>>
+
+    /**
+     * Creates a superset container and adds the selected exercise cards to it
+     * @param {Array} exerciseCards - Array of workout card DOM elements to group into a superset
+     * @returns {HTMLElement} The superset container element 
+     */
+    function createSuperset(exerciseCards) {
+        if (!exerciseCards || exerciseCards.length < 2) {
+            console.error('At least 2 exercise cards are required to create a superset');
+            showToast('Select at least 2 exercises to create a superset', 'error');
+            return null;
+        }
+
+        // Create the superset container
+        const supersetContainer = document.createElement('div');
+        supersetContainer.className = 'superset-container';
+        supersetContainer.id = `superset-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        
+        // Create the header with label and controls
+        const supersetHeader = document.createElement('div');
+        supersetHeader.className = 'superset-header';
+        supersetHeader.innerHTML = `
+            <div class="superset-label">Superset</div>
+            <div class="superset-controls">
+                <button class="superset-edit-btn" title="Edit Superset">✏️</button>
+                <button class="superset-remove-btn" title="Break Superset">❌</button>
+            </div>
+        `;
+        
+        supersetContainer.appendChild(supersetHeader);
+        
+        // Get the parent element (day cell) of the first card
+        const parentCell = exerciseCards[0].closest('.day-cell');
+        if (!parentCell) {
+            console.error('Parent day cell not found for exercise cards');
+            return null;
+        }
+        
+        // Remove cards from their current location and add to the superset container
+        exerciseCards.forEach(card => {
+            // If card is already in a superset, remove it from that superset first
+            const existingSuperset = card.closest('.superset-container');
+            if (existingSuperset) {
+                // If this is the only card in the superset, remove the entire superset
+                const cardsInExistingSuperset = existingSuperset.querySelectorAll('.workout-card');
+                if (cardsInExistingSuperset.length <= 2) {
+                    // Move the other card out of the superset before removing it
+                    Array.from(cardsInExistingSuperset).forEach(c => {
+                        if (c !== card) {
+                            existingSuperset.parentNode.insertBefore(c, existingSuperset);
+                        }
+                    });
+                    existingSuperset.remove();
+                } else {
+                    // Just remove this card from the existing superset
+                    existingSuperset.removeChild(card);
+                }
+            } else if (card.parentNode) {
+                card.parentNode.removeChild(card);
+            }
+            
+            // Add card to new superset container
+            supersetContainer.appendChild(card);
+            
+            // Update the card styling for superset
+            card.classList.add('in-superset');
+        });
+        
+        // Add event listeners to the superset controls
+        supersetContainer.querySelector('.superset-edit-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Open inspector for superset editing
+            // This will need to be implemented as part of the inspector functionality
+            showToast('Superset editing coming soon!', 'info');
+        });
+        
+        supersetContainer.querySelector('.superset-remove-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            breakSuperset(supersetContainer);
+        });
+        
+        // Insert the superset container into the day cell
+        parentCell.appendChild(supersetContainer);
+        
+        // Trigger updates
+        triggerSaveState();
+        triggerAnalyticsUpdate(workCanvas);
+        
+        showToast('Superset created', 'success');
+        return supersetContainer;
+    }
+
+    /**
+     * Breaks a superset, removing the container and returning individual exercise cards to the day cell
+     * @param {HTMLElement} supersetContainer - The superset container element to break
+     */
+    function breakSuperset(supersetContainer) {
+        if (!supersetContainer || !supersetContainer.classList.contains('superset-container')) {
+            console.error('Invalid superset container provided');
+            return;
+        }
+        
+        const parentCell = supersetContainer.closest('.day-cell');
+        if (!parentCell) {
+            console.error('Parent day cell not found for superset');
+            return;
+        }
+        
+        // Get all workout cards in the superset
+        const exerciseCards = Array.from(supersetContainer.querySelectorAll('.workout-card'));
+        
+        // Move cards back to day cell and remove superset container
+        exerciseCards.forEach(card => {
+            card.classList.remove('in-superset');
+            parentCell.appendChild(card);
+        });
+        
+        supersetContainer.remove();
+        
+        // Trigger updates
+        triggerSaveState();
+        triggerAnalyticsUpdate(workCanvas);
+        
+        showToast('Superset removed', 'success');
+    }
+
+    // Add context menu and multi-select toolbar elements
+    let contextMenu = null;
+    let multiSelectToolbar = null;
+    
+    // Initialize the context menu for workout cards
+    function initializeContextMenu() {
+        // Create context menu element if it doesn't exist
+        if (!contextMenu) {
+            contextMenu = document.createElement('div');
+            contextMenu.className = 'context-menu';
+            contextMenu.style.display = 'none';
+            document.body.appendChild(contextMenu);
+            
+            // Close menu on document click
+            document.addEventListener('click', (e) => {
+                if (!contextMenu.contains(e.target)) {
+                    contextMenu.style.display = 'none';
+                }
+            });
+        }
+    }
+    
+    // Show context menu for workout card
+    function showContextMenu(x, y, items) {
+        if (!contextMenu) {
+            initializeContextMenu();
+        }
+        
+        // Clear previous items
+        contextMenu.innerHTML = '';
+        
+        // Add menu items
+        items.forEach(item => {
+            const menuItem = document.createElement('div');
+            menuItem.className = 'context-menu-item';
+            menuItem.innerHTML = `<span class="icon">${item.icon}</span> ${item.label}`;
+            menuItem.addEventListener('click', () => {
+                contextMenu.style.display = 'none';
+                item.action();
+            });
+            contextMenu.appendChild(menuItem);
+        });
+        
+        // Position menu
+        contextMenu.style.left = `${x}px`;
+        contextMenu.style.top = `${y}px`;
+        contextMenu.style.display = 'block';
+        
+        // Ensure menu is within viewport
+        const rect = contextMenu.getBoundingClientRect();
+        if (rect.right > window.innerWidth) {
+            contextMenu.style.left = `${window.innerWidth - rect.width - 5}px`;
+        }
+        if (rect.bottom > window.innerHeight) {
+            contextMenu.style.top = `${y - rect.height}px`;
+        }
+    }
+    
+    // Initialize multi-select toolbar
+    function initializeMultiSelectToolbar() {
+        if (!multiSelectToolbar) {
+            multiSelectToolbar = document.createElement('div');
+            multiSelectToolbar.className = 'multi-select-toolbar';
+            multiSelectToolbar.innerHTML = `
+                <button class="multi-select-action" id="create-superset-btn">
+                    <span class="icon">⚡</span> Create Superset
+                </button>
+                <button class="multi-select-action" id="delete-selected-btn">
+                    <span class="icon">🗑️</span> Delete Selected
+                </button>
+            `;
+            document.body.appendChild(multiSelectToolbar);
+            
+            // Add event listeners
+            document.getElementById('create-superset-btn').addEventListener('click', () => {
+                const selectedCards = Array.from(selectedContext.elements);
+                if (selectedCards.length >= 2) {
+                    createSuperset(selectedCards);
+                    // Clear selection after creating superset
+                    clearSelectionStyles();
+                    selectedContext = { type: 'none', elements: new Set(), modelId: null, dayId: null };
+                    updateMultiSelectToolbarVisibility();
+                }
+            });
+            
+            document.getElementById('delete-selected-btn').addEventListener('click', () => {
+                const selectedCards = Array.from(selectedContext.elements);
+                selectedCards.forEach(card => {
+                    card.remove();
+                });
+                // Clear selection after deleting
+                clearSelectionStyles();
+                selectedContext = { type: 'none', elements: new Set(), modelId: null, dayId: null };
+                updateMultiSelectToolbarVisibility();
+                triggerSaveState();
+                triggerAnalyticsUpdate(workCanvas);
+                showToast(`Deleted ${selectedCards.length} exercises`, 'success');
+            });
+        }
+    }
+    
+    // Update toolbar visibility based on selection
+    function updateMultiSelectToolbarVisibility() {
+        if (!multiSelectToolbar) {
+            initializeMultiSelectToolbar();
+        }
+        
+        if (selectedContext.type === 'exercise' && selectedContext.elements.size >= 2) {
+            multiSelectToolbar.classList.add('active');
+        } else {
+            multiSelectToolbar.classList.remove('active');
+        }
+    }
+    
+    // Enhance the handleCardClick function to support multi-select and context menu
+    function handleCardClick(cardElement, isShiftKey) {
+        // Original selection handling logic
+        handleSelection(cardElement, isShiftKey);
+        
+        // Update the selected context
+        const { selectedElement, selectedElements } = getSelectionState();
+        selectedContext.type = 'exercise';
+        selectedContext.elements = new Set(selectedElements);
+        
+        // Update multi-select toolbar visibility
+        updateMultiSelectToolbarVisibility();
+        
+        // If it's a single card selection, open inspector
+        if (selectedContext.elements.size === 1 && !isShiftKey) {
+            openInspector(cardElement);
+        } else if (selectedContext.elements.size > 1) {
+            openMultiSelectInspector();
+        }
+    }
+    
+    // Add context menu to workout cards via right-click
+    function attachContextMenuToCards() {
+        // Use event delegation on workCanvas
+        workCanvas.addEventListener('contextmenu', (e) => {
+            // Check if right-click happened on a workout card
+            const card = e.target.closest('.workout-card');
+            if (card) {
+                e.preventDefault(); // Prevent default context menu
+                
+                // Add this card to selection if not already selected
+                if (!selectedContext.elements.has(card)) {
+                    handleCardClick(card, false);
+                }
+                
+                const menuItems = [
+                    {
+                        icon: '⚡',
+                        label: 'Create Superset',
+                        action: () => {
+                            if (selectedContext.elements.size >= 2) {
+                                createSuperset(Array.from(selectedContext.elements));
+                                clearSelectionStyles();
+                                selectedContext = { type: 'none', elements: new Set(), modelId: null, dayId: null };
+                                updateMultiSelectToolbarVisibility();
+                            } else {
+                                showToast('Select at least 2 exercises to create a superset', 'warning');
+                            }
+                        }
+                    },
+                    {
+                        icon: '📋',
+                        label: 'Duplicate',
+                        action: () => {
+                            const clone = card.cloneNode(true);
+                            clone.id = `workout-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+                            // Add event listeners to the cloned card
+                            clone.querySelector('.delete-btn').addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                clone.remove();
+                                triggerSaveState();
+                                triggerAnalyticsUpdate(workCanvas);
+                            });
+                            
+                            clone.querySelector('.edit-btn').addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                handleSelection(clone, false);
+                                openInspector(clone);
+                            });
+                            
+                            clone.addEventListener('click', (e) => {
+                                if (e.target.closest('.edit-btn') || e.target.closest('.delete-btn')) return;
+                                handleCardClick(clone, e.shiftKey);
+                            });
+                            
+                            // Insert after original card
+                            card.parentNode.insertBefore(clone, card.nextSibling);
+                            triggerSaveState();
+                            triggerAnalyticsUpdate(workCanvas);
+                            showToast('Exercise duplicated', 'success');
+                        }
+                    },
+                    {
+                        icon: '🔄',
+                        label: 'Find Progression',
+                        action: () => {
+                            showProgressionModal(card);
+                        }
+                    },
+                    {
+                        icon: '🗑️',
+                        label: 'Delete',
+                        action: () => {
+                            card.remove();
+                            triggerSaveState();
+                            triggerAnalyticsUpdate(workCanvas);
+                            showToast('Exercise deleted', 'success');
+                        }
+                    }
+                ];
+                
+                showContextMenu(e.pageX, e.pageY, menuItems);
+            }
+        });
+    }
+    
+    // Call initialization functions
+    initializeContextMenu();
+    initializeMultiSelectToolbar();
+    
+    // Attach context menu to workout cards when calendar is loaded
+    attachContextMenuToCards();
+
+    // Show progression options for an exercise card
+    function showProgressionModal(exerciseCard) {
+        // Create modal if it doesn't exist
+        let progressionModal = document.getElementById('progression-modal');
+        if (!progressionModal) {
+            progressionModal = document.createElement('div');
+            progressionModal.id = 'progression-modal';
+            progressionModal.className = 'modal-overlay';
+            
+            // Create modal content
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content progression-modal-content';
+            
+            // Add close button
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'modal-close-btn';
+            closeBtn.innerHTML = '&times;';
+            closeBtn.addEventListener('click', () => {
+                progressionModal.classList.remove('is-visible');
+            });
+            
+            modalContent.appendChild(closeBtn);
+            progressionModal.appendChild(modalContent);
+            document.body.appendChild(progressionModal);
+        }
+        
+        // Get the modal content element
+        const modalContent = progressionModal.querySelector('.progression-modal-content');
+        
+        // Get exercise details
+        const exerciseName = exerciseCard.querySelector('.exercise-name').textContent;
+        const exerciseId = exerciseCard.dataset.exerciseId || '';
+        
+        // Populate modal content
+        modalContent.innerHTML = `
+            <button class="modal-close-btn">&times;</button>
+            <h4>Exercise Progressions</h4>
+            <div class="exercise-header">${exerciseName}</div>
+            
+            <div class="progression-path">
+                <div class="progression-title">Choose a Progression Path</div>
+                <div id="progression-options" class="progression-options">
+                    <div class="progression-loading">Loading progression options...</div>
+                </div>
+            </div>
+        `;
+        
+        // Add event listener to close button
+        modalContent.querySelector('.modal-close-btn').addEventListener('click', () => {
+            progressionModal.classList.remove('is-visible');
+        });
+        
+        // Show the modal
+        progressionModal.classList.add('is-visible');
+        
+        // Mock load progression options (would be replaced with actual data)
+        setTimeout(() => {
+            const progressionOptions = modalContent.querySelector('#progression-options');
+            
+            // Example progression path based on basic bodyweight progressions
+            const mockProgressions = [
+                {
+                    id: 'easier_variation',
+                    name: 'Easier Variation',
+                    difficulty: 'Beginner',
+                    description: 'A simpler version of this exercise with reduced range of motion or leverage.'
+                },
+                {
+                    id: 'harder_variation',
+                    name: 'Harder Variation',
+                    difficulty: 'Advanced',
+                    description: 'A more challenging version with increased range of motion or leverage.'
+                },
+                {
+                    id: 'weighted_variation',
+                    name: 'Add Weight',
+                    difficulty: 'Intermediate',
+                    description: 'Same exercise pattern with added external resistance.'
+                }
+            ];
+            
+            // Generate HTML for progression options
+            progressionOptions.innerHTML = mockProgressions.map(progression => `
+                <div class="progression-option" data-id="${progression.id}">
+                    <div class="progression-option-header">
+                        <div class="progression-name">${progression.name}</div>
+                        <div class="progression-difficulty">${progression.difficulty}</div>
+                    </div>
+                    <div class="progression-description">${progression.description}</div>
+                    <button class="swap-button" data-id="${progression.id}">Swap Exercise</button>
+                </div>
+            `).join('');
+            
+            // Add event listeners to swap buttons
+            progressionOptions.querySelectorAll('.swap-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const progressionId = e.target.dataset.id;
+                    const progressionName = mockProgressions.find(p => p.id === progressionId).name;
+                    
+                    // Update the exercise card with the new progression
+                    exerciseCard.querySelector('.exercise-name').textContent = `${exerciseName} (${progressionName})`;
+                    
+                    // Close the modal
+                    progressionModal.classList.remove('is-visible');
+                    
+                    // Show success toast
+                    showToast(`Exercise progressed to: ${progressionName}`, 'success');
+                    
+                    // Trigger save state and analytics update
+                    triggerSaveState();
+                    triggerAnalyticsUpdate(workCanvas);
+                });
+            });
+        }, 500); // Simulate loading delay
+    }
+
+    // Update context menu to use the new progression modal
+    function showContextMenu(x, y, items) {
+        if (!contextMenu) {
+            initializeContextMenu();
+        }
+        
+        // Clear previous items
+        contextMenu.innerHTML = '';
+        
+        // Add menu items
+        items.forEach(item => {
+            const menuItem = document.createElement('div');
+            menuItem.className = 'context-menu-item';
+            menuItem.innerHTML = `<span class="icon">${item.icon}</span> ${item.label}`;
+            menuItem.addEventListener('click', () => {
+                contextMenu.style.display = 'none';
+                item.action();
+            });
+            contextMenu.appendChild(menuItem);
+        });
+        
+        // Position menu
+        contextMenu.style.left = `${x}px`;
+        contextMenu.style.top = `${y}px`;
+        contextMenu.style.display = 'block';
+        
+        // Ensure menu is within viewport
+        const rect = contextMenu.getBoundingClientRect();
+        if (rect.right > window.innerWidth) {
+            contextMenu.style.left = `${window.innerWidth - rect.width - 5}px`;
+        }
+        if (rect.bottom > window.innerHeight) {
+            contextMenu.style.top = `${y - rect.height}px`;
+        }
+    }
+
+    // Update context menu handler for cards to include progression
+    function attachContextMenuToCards() {
+        // Use event delegation on workCanvas
+        workCanvas.addEventListener('contextmenu', (e) => {
+            // Check if right-click happened on a workout card
+            const card = e.target.closest('.workout-card');
+            if (card) {
+                e.preventDefault(); // Prevent default context menu
+                
+                // Add this card to selection if not already selected
+                if (!selectedContext.elements.has(card)) {
+                    handleCardClick(card, false);
+                }
+                
+                const menuItems = [
+                    {
+                        icon: '⚡',
+                        label: 'Create Superset',
+                        action: () => {
+                            if (selectedContext.elements.size >= 2) {
+                                createSuperset(Array.from(selectedContext.elements));
+                                clearSelectionStyles();
+                                selectedContext = { type: 'none', elements: new Set(), modelId: null, dayId: null };
+                                updateMultiSelectToolbarVisibility();
+                            } else {
+                                showToast('Select at least 2 exercises to create a superset', 'warning');
+                            }
+                        }
+                    },
+                    {
+                        icon: '📋',
+                        label: 'Duplicate',
+                        action: () => {
+                            const clone = card.cloneNode(true);
+                            clone.id = `workout-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+                            // Add event listeners to the cloned card
+                            clone.querySelector('.delete-btn').addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                clone.remove();
+                                triggerSaveState();
+                                triggerAnalyticsUpdate(workCanvas);
+                            });
+                            
+                            clone.querySelector('.edit-btn').addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                handleSelection(clone, false);
+                                openInspector(clone);
+                            });
+                            
+                            clone.addEventListener('click', (e) => {
+                                if (e.target.closest('.edit-btn') || e.target.closest('.delete-btn')) return;
+                                handleCardClick(clone, e.shiftKey);
+                            });
+                            
+                            // Insert after original card
+                            card.parentNode.insertBefore(clone, card.nextSibling);
+                            triggerSaveState();
+                            triggerAnalyticsUpdate(workCanvas);
+                            showToast('Exercise duplicated', 'success');
+                        }
+                    },
+                    {
+                        icon: '🔄',
+                        label: 'Find Progression',
+                        action: () => {
+                            showProgressionModal(card);
+                        }
+                    },
+                    {
+                        icon: '🗑️',
+                        label: 'Delete',
+                        action: () => {
+                            card.remove();
+                            triggerSaveState();
+                            triggerAnalyticsUpdate(workCanvas);
+                            showToast('Exercise deleted', 'success');
+                        }
+                    }
+                ];
+                
+                showContextMenu(e.pageX, e.pageY, menuItems);
+            }
+        });
+    }
+
+    // --- Event Listeners --- //
+    if (hubCreateNewBtn) {
+        hubCreateNewBtn.addEventListener('click', () => {
+            console.log("Create New button clicked");
+            const modal = document.getElementById('new-block-options-modal');
+            if (modal) {
+                modal.classList.add('is-visible');
+            }
+            // Previously, this might have directly shown the builder view
+            // showView('builder'); 
+            // generateCalendarGrid(8); // Default 8 weeks
+        });
+    }
+
+    if (hubBrowseTemplatesBtn) {
+        hubBrowseTemplatesBtn.addEventListener('click', () => {
+            console.log("Browse Templates button clicked (hub)");
+            // showToast("Template browser not yet implemented.", "info"); // <<< REMOVE THIS LINE
+            const templatesModal = document.getElementById('templates-modal');
+            if (templatesModal) {
+                templatesModal.classList.add('is-visible');
+            } else {
+                console.error("Templates modal not found!");
+            }
+        });
+    }
+
+    // Listener for the button *within* the new block modal
+    if (createBlockFromOptionsBtn) {
+        createBlockFromOptionsBtn.addEventListener('click', () => {
+             console.log("Create button inside modal clicked.");
+             handleCreateBlockFromOptions(); // Call the function to create the block & switch view
+        });
+        } else {
          console.error("Create Block From Options button not found!");
     }
 
