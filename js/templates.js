@@ -412,89 +412,75 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Render templates in the grid
     function renderTemplates() {
-        console.log("renderTemplates: Starting to render templates");
-        try {
-            // Check if templatesList exists and is accessible
-            if (!templatesList) {
-                console.error("renderTemplates: templatesList element is null or undefined");
-                return;
-            }
-            
-            console.log("renderTemplates: templatesList element properties:", {
-                id: templatesList.id,
-                className: templatesList.className,
-                offsetWidth: templatesList.offsetWidth,
-                offsetHeight: templatesList.offsetHeight,
-                style: templatesList.getAttribute('style'),
-                display: window.getComputedStyle(templatesList).display,
-                visibility: window.getComputedStyle(templatesList).visibility
-            });
-            
-            // Clear existing templates
-            console.log("renderTemplates: Clearing templatesList innerHTML");
-            templatesList.innerHTML = '';
-
-            // Filter templates by category and search term
-            console.log(`renderTemplates: Filtering templates with category: ${currentCategory} and search term: ${currentSearchTerm}`);
-            const filteredTemplates = trainingTemplates.filter(template => {
-                const matchesCategory = currentCategory === 'all' || template.category === currentCategory;
-                const matchesSearch = !currentSearchTerm || 
-                    template.title.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
-                    template.author.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
-                    template.description.toLowerCase().includes(currentSearchTerm.toLowerCase());
-                return matchesCategory && matchesSearch;
-            });
-            
-            console.log(`renderTemplates: Filtered templates count: ${filteredTemplates.length}`);
-            
-            if (filteredTemplates.length === 0) {
-                templatesList.innerHTML = '<p class="no-results">No templates match your criteria. Try adjusting your filters.</p>';
-                return;
-            }
-            
-            console.log("renderTemplates: Creating and appending template cards");
-            filteredTemplates.forEach((template, index) => {
-                console.log(`renderTemplates: Creating card ${index+1}/${filteredTemplates.length} - ${template.title}`);
-                const card = createTemplateCard(template);
-                templatesList.appendChild(card);
-                console.log(`renderTemplates: Card ${index+1} appended, container now has ${templatesList.children.length} children`);
-            });
-            
-            console.log("renderTemplates: All template cards appended");
-            console.log("renderTemplates: Final templatesList state:", {
-                childCount: templatesList.children.length,
-                offsetWidth: templatesList.offsetWidth,
-                offsetHeight: templatesList.offsetHeight,
-                firstChildVisible: templatesList.firstChild ? 
-                    window.getComputedStyle(templatesList.firstChild).display !== 'none' : 'No children'
-            });
-            
-            // Force layout calculation for animation
-            window.requestAnimationFrame(() => {
-                // Apply staggered entrance animation to cards if needed
-                const cards = templatesList.querySelectorAll('.template-card');
-                console.log(`renderTemplates: Found ${cards.length} cards for animation`);
-                
-                // Add a safety check to ensure we only animate cards that are safely in the templates grid
-                if (cards.length > 0 && templatesList.contains(cards[0])) {
-                    cards.forEach((card, i) => {
-                        // Delay adding the animation class to ensure DOM is ready
-                        setTimeout(() => {
-                            // Only add animation if the card is still in the container
-                            if (templatesList.contains(card)) {
-                                card.style.animationDelay = `${i * 0.05}s`;
-                                card.classList.add('animate-in');
-                                console.log(`renderTemplates: Card ${i+1} animation delay set to ${i * 0.05}s`);
-                            }
-                        }, 50); // Small delay to ensure DOM stability
-                    });
-                } else {
-                    console.warn('renderTemplates: Cards not found in templates container, skipping animation');
-                }
-            });
-        } catch (error) {
-            console.error("Error rendering templates:", error);
+        console.log("renderTemplates: Clearing templatesList innerHTML");
+        templatesList.innerHTML = '';
+        
+        // Filter templates based on search and category
+        console.log(`renderTemplates: Filtering templates with category: ${currentCategory} and search term: ${currentSearchTerm}`);
+        
+        const filtered = trainingTemplates.filter(template => {
+            const matchesCategory = currentCategory === 'all' || template.category === currentCategory;
+            const matchesSearch = !currentSearchTerm || 
+                template.title.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
+                template.description.toLowerCase().includes(currentSearchTerm.toLowerCase());
+            return matchesCategory && matchesSearch;
+        });
+        
+        console.log(`renderTemplates: Filtered templates count: ${filtered.length}`);
+        
+        if (filtered.length === 0) {
+            templatesList.innerHTML = '<div class="no-templates-msg">No matching templates found</div>';
+            return;
         }
+        
+        console.log("renderTemplates: Creating and appending template cards");
+        filtered.forEach((template, index) => {
+            console.log(`renderTemplates: Creating card ${index+1}/${filtered.length} - ${template.title}`);
+            const card = createTemplateCard(template);
+            templatesList.appendChild(card);
+            console.log(`renderTemplates: Card ${index+1} appended, container now has ${templatesList.children.length} children`);
+        });
+        
+        console.log("renderTemplates: All template cards appended");
+        console.log("renderTemplates: Final templatesList state:", templatesList);
+        
+        // Safely add animation classes after cards are in DOM
+        function addAnimation() {
+            // Apply staggered entrance animation to cards
+            const cards = templatesList.querySelectorAll('.template-card');
+            console.log(`renderTemplates: Found ${cards.length} cards for animation`);
+            
+            if (cards.length > 0) {
+                // Only add animation to cards that are visibly contained in the templates grid
+                cards.forEach((card, i) => {
+                    // Make sure the card is actually in the DOM and in its proper container
+                    if (card.parentElement === templatesList) {
+                        const delay = i * 0.05;
+                        console.log(`renderTemplates: Card ${i+1} animation delay set to ${delay}s`);
+                        
+                        // Add animation classes safely
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateY(20px)';
+                        
+                        // Use requestAnimationFrame to ensure the initial state is rendered
+                        window.requestAnimationFrame(() => {
+                            // Add animation-specific classes
+                            card.classList.add('animate-in');
+                            card.style.animationDelay = `${delay}s`;
+                            
+                            // Transition to final state
+                            setTimeout(() => {
+                                card.style.opacity = '1';
+                                card.style.transform = 'translateY(0)';
+                            }, 50);
+                        });
+                    }
+                });
+            }
+        }
+        
+        // Wait for cards to be properly inserted in DOM
+        setTimeout(addAnimation, 100);
     }
 
     // Create a template card element
@@ -505,76 +491,115 @@ document.addEventListener('DOMContentLoaded', function() {
         card.setAttribute('data-id', template.id);
         card.setAttribute('data-category', template.category);
         
-        // Only add animate-in class when the card is in the right container
-        // Removed: card.classList.add('animate-in');
+        // Create card header
+        const header = document.createElement('div');
+        header.className = 'template-header';
         
-        // Explicitly set styles to ensure visibility only when properly placed
-        // Remove direct style setting that could override CSS protection
-        // card.style.opacity = '1';
-        // card.style.transform = 'translateY(0)';
-        // card.style.display = 'flex';
-        // card.style.visibility = 'visible';
+        const title = document.createElement('h3');
+        title.className = 'template-title';
+        title.textContent = template.title;
         
-        // Create rating stars
-        const starFull = '★';
-        const starEmpty = '☆';
-        const ratingRounded = Math.round(template.rating * 2) / 2;
-        const fullStars = Math.floor(ratingRounded);
-        const hasHalfStar = ratingRounded % 1 !== 0;
+        const author = document.createElement('p');
+        author.className = 'template-author';
+        author.textContent = `By ${template.author}`;
         
-        let starsHtml = '';
-        for (let i = 0; i < 5; i++) {
-            if (i < fullStars) {
-                starsHtml += starFull;
-            } else if (i === fullStars && hasHalfStar) {
-                starsHtml += starFull; // Use full star for simplicity
-            } else {
-                starsHtml += starEmpty;
-            }
-        }
+        const categoryIcon = document.createElement('div');
+        categoryIcon.className = 'template-category-icon';
+        categoryIcon.textContent = getCategoryIcon(template.category);
         
-        // Create animation icon based on category
-        const animationIcon = getCategoryIcon(template.category);
+        header.appendChild(title);
+        header.appendChild(author);
+        header.appendChild(categoryIcon);
         
-        // Set inner HTML - IMPORTANT: This creates all template subelements
-        card.innerHTML = `
-            <div class="template-header">
-                <h3 class="template-title">${template.title}</h3>
-                <p class="template-author">By ${template.author}</p>
-                <div class="template-category-icon">${animationIcon}</div>
-            </div>
-            <div class="template-body">
-                <p class="template-description">${template.description.length > 150 ? template.description.substring(0, 150) + '...' : template.description}</p>
-                <div class="template-metadata">
-                    <span>
-                        ⏱️ ${template.weeks} weeks
-                    </span>
-                    <span>
-                        💪 ${template.level}
-                    </span>
-                    <span>
-                        🔄 ${template.sessions}x/week
-                    </span>
-                </div>
-                <div class="template-focus-areas">
-                    ${template.focus.map(area => `<span class="template-focus-tag">${area}</span>`).join('')}
-                </div>
-                <div class="template-rating">
-                    <div class="rating-stars">${starsHtml}</div>
-                    <div class="rating-value">${template.rating}</div>
-                </div>
-                <div class="template-footer">
-                    <button class="template-preview-btn" data-id="${template.id}">Preview</button>
-                    <button class="template-use-btn" data-id="${template.id}">Use</button>
-                </div>
-            </div>
+        // Create card body
+        const body = document.createElement('div');
+        body.className = 'template-body';
+        
+        // Description
+        const description = document.createElement('p');
+        description.className = 'template-description';
+        description.textContent = template.description;
+        
+        // Metadata
+        const metadata = document.createElement('div');
+        metadata.className = 'template-metadata';
+        
+        // Duration
+        const durationSpan = document.createElement('span');
+        durationSpan.innerHTML = `
+            ⏱️ ${template.weeks} weeks
         `;
         
-        // DO NOT append to body at any point for dimension calculation
-        // Skip dimension calculation entirely
+        // Level
+        const levelSpan = document.createElement('span');
+        levelSpan.innerHTML = `
+            💪 ${template.level}
+        `;
+        
+        // Frequency
+        const frequencySpan = document.createElement('span');
+        frequencySpan.innerHTML = `
+            🔄 ${template.sessions}x/week
+        `;
+        
+        metadata.appendChild(durationSpan);
+        metadata.appendChild(levelSpan);
+        metadata.appendChild(frequencySpan);
+        
+        // Focus areas
+        const focusAreas = document.createElement('div');
+        focusAreas.className = 'template-focus-areas';
+        
+        template.focus.forEach(focus => {
+            const tag = document.createElement('span');
+            tag.className = 'template-focus-tag';
+            tag.textContent = focus;
+            focusAreas.appendChild(tag);
+        });
+        
+        // Rating
+        const rating = document.createElement('div');
+        rating.className = 'template-rating';
+        
+        const stars = document.createElement('div');
+        stars.className = 'rating-stars';
+        stars.textContent = '★'.repeat(Math.round(template.rating));
+        
+        const ratingValue = document.createElement('div');
+        ratingValue.className = 'rating-value';
+        ratingValue.textContent = template.rating.toFixed(1);
+        
+        rating.appendChild(stars);
+        rating.appendChild(ratingValue);
+        
+        // Footer
+        const footer = document.createElement('div');
+        footer.className = 'template-footer';
+        
+        const previewBtn = document.createElement('button');
+        previewBtn.className = 'template-preview-btn';
+        previewBtn.setAttribute('data-id', template.id);
+        previewBtn.textContent = 'Preview';
+        
+        const useBtn = document.createElement('button');
+        useBtn.className = 'template-use-btn';
+        useBtn.setAttribute('data-id', template.id);
+        useBtn.textContent = 'Use';
+        
+        footer.appendChild(previewBtn);
+        footer.appendChild(useBtn);
+        
+        // Assemble card
+        body.appendChild(description);
+        body.appendChild(metadata);
+        body.appendChild(focusAreas);
+        body.appendChild(rating);
+        body.appendChild(footer);
+        
+        card.appendChild(header);
+        card.appendChild(body);
         
         console.log("Card HTML structure created for template:", template.id);
-        
         return card;
     }
 
@@ -678,8 +703,19 @@ document.addEventListener('DOMContentLoaded', function() {
             recommendedList.appendChild(li);
         });
         
+        // Reset any inline styles that might have been applied when closing
+        templatePreviewModal.style.display = '';
+        templatePreviewModal.style.opacity = '';
+        templatePreviewModal.style.visibility = '';
+        
         // Show modal
         templatePreviewModal.classList.add('is-visible');
+        
+        // Force layout calculation for animation
+        window.requestAnimationFrame(() => {
+            templatePreviewModal.style.opacity = '1';
+            templatePreviewModal.style.visibility = 'visible';
+        });
     }
 
     // Use selected template to create new block
