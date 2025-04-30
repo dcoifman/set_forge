@@ -6,9 +6,10 @@ import vbtAdjust from './velocityAutoReg.js'; // Import VBT adjustment logic
 // Import necessary helpers/state functions
 import { getStructuredDetails } from './utils/helpers.js'; 
 import { triggerSaveState } from './state/storage.js'; 
-import ForgeAssist from './forgeassist.js'; // <<< RE-ADDED Import ForgeAssist
-import AdaptiveScheduler from './adaptiveScheduler.js'; // Import AdaptiveScheduler explicitly
-import PeriodizationModelManager from './periodizationModelManager.js'; // <<< UNCOMMENTED Import
+// Import NAMED initialization functions
+import { initializeForgeAssist } from './forgeassist.js'; 
+import { initializeAdaptiveScheduler } from './adaptiveScheduler.js'; 
+import PeriodizationModelManager from './periodizationModelManager.js'; // Default import
 import { initializePhaseResizing } from './ui/phaseResize.js'; // <-- Added Phase Resize
 import { handleSelection, getSelectionState } from './ui/selection.js';
 import {
@@ -153,10 +154,22 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn("Drag and drop module not found.");
     }
 
+    // Define getPeriodizationEngine *before* initializing the manager
+    function getPeriodizationEngine() {
+        // Return the imported engine module directly
+        return PeriodizationEngine; 
+    }
+
     // Initialize Periodization Model Manager
     if (typeof PeriodizationModelManager !== 'undefined') {
         const periodizationManagerInstance = new PeriodizationModelManager();
-        periodizationManagerInstance.init({ showToast, createWorkoutCard, getBlockStateHelper, getTotalWeeksHelper });
+        // Pass the CORRECT dependencies needed by the Manager's init method
+        periodizationManagerInstance.init({ 
+            workCanvas: workCanvas, // Pass the DOM element
+            showToast: showToast, // Pass the imported function
+            triggerAnalyticsUpdate: triggerAnalyticsUpdate, // Pass the imported function
+            getPeriodizationEngine: getPeriodizationEngine // Pass the helper function
+        });
         // Make the instance available globally if needed by other parts (optional)
         window.periodizationManager = periodizationManagerInstance; 
     } else {

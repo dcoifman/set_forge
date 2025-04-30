@@ -1256,4 +1256,9 @@ const AdaptiveScheduler = (() => {
 
 })();
 
-export default AdaptiveScheduler;
+// Export the init function specifically if needed by blockbuilder
+export function initializeAdaptiveScheduler(deps) {
+    AdaptiveScheduler.init(deps);
+    // Return the main module object if other functions are needed later
+    return AdaptiveScheduler; 
+}

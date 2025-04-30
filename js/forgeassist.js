@@ -2606,3 +2606,22 @@ function getRecommendedReps(exercise, difficulty) {
     
     return defaultReps[difficulty] || 8;
 }
+
+// Public API returned by the IIFE
+return {
+    init,
+    updateContext,
+    parseCommand,
+    processCommand,
+    getContextualActions,
+    checkAnalyticsThresholds,
+    handleProposalActionClick, // Expose for event listener
+    clearContext // Expose clear context
+};
+
+// Export the init function specifically if needed by blockbuilder
+export function initializeForgeAssist(deps) {
+    ForgeAssist.init(deps);
+    // Return the main module object if other functions are needed later
+    return ForgeAssist; 
+}
