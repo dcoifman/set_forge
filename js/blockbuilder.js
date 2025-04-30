@@ -1083,11 +1083,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (browseTemplatesBtn) {
          browseTemplatesBtn.addEventListener('click', () => {
-            console.log("Browse Templates button clicked - showing toast (placeholder)");
-            // Placeholder: Implement template browsing logic/modal later
-            showToast("Template browser not yet implemented.", "info");
-        });
+            console.log("Browse Templates button clicked");
+            const templatesModal = document.getElementById('templates-modal');
+            if (templatesModal) {
+                templatesModal.classList.add('is-visible');
             } else {
+                console.error("Templates modal not found!");
+            }
+        });
+    } else {
         console.error("Browse Templates button not found!");
     }
     // <<<--- END ADDED EVENT LISTENERS --- >>>
@@ -3856,5 +3860,32 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
          console.error("Create Block From Options button not found!");
     }
+
+    // Function to load a template into the block builder
+    function loadTemplateBlock(template) {
+        console.log(`Loading template: ${template.title}`);
+        
+        // 1. Generate Grid based on template weeks
+        generateCalendarGrid(template.weeks || 8);
+        
+        // 2. Stay in builder view
+        showView('builder');
+        
+        // 3. Set block name based on template
+        const blockNameInput = document.getElementById('block-name-input');
+        if (blockNameInput) {
+            blockNameInput.value = template.title || 'Untitled Block';
+        }
+        
+        // 4. Apply template-specific settings
+        // This would be expanded based on template schema
+        
+        // Return true to indicate success
+        return true;
+    }
+
+    // Make loadTemplateBlock accessible to other modules
+    window.blockBuilder = window.blockBuilder || {};
+    window.blockBuilder.loadTemplateBlock = loadTemplateBlock;
 
 }); // End DOMContentLoaded 
