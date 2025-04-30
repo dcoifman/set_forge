@@ -474,11 +474,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Apply staggered entrance animation to cards if needed
                 const cards = templatesList.querySelectorAll('.template-card');
                 console.log(`renderTemplates: Found ${cards.length} cards for animation`);
-                cards.forEach((card, i) => {
-                    card.style.animationDelay = `${i * 0.05}s`;
-                    card.classList.add('animate-in');
-                    console.log(`renderTemplates: Card ${i+1} animation delay set to ${i * 0.05}s`);
-                });
+                
+                // Add a safety check to ensure we only animate cards that are safely in the templates grid
+                if (cards.length > 0 && templatesList.contains(cards[0])) {
+                    cards.forEach((card, i) => {
+                        // Delay adding the animation class to ensure DOM is ready
+                        setTimeout(() => {
+                            // Only add animation if the card is still in the container
+                            if (templatesList.contains(card)) {
+                                card.style.animationDelay = `${i * 0.05}s`;
+                                card.classList.add('animate-in');
+                                console.log(`renderTemplates: Card ${i+1} animation delay set to ${i * 0.05}s`);
+                            }
+                        }, 50); // Small delay to ensure DOM stability
+                    });
+                } else {
+                    console.warn('renderTemplates: Cards not found in templates container, skipping animation');
+                }
             });
         } catch (error) {
             console.error("Error rendering templates:", error);
@@ -493,29 +505,38 @@ document.addEventListener('DOMContentLoaded', function() {
         card.setAttribute('data-id', template.id);
         card.setAttribute('data-category', template.category);
         
-        // Explicitly set styles to ensure visibility
-        card.style.opacity = '1';
-        card.style.transform = 'translateY(0)';
-        card.style.display = 'flex';
-        card.style.visibility = 'visible';
+        // Only add animate-in class when the card is in the right container
+        // Removed: card.classList.add('animate-in');
+        
+        // Explicitly set styles to ensure visibility only when properly placed
+        // Remove direct style setting that could override CSS protection
+        // card.style.opacity = '1';
+        // card.style.transform = 'translateY(0)';
+        // card.style.display = 'flex';
+        // card.style.visibility = 'visible';
         
         // Create rating stars
         const starFull = '★';
         const starEmpty = '☆';
         const ratingRounded = Math.round(template.rating * 2) / 2;
         const fullStars = Math.floor(ratingRounded);
-        const halfStar = ratingRounded % 1 !== 0;
-        const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+        const hasHalfStar = ratingRounded % 1 !== 0;
         
-        const starsHtml = 
-            starFull.repeat(fullStars) + 
-            (halfStar ? '½' : '') + 
-            starEmpty.repeat(emptyStars);
+        let starsHtml = '';
+        for (let i = 0; i < 5; i++) {
+            if (i < fullStars) {
+                starsHtml += starFull;
+            } else if (i === fullStars && hasHalfStar) {
+                starsHtml += starFull; // Use full star for simplicity
+            } else {
+                starsHtml += starEmpty;
+            }
+        }
         
-        // Get category-specific animation icon
+        // Create animation icon based on category
         const animationIcon = getCategoryIcon(template.category);
         
-        console.log("createTemplateCard: Building HTML content");
+        // Set inner HTML - IMPORTANT: This creates all template subelements
         card.innerHTML = `
             <div class="template-header">
                 <h3 class="template-title">${template.title}</h3>
@@ -549,19 +570,10 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        // Skip dimension calculation - it's causing elements to remain in the DOM
-        // This was causing template elements to be left in the page
-        /* 
-        // Force layout calculation to get accurate dimensions 
-        document.body.appendChild(card);
-        const width = card.offsetWidth;
-        const height = card.offsetHeight;
-        document.body.removeChild(card);
+        // DO NOT append to body at any point for dimension calculation
+        // Skip dimension calculation entirely
         
-        console.log(`createTemplateCard: Card created with dimensions ${width} x ${height}`);
-        */
-        
-        console.log("Card HTML structure:", card.outerHTML.substring(0, 200) + "...");
+        console.log("Card HTML structure created for template:", template.id);
         
         return card;
     }
