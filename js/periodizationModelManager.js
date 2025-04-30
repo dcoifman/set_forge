@@ -30,22 +30,42 @@ class PeriodizationModelManager {
     }
 
     /**
-     * Initializes the manager with necessary dependencies.
-     * @param {object} deps - Dependencies required by the manager.
-     * @param {HTMLElement} deps.workCanvas - The main canvas element.
-     * @param {function} deps.showToast - Function to display notifications.
-     * @param {function} deps.triggerAnalyticsUpdate - Function to trigger analytics.
-     * @param {function} deps.getPeriodizationEngine - Function to access the periodization engine.
+     * Initialize with required dependencies.
+     * @param {Object} deps - Object containing required callback functions/data.
+     * @returns {boolean} - Success indicator.
      */
     init(deps) {
-        console.log("Initializing PeriodizationModelManager...");
-        this.dependencies = { ...this.dependencies, ...deps };
-        // Basic validation
-        if (!this.dependencies.workCanvas || typeof this.dependencies.getPeriodizationEngine !== 'function') {
-            console.error("PeriodizationModelManager init failed: Missing critical dependencies.");
-            this.dependencies.workCanvas?.dispatchEvent(new CustomEvent('forge-assist:error', { detail: { message: 'Periodization Manager failed to initialize.' } }));
+        if (!deps) {
+            console.error("PeriodizationModelManager init failed: Missing dependencies.");
+            return false;
         }
-        console.log("PeriodizationModelManager Initialized with deps:", Object.keys(this.dependencies).filter(k => this.dependencies[k]));
+        
+        // Required dependencies for the module to function
+        const requiredDeps = ['showToast', 'createWorkoutCard', 'getBlockStateHelper', 'getTotalWeeksHelper'];
+        
+        // Check for minimum required dependencies
+        const missingDeps = requiredDeps.filter(dep => !deps[dep]);
+        if (missingDeps.length > 0) {
+            console.error("PeriodizationModelManager init failed: Missing critical dependencies.");
+            return false;
+        }
+        
+        // Store dependencies
+        this.dependencies = {
+            ...deps,
+            // Get a reference to the work canvas for finding day cells
+            workCanvas: document.getElementById('work-canvas')
+        };
+        
+        console.log(`PeriodizationModelManager Initialized with deps: ${Object.keys(this.dependencies)}`);
+        
+        // Setup event listeners
+        this._setupEventListeners();
+        
+        // Load state if any (models, mappings)
+        // this.loadState(deps.getState ? deps.getState() : {});
+        
+        return true;
     }
 
     /**

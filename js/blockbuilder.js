@@ -917,16 +917,28 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`Creating new block: ${weeks} weeks, ${sessions} sessions/wk, Model: ${model}, Name: ${name}`);
         
         // Create day IDs ahead of time
-        const dayIds = [];
-        for (let w = 1; w <= weeks; w++) {
-            for (let d = 1; d <= 7; d++) {
-                // Generate day ID helper function instead of using static method
-                const dayId = generateDayId(w, d);
-                dayIds.push({
-                    week: w,
-                    day: d,
-                    id: dayId
-                });
+        const targetDayIds = [];
+        
+        // Determine which days to include based on selected sessions per week
+        let daysToUse;
+        switch(sessions) {
+            case 1: daysToUse = ['Mon']; break;
+            case 2: daysToUse = ['Mon', 'Thu']; break;
+            case 3: daysToUse = ['Mon', 'Wed', 'Fri']; break;
+            case 4: daysToUse = ['Mon', 'Tue', 'Thu', 'Fri']; break;
+            case 5: daysToUse = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']; break;
+            case 6: daysToUse = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; break;
+            case 7: daysToUse = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']; break;
+            default: daysToUse = ['Mon', 'Wed', 'Fri']; // Default to 3 days if invalid
+        }
+        
+        // Generate day IDs in the correct format for each week and selected day
+        for (let week = 1; week <= weeks; week++) {
+            for (const day of daysToUse) {
+                // Use the correct format: "wk{weekNum}-{dayAbbr}" (lowercase day abbreviation)
+                const dayAbbr = day.substring(0, 3).toLowerCase();
+                const dayId = `wk${week}-${dayAbbr}`;
+                targetDayIds.push(dayId);
             }
         }
         
@@ -943,13 +955,6 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (sessions >= 2) sessionDays = ["Tue", "Thu"];
         else if (sessions >= 1) sessionDays = ["Wed"];
 
-        const targetDayIds = [];
-        for (let week = 0; week < weeks; week++) {
-            sessionDays.forEach(day => {
-                const dayId = generateDayId(week + 1, day);
-                if (dayId) targetDayIds.push(dayId);
-            });
-        }
         console.log("Target Day IDs for model:", targetDayIds);
 
         // 3. Create and Apply Model Instance (if not 'blank')
@@ -962,29 +967,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 instanceId = window.periodizationManager.createAndApplyModel(model, baseParams, targetDayIds, exerciseLibraryData);
                 if (!instanceId) {
                     showToast(`Failed to create periodization model: ${model}`, 'error');
-                    // Proceed with blank block? Or stop?
-                    // For now, just continue without model-driven cards.
-                } else {
-                    console.log(`Model instance ${instanceId} created and applied.`);
-                    // TODO: Call engine to populate cards based on this instanceId and targetDayIds
-                    // populateModelDrivenCards(instanceId, targetDayIds);
-                    populateModelDrivenCards(instanceId, targetDayIds); // Call the new function
+                    // Proceed with blank grid
                 }
             } else {
-                console.error("PeriodizationModelManager instance not available");
-                showToast(`Cannot create model: PeriodizationModelManager unavailable`, 'error');
+                console.error('PeriodizationModelManager or createAndApplyModel is not available.');
+                showToast('Error creating training model', 'error');
             }
         }
-
-        // 4. Reset Phases (Example Default)
-        const phases = phaseRibbon.querySelectorAll('.phase-bar');
-        if (phases.length === 4) { // Basic check
-            phases[0].style.width = '25%';
-            phases[1].style.width = '40%';
-            phases[2].style.width = '25%';
-            phases[3].style.width = '10%';
+        
+        console.log("Model instance " + instanceId + " created and applied.");
+        
+        // 4. Generate Cards using the Model (if created)
+        if (instanceId) {
+            populateModelDrivenCards(instanceId, targetDayIds);
         }
-        updateCalendarPhaseIndicators(phaseRibbon, workCanvas);
 
         // 5. Clear Settings (Except potentially name)
         const settingsTab = document.getElementById('settings');
@@ -1024,16 +1020,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- END Badge Update ---
     }
 
-    // Helper function to generate day IDs (replacing PeriodizationModelManager.generateDayId)
-    function generateDayId(week, day) {
-        return `w${week}d${day}`;
-    }
-
     // --- Function to populate cards based on a model instance ---
     function populateModelDrivenCards(instanceId, targetDayIds) {
         if (!instanceId || !targetDayIds || targetDayIds.length === 0) return;
 
-        const modelInstance = PeriodizationModelManager.getModelInstance(instanceId);
+        // Use the instance method instead of trying to use it as a static method
+        const modelInstance = window.periodizationManager.getModelInstance(instanceId);
         const engine = getPeriodizationEngine(); // Assume this gives access to calculation functions
 
         if (!modelInstance) {
@@ -4194,7 +4186,19 @@ window.blockBuilder = {
                                 
                                 // Create the workout card
                                 try {
-                                    const card = createWorkoutCard(exerciseName, details, { dayId: dayId });
+                                    // Format the details string properly to match what createWorkoutCard expects
+                                    const detailsString = `${sets || ''}x${reps || ''} ${details.load || ''} ${details.loadType || ''} ${details.rest || ''}`.trim();
+                                    
+                                    const card = createWorkoutCard(exerciseName, detailsString, { 
+                                        sets: sets,
+                                        reps: reps,
+                                        loadValue: details.load,
+                                        loadType: details.loadType,
+                                        rest: details.rest,
+                                        notes: details.notes,
+                                        dayId: dayId
+                                    });
+                                    
                                     if (card) {
                                         dayCell.appendChild(card);
                                         console.log(`Added exercise "${exerciseName}" to ${dayId}`);
