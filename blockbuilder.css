@@ -5395,3 +5395,31 @@ body.show-hub #back-to-hub-btn {
 .template-card.animate-in {
     animation: templateCardFadeIn 0.5s ease forwards;
 }
+
+/* Fix for templates-list showing over everything */
+#templates-list {
+    position: relative;
+    z-index: 1; /* Keep it within the modal's context */
+}
+
+#templates-modal:not(.is-visible) #templates-list {
+    display: none; /* Ensure list is hidden when modal is hidden */
+}
+
+#templates-modal {
+    z-index: 9999; /* Ensure modal is above other content when visible */
+}
+
+#templates-modal:not(.is-visible) {
+    pointer-events: none;
+    visibility: hidden;
+}
+
+.templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    width: 100%;
+    overflow-y: auto;
+    max-height: 70vh;
+}

@@ -802,12 +802,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (templatesCloseBtn && templatesModal) {
             templatesCloseBtn.addEventListener('click', function() {
-                console.log("Templates modal close button clicked");
+                console.log("Templates close button clicked");
                 templatesModal.classList.remove('is-visible');
-                
-                // Only modify opacity and visibility, DO NOT set display:none
-                templatesModal.style.opacity = '0';
-                templatesModal.style.visibility = 'hidden';
+                // Clear the templates list when modal is closed to prevent rendering outside the modal
+                if (templatesList) {
+                    templatesList.innerHTML = '';
+                }
             });
         } else {
             console.error("Templates modal close button or modal not found:", {
@@ -852,21 +852,25 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Template actions delegation (preview and use buttons)
-        if (templatesList) {
-            templatesList.addEventListener('click', function(e) {
-                const previewBtn = e.target.closest('.template-preview-btn');
-                const useBtn = e.target.closest('.template-use-btn');
-                
-                if (previewBtn) {
-                    const templateId = previewBtn.getAttribute('data-id');
+        // Open template preview modal when Preview button is clicked
+        templatesList.addEventListener('click', (e) => {
+            const previewBtn = e.target.closest('.template-preview-btn');
+            const useBtn = e.target.closest('.template-use-btn');
+            
+            if (previewBtn) {
+                e.preventDefault();
+                const templateId = previewBtn.getAttribute('data-id');
+                if (templateId) {
                     showTemplatePreview(templateId);
-                } else if (useBtn) {
-                    const templateId = useBtn.getAttribute('data-id');
+                }
+            } else if (useBtn) {
+                e.preventDefault();
+                const templateId = useBtn.getAttribute('data-id');
+                if (templateId) {
                     useTemplate(templateId);
                 }
-            });
-        }
+            }
+        });
         
         // Use template button in preview modal
         if (useTemplateBtn && currentTemplateId) {
