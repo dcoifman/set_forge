@@ -46,87 +46,175 @@ import {
 } from './exercises/library.js'; // <-- Added Library import
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM fully loaded and parsed for blockbuilder.js");
+
+    // --- DOM Element References ---
     const workCanvas = document.getElementById('work-canvas');
     const inspectorPanel = document.getElementById('inspector-panel');
-    const inspectorCloseBtn = document.getElementById('inspector-close-btn');
-    const inspectorTabs = document.querySelectorAll('.inspector-content .tab-content');
-    const exerciseList = document.querySelector('.exercise-list');
-    const sessionSlots = document.querySelectorAll('.day-cell.session-slot');
-    const phaseRibbon = document.getElementById('phase-ribbon');
-    const inspectorSearch = document.querySelector('.inspector-search');
     const inspectorTitle = document.getElementById('inspector-title');
-    const inspectorTabsContainer = document.querySelector('.inspector-tabs'); // Get tabs container
-    const blockBuilderContainer = document.querySelector('.block-builder-container'); // Added container selector
-    const hubContainer = document.getElementById('block-builder-hub'); // Hub container
-    const createNewBtn = document.getElementById('hub-create-new');
-    const browseTemplatesBtn = document.getElementById('hub-browse-templates');
-    const recentBlocksList = document.getElementById('recent-blocks-list');
-    const backToHubBtn = document.getElementById('back-to-hub-btn');
-    // New Block Options Modal elements
+    const inspectorContent = inspectorPanel ? inspectorPanel.querySelector('.inspector-content') : null;
+    const inspectorCloseBtn = document.getElementById('inspector-close-btn');
+    const libraryTab = document.querySelector('.tab-link[data-tab="library"]');
+    const detailsTab = document.querySelector('.tab-link[data-tab="details"]');
+    const libraryContent = document.getElementById('library');
+    const detailsContent = document.getElementById('details');
+    const exerciseListUl = libraryContent ? libraryContent.querySelector('.exercise-list') : null;
+    const inspectorSearchInput = document.getElementById('inspector-search');
+    const phaseRibbon = document.getElementById('phase-ribbon');
+    const timelineFooter = document.getElementById('timeline-footer');
+    const acwrGaugeValue = document.getElementById('acwr-gauge .gauge-value');
+    const acwrGaugeBar = document.getElementById('acwr-gauge .gauge-bar');
+    const monotonyGaugeValue = document.getElementById('monotony-gauge .gauge-value');
+    const monotonyGaugeBar = document.getElementById('monotony-gauge .gauge-bar');
+    const strainGaugeValue = document.getElementById('strain-gauge .gauge-value');
+    const strainGaugeBar = document.getElementById('strain-gauge .gauge-bar');
+    const blockNameInput = document.getElementById('block-name'); // In settings tab
+    const prevPlannedRpeInput = document.getElementById('prev-planned-rpe');
+    const prevActualRpeInput = document.getElementById('prev-actual-rpe');
+    const saveSettingsBtn = document.getElementById('save-settings-btn');
+    const toastContainer = document.getElementById('toast-container');
+    const mobilePreviewBtn = document.getElementById('mobile-preview-btn');
+    const mobilePreviewModal = document.getElementById('mobile-preview-modal');
+    const mobilePreviewCloseBtn = document.getElementById('mobile-preview-close-btn');
+    const mobilePreviewBody = document.getElementById('mobile-preview-body');
+    const commitBlockBtn = document.getElementById('commit-block-btn');
+    const versionsBtn = document.getElementById('versions-btn');
+    const versionsModal = document.getElementById('versions-modal');
+    const versionsCloseBtn = document.getElementById('versions-close-btn');
+    const versionsList = document.getElementById('versions-list');
     const newBlockOptionsModal = document.getElementById('new-block-options-modal');
     const newBlockOptionsCloseBtn = document.getElementById('new-block-options-close-btn');
     const createBlockFromOptionsBtn = document.getElementById('create-block-from-options-btn');
     const newBlockWeeksInput = document.getElementById('new-block-weeks');
-    const newBlockModelSelect = document.getElementById('new-block-model'); // Added model select
-    const newBlockSessionsSelect = document.getElementById('new-block-sessions'); // Get sessions select
-    const newBlockNameModalInput = document.getElementById('new-block-name-modal');
-    const commitBtn = document.getElementById('commit-block-btn'); // <<< ADDED Definition
-    const versionsBtn = document.getElementById('versions-btn'); // <<< ADDED Definition
-    const blockNameInput = document.getElementById('block-name-input');
-    const multiAthleteToggle = document.getElementById('multi-athlete-toggle');
-    const acwrGauge = document.getElementById('acwr-gauge');
-    const monotonyGauge = document.getElementById('monotony-gauge');
-    const strainGauge = document.getElementById('strain-gauge');
-    // NOTE: Also added versionsBtn which is used nearby commitBtn
-
-    // <<< Add Exercise Detail Modal Refs >>>
+    const newBlockModelSelect = document.getElementById('new-block-model');
+    const newBlockSessionsSelect = document.getElementById('new-block-sessions');
+    const newBlockNameModalInput = document.getElementById('new-block-name-modal'); 
+    
+    // --- Hub View Elements ---
+    const blockBuilderHub = document.getElementById('block-builder-hub');
+    const hubCreateNewBtn = document.getElementById('hub-create-new'); // <<< DEFINE THIS
+    const hubBrowseTemplatesBtn = document.getElementById('hub-browse-templates');
+    const recentBlocksList = document.getElementById('recent-blocks-list');
+    const backToHubBtn = document.getElementById('back-to-hub-btn');
+    
+    // --- Exercise Modals ---
+    const exerciseModal = document.getElementById('exercise-modal');
+    const exerciseModalCloseBtn = document.getElementById('exercise-modal-close-btn');
+    const exerciseModalForm = document.getElementById('exercise-modal-form');
+    const addExerciseBtn = document.getElementById('add-exercise-btn');
+    const exerciseModalTitle = document.getElementById('exercise-modal-title');
     const exerciseDetailModal = document.getElementById('exercise-detail-modal');
     const exerciseDetailCloseBtn = document.getElementById('exercise-detail-close-btn');
-    const exerciseDetailTitle = document.getElementById('exercise-detail-title');
-    const detailCurrentSets = document.getElementById('detail-current-sets');
-    const detailCurrentReps = document.getElementById('detail-current-reps');
-    const detailCurrentLoadType = document.getElementById('detail-current-load-type');
-    const detailCurrentLoadValue = document.getElementById('detail-current-load-value');
-    const detailCurrentRest = document.getElementById('detail-current-rest');
-    const detailCurrentNotes = document.getElementById('detail-current-notes');
-    const detailLibraryCategory = document.getElementById('detail-library-category');
-    const detailLibraryDescription = document.getElementById('detail-library-description');
-    const detailLibraryMuscles = document.getElementById('detail-library-muscles');
-    const detailLibraryEquipment = document.getElementById('detail-library-equipment');
-    const detailLibraryDifficulty = document.getElementById('detail-library-difficulty');
-    const detailLibraryVideo = document.getElementById('detail-library-video');
     const detailModalEditBtn = document.getElementById('detail-modal-edit-btn');
     const detailModalSwapBtn = document.getElementById('detail-modal-swap-btn');
-    // <<< End Refs >>>
 
-    // --- State --- 
-    // let draggedItem = null; // Moved to dragdrop.js
-    let currentBlockData = {}; // Simple object to hold state (future use)
-    let currentLoadedVersionTimestamp = null; // <<< Added declaration
-    // let selectedElement = null; // Moved to ui/selection.js
-    // let selectedElements = new Set(); // Moved to ui/selection.js
-    let exerciseLibraryData = []; // Holds merged default + user exercises
-    const USER_EXERCISES_KEY = 'setforgeUserExercises_v1';
-    const EXERCISE_FAVORITES_KEY = 'setforgeExerciseFavorites_v1';
-    const EXERCISE_FREQUENCY_KEY = 'setforgeExerciseFrequency_v1';
-    const VIEW_MODE_KEY = 'setforgeLibraryViewMode_v1'; // Key for storing view mode
-    let exerciseFavorites = new Set();
-    let exerciseFrequency = {};
+    // --- Library Controls ---
+    const libraryFilterCategory = document.getElementById('library-filter-category');
+    const libraryFilterEquipment = document.getElementById('library-filter-equipment');
+    const librarySort = document.getElementById('library-sort');
+    const libraryToggleFavorites = document.getElementById('library-toggle-favorites');
+    const viewModeStandardBtn = document.getElementById('view-mode-standard');
+    const viewModeCompactBtn = document.getElementById('view-mode-compact');
+    const exerciseListContainer = document.querySelector('.exercise-list-container');
+    const importExercisesInput = document.getElementById('import-exercises-input');
+    const importExercisesLabel = document.getElementById('import-exercises-label');
+    const exportExercisesBtn = document.getElementById('export-exercises-btn');
 
-    // --- NEW: Unified Selection State ---
-    let selectedContext = {
-        type: 'none',    // 'none', 'exercise', 'day', 'phase', 'model', 'multi-exercise'
-        elements: new Set(), // Store selected DOM elements (can be cards, cells, phases)
-        modelId: null,   // Relevant for 'model' type
-        dayId: null      // Relevant for 'model' type (and potentially 'day')
-    };
+    // --- ForgeAssist Chat Elements ---
+    const forgeChatContainer = document.getElementById('forge-chat-container');
+    const forgeChatToggle = document.getElementById('forge-chat-toggle');
+    const forgeChatPanel = document.getElementById('forge-chat-panel');
+    const forgeChatMinimize = document.getElementById('forge-chat-minimize');
+    const forgeChatMessages = document.getElementById('forge-chat-messages');
+    const forgeChatInput = document.getElementById('forge-chat-input');
+    const forgeChatSend = document.getElementById('forge-chat-send');
+    const forgeChatSuggestions = document.querySelector('.forge-chat-suggestions');
 
-    function syncSelectedContext(type, extra = {}) {
-        const { selectedElement, selectedElements } = getSelectionState();
-        selectedContext.type = type;
-        selectedContext.elements = new Set(selectedElements);
-        selectedContext.modelId = extra.modelId || null;
-        selectedContext.dayId = extra.dayId || null;
+    // --- Global State Variables ---
+    let exerciseLibraryData = []; // Holds the full library
+    let selectedContext = { type: 'none', elements: new Set(), modelId: null, dayId: null };
+    let isInspectorOpen = false;
+    let currentBlockState = {}; // Holds the state for saving/loading
+    // let multiSelectToolbar = null; // Initialize toolbar reference - REMOVED Redeclaration
+    // let contextMenu = null; // Initialize context menu reference - REMOVED Redeclaration
+
+    // --- Initialize Modules & Load Data ---
+    // Initialize Phase Resizing (if available)
+    if (typeof initializePhaseResizing === 'function') {
+        initializePhaseResizing(phaseRibbon, workCanvas);
+    } else {
+        console.warn("Phase resizing module not found or failed to load.");
+    }
+    
+    // Initialize Drag & Drop
+    if (typeof initializeDragDrop === 'function') {
+        initializeDragDrop(workCanvas);
+    } else {
+        console.warn("Drag and drop module not found.");
+    }
+
+    // Initialize Periodization Model Manager
+    if (typeof PeriodizationModelManager !== 'undefined') {
+        PeriodizationModelManager.initialize({ showToast, createWorkoutCard, getBlockStateHelper, getTotalWeeksHelper });
+    } else {
+        console.error("PeriodizationModelManager is not defined!");
+    }
+
+    // Initialize Analytics Updater (if available)
+    if (typeof initializeAnalyticsUpdater === 'function') {
+        initializeAnalyticsUpdater();
+    } else {
+        console.warn("Analytics updater module not found or failed to load.");
+    }
+    
+    // Load initial block state from storage
+    // loadBlockIntoDOM(); 
+    // Load settings
+    loadSettingsIntoDOM();
+    
+    // --- Initialize Core Systems AFTER loading library ---
+    loadExerciseLibrary().then(loadedData => {
+        console.log("Library initialized and data loaded successfully.");
+        exerciseLibraryData = loadedData; // Assign loaded data to the outer scope variable
+        console.log("[BlockBuilder .then()] Inspecting loadedData:", loadedData);
+        console.log("[BlockBuilder .then()] Inspecting outer scope exerciseLibraryData AFTER assignment:", exerciseLibraryData);
+        
+        // Now initialize ForgeAssist with the loaded library
+        initializeForgeAssistSystem(exerciseLibraryData); 
+        // Now initialize Adaptive Training
+        initializeAdaptiveTraining(exerciseLibraryData); 
+        
+        // Potentially populate recent blocks here if needed after library load
+        // populateRecentBlocks(); 
+
+    }).catch(error => {
+        console.error("Failed to load exercise library:", error);
+        showToast("Error loading exercise library. Some features might be limited.", "error");
+         // Initialize other systems even if library fails?
+         initializeForgeAssistSystem([]); // Initialize with empty library
+         initializeAdaptiveTraining([]);
+    });
+
+    // Function to initialize ForgeAssist and related systems
+    function initializeForgeAssistSystem(libraryData) {
+        console.log("[BlockBuilder] Initializing ForgeAssist...");
+        if (typeof initializeAdaptiveScheduler === 'function' && typeof initializeForgeAssist === 'function') {
+             console.log("[BlockBuilder] Using exercise library with", libraryData.length, "items for ForgeAssist init.");
+            // Pass necessary functions and data
+            const analyticsInterface = { 
+                 getACWR: () => AnalyticsModule.getACWR ? AnalyticsModule.getACWR(AnalyticsModule.getDailyLoads(workCanvas)) : null, // Example, adapt as needed
+                 getMonotony: () => AnalyticsModule.getMonotony ? AnalyticsModule.getMonotony(AnalyticsModule.getDailyLoads(workCanvas)) : null, // Example
+                 getStrain: () => AnalyticsModule.getStrain ? AnalyticsModule.getStrain(AnalyticsModule.getDailyLoads(workCanvas)) : null, // Example
+                 getWeeklyLoad: (weekNum) => AnalyticsModule.getWeeklyLoad ? AnalyticsModule.getWeeklyLoad(AnalyticsModule.getDailyLoads(workCanvas), weekNum) : 0,
+                 getTotalLoad: () => AnalyticsModule.getTotalLoad ? AnalyticsModule.getTotalLoad(AnalyticsModule.getDailyLoads(workCanvas)) : 0
+             }; 
+             
+             const adaptiveScheduler = initializeAdaptiveScheduler(analyticsInterface);
+             initializeForgeAssist(libraryData, analyticsInterface, adaptiveScheduler);
+            console.log("[BlockBuilder] ForgeAssist initialized successfully.");
+        } else {
+            console.error("ForgeAssist or AdaptiveScheduler initialization functions not found!");
+        }
     }
 
     // --- Initialize Library Module ---
@@ -1091,7 +1179,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Templates modal not found!");
             }
         });
-    } else {
+            } else {
         console.error("Browse Templates button not found!");
     }
     // <<<--- END ADDED EVENT LISTENERS --- >>>
@@ -3890,5 +3978,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Signal that the block builder is ready
     window.dispatchEvent(new CustomEvent('blockbuilderReady'));
-    
+
 }); // End DOMContentLoaded 

@@ -352,11 +352,19 @@ document.addEventListener('DOMContentLoaded', function() {
     function init() {
         renderTemplates();
         addEventListeners();
-        applyTemplateGridLayout();
+        if (templatesList) {
+            applyTemplateGridLayout();
+        } else {
+            console.error("Could not find templatesList element to apply grid layout.");
+        }
     }
 
     // Render templates in the grid
     function renderTemplates() {
+        if (!templatesList) {
+            console.error("renderTemplates: templatesList element not found.");
+            return;
+        }
         templatesList.innerHTML = '';
         
         const filteredTemplates = trainingTemplates.filter(template => {
