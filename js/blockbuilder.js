@@ -3705,4 +3705,205 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    /**
+     * Populates the ForgeAssist tab with contextual actions based on the current selection.
+     * Uses the new card-based UI format.
+     */
+    function populateForgeAssistTab() {
+        const assistTab = document.getElementById('assist');
+        const actionCardsContainer = assistTab.querySelector('.assist-action-cards');
+        
+        // Clear previous content
+        actionCardsContainer.innerHTML = '';
+        
+        // Get contextual actions from ForgeAssist
+        const actions = ForgeAssist.getContextualActions();
+        
+        if (actions.length === 0) {
+            // Show empty state
+            actionCardsContainer.innerHTML = `
+                <div class="assist-empty-state">
+                    <div class="assist-empty-state-icon">⚡</div>
+                    <p>Select an item on the calendar to see relevant actions and suggestions.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Group actions by type
+        const groupedActions = {};
+        actions.forEach(action => {
+            const type = action.type || 'other';
+            if (!groupedActions[type]) {
+                groupedActions[type] = [];
+            }
+            groupedActions[type].push(action);
+        });
+        
+        // Define type order and labels
+        const typeOrder = ['primary', 'secondary', 'analytics', 'coaching', 'recovery', 'other'];
+        const typeLabels = {
+            primary: 'Recommended Actions',
+            secondary: 'Other Actions',
+            analytics: 'Analytics & Insights',
+            coaching: 'Coaching Suggestions',
+            recovery: 'Recovery Options',
+            other: 'Additional Options'
+        };
+        
+        // Create action cards by type
+        typeOrder.forEach(type => {
+            if (groupedActions[type] && groupedActions[type].length > 0) {
+                // Add type header
+                const typeHeader = document.createElement('h5');
+                typeHeader.textContent = typeLabels[type] || 'Actions';
+                typeHeader.className = 'assist-type-header';
+                actionCardsContainer.appendChild(typeHeader);
+                
+                // Add actions for this type
+                groupedActions[type].forEach(action => {
+                    const card = document.createElement('div');
+                    card.className = 'assist-action-card';
+                    card.dataset.actionId = action.id;
+                    
+                    // Determine if there should be one or two buttons
+                    const hasPrimaryButton = !action.disabled;
+                    const hasSecondaryButton = action.secondaryAction || false;
+                    
+                    card.innerHTML = `
+                        <h5>${action.label}</h5>
+                        <p>${action.description || ''}</p>
+                        <div class="assist-action-btns">
+                            ${hasSecondaryButton ? 
+                                `<button class="assist-action-btn secondary" data-action="${action.secondaryAction}">
+                                    ${action.secondaryLabel || 'Cancel'}
+                                </button>` : ''}
+                            ${hasPrimaryButton ? 
+                                `<button class="assist-action-btn primary" data-action="${action.id}">
+                                    ${type === 'primary' ? 'Apply' : 'Run'}
+                                </button>` : 
+                                `<button class="assist-action-btn" disabled>
+                                    Coming Soon
+                                </button>`}
+                        </div>
+                    `;
+                    
+                    // Add the card to the container
+                    actionCardsContainer.appendChild(card);
+                    
+                    // Add click handler for the primary button if not disabled
+                    if (hasPrimaryButton) {
+                        const primaryBtn = card.querySelector('.assist-action-btn.primary');
+                        primaryBtn.addEventListener('click', () => {
+                            if (typeof action.handler === 'function') {
+                                action.handler();
+                            }
+                        });
+                    }
+                    
+                    // Add click handler for the secondary button if present
+                    if (hasSecondaryButton) {
+                        const secondaryBtn = card.querySelector('.assist-action-btn.secondary');
+                        secondaryBtn.addEventListener('click', () => {
+                            if (typeof action.secondaryHandler === 'function') {
+                                action.secondaryHandler();
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    // Add event listeners for ForgeAssist example chips
+    function setupForgeAssistExamples() {
+        const exampleChips = document.querySelectorAll('.assist-example-chip');
+        const assistInput = document.getElementById('forge-assist-input');
+        
+        exampleChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                const command = chip.dataset.command;
+                if (command && assistInput) {
+                    assistInput.value = command;
+                    assistInput.focus();
+                }
+            });
+        });
+    }
+
+    // Initialize ForgeAssist chat integration
+    function initForgeAssistChat() {
+        const sendButton = document.getElementById('forge-assist-send');
+        const inputField = document.getElementById('forge-assist-input');
+        
+        if (sendButton && inputField) {
+            sendButton.addEventListener('click', () => {
+                const command = inputField.value.trim();
+                if (command) {
+                    // Process the command
+                    ForgeAssist.processCommand(command);
+                    // Clear the input
+                    inputField.value = '';
+                }
+            });
+            
+            // Add Enter key support
+            inputField.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendButton.click();
+                }
+            });
+        }
+        
+        // Setup example chips
+        setupForgeAssistExamples();
+    }
+
+    // This edit needs to be added to the openInspector function
+    function openInspector() {
+        inspectorPanel.classList.add('is-visible');
+        document.body.classList.add('inspector-is-visible');
+        
+        // Update ForgeAssist tab with current context
+        populateForgeAssistTab();
+    }
+
+    // This edit needs to be added to the handleSelection function or wherever selection updates are handled
+    function handleSelection(element, isMultiSelect = false) {
+        if (!isMultiSelect) {
+            // Clear previous selection when not in multi-select
+            clearSelection();
+        }
+
+        // Add selection styling
+        element.classList.add('selected');
+        selectedElements.add(element);
+        selectedElement = element;
+
+        // Open inspector or update if already open
+        if (!inspectorPanel.classList.contains('is-visible')) {
+            openInspector();
+        } else {
+            // Just update the tabs with the new selection
+            populateDetailsTab(element);
+            populateForgeAssistTab(); // Update ForgeAssist with new selection
+        }
+
+        // Update ForgeAssist context
+        if (typeof ForgeAssist !== 'undefined' && ForgeAssist.updateContext) {
+            ForgeAssist.updateContext(selectedElement, selectedElements);
+        }
+    }
+
+    // Add initialization of ForgeAssist chat in the DOMContentLoaded event handler
+    document.addEventListener('DOMContentLoaded', () => {
+        // Existing initialization code...
+        
+        // Initialize ForgeAssist related features
+        initForgeAssistChat();
+        
+        // More existing code...
+    });
+
 }); // End DOMContentLoaded 

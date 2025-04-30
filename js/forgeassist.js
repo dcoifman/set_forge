@@ -137,7 +137,7 @@ const ForgeAssist = (() => {
 
     /**
      * Generates a list of relevant actions based on the currently selected element.
-     * @returns {Array<object>} - Array of actions { id: string, label: string, handler: function | string }
+     * @returns {Array<object>} - Array of actions { id: string, label: string, description: string, type: string, handler: function | string }
      */
     function getContextualActions() {
         // <<< ADDED LOG >>>
@@ -146,7 +146,7 @@ const ForgeAssist = (() => {
         let actions = [];
 
         if (!element) {
-            actions.push({ id: 'generic_help', label: 'General Help (coming soon)', disabled: true });
+            // Return empty array for no selection
             return actions;
         }
 
@@ -154,76 +154,174 @@ const ForgeAssist = (() => {
             // --- Add Check for Placeholder ---
             if (element.dataset.isPlaceholder === 'true') {
                 // It's a placeholder card, offer different actions (or none for now)
-                actions.push({ id: 'define_placeholder', label: 'Define Session Content...', handler: () => {
-                     // Simulate clicking the '+' button or double-clicking
-                     const cell = element.closest('.day-cell');
-                     if (cell) {
-                         // Need access to blockbuilder functions - might need to pass them in init or use events
-                         console.log('[ForgeAssist] Triggering Library focus for placeholder');
-                         // Directly call blockbuilder functions IF available (not ideal) 
-                         // openInspector(); 
-                         // activateTab('library');
-                         // showInspectorFocusMessage(`Adding exercises to ${cell.dataset.day}, Week ${cell.dataset.week}.`);
-                         
-                         // Safer approach: Dispatch a custom event that blockbuilder listens for
-                         cell.dispatchEvent(new CustomEvent('forge-assist:focus-library', { bubbles: true }));
-                         dependencies.showToast('Opened Library. Drag exercises to the calendar day.', 'info');
-                     }
-                 } });
-                 actions.push({ id: 'clear_placeholder', label: 'Remove Placeholder', handler: () => {
-                      if (confirm('Remove this session placeholder?')) {
-                          element.remove();
-                          dependencies.triggerAnalyticsUpdate(); // Placeholder load changes
-                          dependencies.showToast('Placeholder removed.', 'info');
-                      }
-                 } });
-                 // Add other placeholder-specific actions if needed
+                actions.push({ 
+                    id: 'define_placeholder', 
+                    label: 'Define Session Content', 
+                    description: 'Replace this placeholder with actual training exercises.',
+                    type: 'primary',
+                    handler: () => {
+                         // Simulate clicking the '+' button or double-clicking
+                         const cell = element.closest('.day-cell');
+                         if (cell) {
+                             cell.dispatchEvent(new CustomEvent('forge-assist:focus-library', { bubbles: true }));
+                             dependencies.showToast('Opened Library. Drag exercises to the calendar day.', 'info');
+                         }
+                     } 
+                });
+                 actions.push({ 
+                    id: 'clear_placeholder', 
+                    label: 'Remove Placeholder', 
+                    description: 'Delete this placeholder session from the calendar.',
+                    type: 'secondary',
+                    handler: () => {
+                          if (confirm('Remove this session placeholder?')) {
+                              element.remove();
+                              dependencies.triggerAnalyticsUpdate(); // Placeholder load changes
+                              dependencies.showToast('Placeholder removed.', 'info');
+                          }
+                     } 
+                });
             } else {
                 // --- It's a regular exercise card --- 
                 const exerciseName = element.querySelector('.exercise-name')?.textContent || 'Exercise';
                 const exerciseId = findExerciseIdByName(exerciseName); // Helper needed
 
                 // Existing actions
-                actions.push({ id: 'suggest_swap', label: `Suggest Swap for ${exerciseName}`, handler: () => handleSuggestSwap(exerciseId) });
-                actions.push({ id: 'decrease_intensity', label: 'Decrease Intensity (10%)', handler: () => handleChangeIntensity(element, -0.1) });
-                actions.push({ id: 'increase_intensity', label: 'Increase Intensity (10%)', handler: () => handleChangeIntensity(element, 0.1) });
-                actions.push({ id: 'simulate_acwr', label: 'Simulate ACWR Impact', handler: () => simulateCardChanges(element) });
+                actions.push({ 
+                    id: 'suggest_swap', 
+                    label: `Find Alternative for ${exerciseName}`, 
+                    description: 'Get suggestions for similar exercises that can replace this one.',
+                    type: 'primary',
+                    handler: () => handleSuggestSwap(exerciseId) 
+                });
+                
+                actions.push({ 
+                    id: 'decrease_intensity', 
+                    label: 'Decrease Intensity (10%)', 
+                    description: 'Reduce the load/intensity of this exercise to lower overall stress.',
+                    type: 'secondary',
+                    handler: () => handleChangeIntensity(element, -0.1) 
+                });
+                
+                actions.push({ 
+                    id: 'increase_intensity', 
+                    label: 'Increase Intensity (10%)', 
+                    description: 'Increase the load/intensity of this exercise for greater stimulus.',
+                    type: 'secondary',
+                    handler: () => handleChangeIntensity(element, 0.1) 
+                });
+                
+                actions.push({ 
+                    id: 'simulate_acwr', 
+                    label: 'Simulate ACWR Impact', 
+                    description: 'See how modifying this exercise would affect your acute-to-chronic workload ratio.',
+                    type: 'analytics',
+                    handler: () => simulateCardChanges(element) 
+                });
                 
                 // --- Add new actions --- 
                 actions.push({
                     id: 'find-alternative', // Matches user query
                     label: 'Find Alternative Exercise',
+                    description: 'Discover exercises with similar training effects that might be better suited.',
+                    type: 'primary',
                     // Reuse suggestSwap handler
                     handler: () => handleSuggestSwap(exerciseId)
                 });
+                
                 actions.push({
                     id: 'add-technique-cue', // Matches user query
                     label: 'Add Technique Cue',
+                    description: 'Add a coaching note or technique reminder for better execution.',
+                    type: 'coaching',
                     // Point to new handler function
                     handler: () => handleAddTechniqueCue(element) 
                 });
+                
                 actions.push({
                     id: 'suggest-progression', // Matches user query
                     label: 'Suggest Progression',
+                    description: 'Get recommendations on how to progress this exercise in future sessions.',
+                    type: 'coaching',
                     // Point to new handler function
                     handler: () => handleSuggestProgression(element) 
                 });
-                // --- End new actions ---
             }
-            // --- End Placeholder Check ---
         } else if (element.classList.contains('day-cell')) {
             const week = element.dataset.week;
             const day = element.dataset.day;
-             actions.push({ id: 'handle_missed', label: `Handle Missed Session (${day} Wk ${week})`, handler: () => handleMissedSession({ day: day.toLowerCase().substring(0,3), week: parseInt(week, 10) }) });
-             actions.push({ id: 'clear_day_ctx', label: `Clear ${day} Wk ${week}`, handler: () => processCommand(`clear ${day.toLowerCase().substring(0,3)} wk ${week}`) });
-            actions.push({ id: 'convert_rest', label: `Convert to Rest Day`, handler: () => handleConvertToRestDay(element) });
+             actions.push({ 
+                id: 'handle_missed', 
+                label: `Handle Missed Session`, 
+                description: `Process a missed workout for ${day} Week ${week} with smart rescheduling or adjustments.`,
+                type: 'primary',
+                handler: () => handleMissedSession({ day: day.toLowerCase().substring(0,3), week: parseInt(week, 10) }) 
+            });
+             
+             actions.push({ 
+                id: 'clear_day_ctx', 
+                label: `Clear ${day} Wk ${week}`, 
+                description: 'Remove all exercises from this day while adjusting surrounding workload if needed.',
+                type: 'secondary',
+                handler: () => processCommand(`clear ${day.toLowerCase().substring(0,3)} wk ${week}`) 
+            });
+            
+            actions.push({ 
+                id: 'convert_rest', 
+                label: `Convert to Rest Day`, 
+                description: 'Mark this as a recovery day and get suggestions for light activities.',
+                type: 'recovery',
+                handler: () => handleConvertToRestDay(element) 
+            });
+            
+            actions.push({ 
+                id: 'optimize_day', 
+                label: `Optimize Day Structure`, 
+                description: 'Reorder exercises and adjust sets/reps for better training stimulus.',
+                type: 'analytics',
+                handler: () => handleOptimizeDayStructure(element) 
+            });
         } else if (element.classList.contains('phase-bar')) {
             const phaseName = element.dataset.phase || 'Phase';
-            actions.push({ id: 'optimize_phase', label: `Optimize ${phaseName} Phase Load`, handler: () => handleOptimizePhaseLoad(element) });
-             actions.push({ id: 'clear_phase', label: `Clear ${phaseName} Phase`, handler: () => handleClearPhase(element) });
+            actions.push({ 
+                id: 'optimize_phase', 
+                label: `Optimize ${phaseName} Phase`, 
+                description: 'Analyze and adjust the workload distribution across this phase for better progression.',
+                type: 'analytics',
+                handler: () => handleOptimizePhaseLoad(element) 
+            });
+            
+            actions.push({ 
+                id: 'clear_phase', 
+                label: `Clear ${phaseName} Phase`, 
+                description: 'Remove all workouts from this phase for a fresh start.',
+                type: 'secondary',
+                handler: () => handleClearPhase(element) 
+            });
+            
+            actions.push({ 
+                id: 'generate_phase', 
+                label: `Generate ${phaseName} Content`, 
+                description: 'Auto-generate a structured training plan for this phase based on goals.',
+                type: 'primary',
+                handler: () => handleGeneratePhaseContent(element) 
+            });
         }
 
         return actions;
+    }
+
+    // Placeholder for new handler function
+    function handleOptimizeDayStructure(dayCell) {
+        // Implementation to be added in future
+        dependencies.showToast("Day structure optimization coming soon in a future update!", "info");
+    }
+    
+    // Placeholder for new handler function
+    function handleGeneratePhaseContent(phaseElement) {
+        // Implementation to be added in future
+        const phaseName = phaseElement.dataset.phase || 'Phase';
+        dependencies.showToast(`${phaseName} phase content generation will be available in a future update!`, "info");
     }
 
      // Helper to find exercise ID (replace with better method if available)
