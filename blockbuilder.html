@@ -8,6 +8,27 @@
     <link rel="stylesheet" href="blockbuilder.css">
     <link rel="stylesheet" href="css/forgeassist_education.css">
     <!-- <link rel="stylesheet" href="css/template-animations.css"> -->
+    <!-- Fix for floating template elements -->
+    <style>
+        body > .template-focus-areas,
+        body > .template-rating,
+        body > .template-footer,
+        body > .template-card,
+        body > .template-header,
+        body > .template-body,
+        body > .template-focus-tag,
+        body > .template-metadata,
+        body > .template-preview-btn,
+        body > .template-use-btn,
+        body > div[class^="template-"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            position: absolute !important;
+            z-index: -9999 !important;
+            pointer-events: none !important;
+        }
+    </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">

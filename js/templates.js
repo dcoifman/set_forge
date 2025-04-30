@@ -549,13 +549,18 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        // Force layout calculation to get accurate dimensions
+        // Skip dimension calculation - it's causing elements to remain in the DOM
+        // This was causing template elements to be left in the page
+        /* 
+        // Force layout calculation to get accurate dimensions 
         document.body.appendChild(card);
         const width = card.offsetWidth;
         const height = card.offsetHeight;
         document.body.removeChild(card);
         
         console.log(`createTemplateCard: Card created with dimensions ${width} x ${height}`);
+        */
+        
         console.log("Card HTML structure:", card.outerHTML.substring(0, 200) + "...");
         
         return card;
