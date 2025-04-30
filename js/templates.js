@@ -413,38 +413,51 @@ document.addEventListener('DOMContentLoaded', function() {
     // Render templates in the grid
     function renderTemplates() {
         console.log("renderTemplates: Starting to render templates");
-        if (!templatesList) {
-            console.error("renderTemplates: templatesList element not found.");
-            return;
+        try {
+            // Clear existing templates
+            console.log("renderTemplates: Clearing templatesList innerHTML");
+            templatesList.innerHTML = '';
+
+            // Filter templates by category and search term
+            console.log(`renderTemplates: Filtering templates with category: ${currentCategory} and search term: ${currentSearchTerm}`);
+            const filteredTemplates = trainingTemplates.filter(template => {
+                const matchesCategory = currentCategory === 'all' || template.category === currentCategory;
+                const matchesSearch = !currentSearchTerm || 
+                    template.title.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
+                    template.author.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
+                    template.description.toLowerCase().includes(currentSearchTerm.toLowerCase());
+                return matchesCategory && matchesSearch;
+            });
+            
+            console.log(`renderTemplates: Filtered templates count: ${filteredTemplates.length}`);
+            
+            if (filteredTemplates.length === 0) {
+                templatesList.innerHTML = '<p class="no-results">No templates match your criteria. Try adjusting your filters.</p>';
+                return;
+            }
+            
+            console.log("renderTemplates: Creating and appending template cards");
+            filteredTemplates.forEach((template, index) => {
+                console.log(`renderTemplates: Creating card ${index+1}/${filteredTemplates.length} - ${template.title}`);
+                const card = createTemplateCard(template);
+                templatesList.appendChild(card);
+            });
+            
+            console.log("renderTemplates: All template cards appended");
+            console.dir(templatesList); // Log the DOM element details
+            
+            // Force layout calculation for animation
+            window.requestAnimationFrame(() => {
+                // Apply staggered entrance animation to cards if needed
+                const cards = templatesList.querySelectorAll('.template-card');
+                cards.forEach((card, i) => {
+                    card.style.animationDelay = `${i * 0.05}s`;
+                    card.classList.add('animate-in');
+                });
+            });
+        } catch (error) {
+            console.error("Error rendering templates:", error);
         }
-        
-        console.log("renderTemplates: Clearing templatesList innerHTML");
-        templatesList.innerHTML = '';
-        
-        console.log("renderTemplates: Filtering templates with category:", currentCategory, "and search term:", currentSearchTerm);
-        const filteredTemplates = trainingTemplates.filter(template => {
-            const matchesCategory = currentCategory === 'all' || template.category === currentCategory;
-            const matchesSearch = template.title.toLowerCase().includes(currentSearchTerm.toLowerCase()) || 
-                                  template.description.toLowerCase().includes(currentSearchTerm.toLowerCase());
-            return matchesCategory && matchesSearch;
-        });
-        
-        console.log("renderTemplates: Filtered templates count:", filteredTemplates.length);
-        
-        if (filteredTemplates.length === 0) {
-            console.log("renderTemplates: No templates to display, showing message");
-            templatesList.innerHTML = '<p class="no-templates">No templates found matching your criteria.</p>';
-            return;
-        }
-        
-        console.log("renderTemplates: Creating and appending template cards");
-        filteredTemplates.forEach((template, index) => {
-            console.log(`renderTemplates: Creating card ${index + 1}/${filteredTemplates.length} - ${template.title}`);
-            const templateCard = createTemplateCard(template);
-            templatesList.appendChild(templateCard);
-        });
-        
-        console.log("renderTemplates: All template cards appended");
     }
 
     // Create a template card element
@@ -669,11 +682,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add all event listeners
     function addEventListeners() {
-        // Only add event listeners if elements exist
-        if (hubBrowseTemplatesBtn && templatesModal) {
-            hubBrowseTemplatesBtn.addEventListener('click', function() {
+        console.log("Templates module: Adding event listeners");
+        
+        // Browse Templates button click
+        if (hubBrowseTemplatesBtn) {
+            hubBrowseTemplatesBtn.addEventListener('click', () => {
                 console.log("Templates: Opening templates modal");
-                templatesModal.classList.add('is-visible');
+                if (templatesModal) {
+                    templatesModal.classList.add('is-visible');
+                    // Force layout calculation for animation
+                    window.requestAnimationFrame(() => {
+                        templatesModal.style.opacity = '1';
+                        templatesModal.style.visibility = 'visible';
+                    });
+                } else {
+                    console.error("Templates modal not found");
+                }
             });
         }
         

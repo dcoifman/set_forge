@@ -5374,3 +5374,24 @@ body.show-hub #back-to-hub-btn {
     border-radius: 6px;
     margin-bottom: 0.5rem;
 }
+
+/* Template animations and visual improvements */
+@keyframes templateCardFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.template-card {
+    /* ... existing styles ... */
+    opacity: 0;
+}
+
+.template-card.animate-in {
+    animation: templateCardFadeIn 0.5s ease forwards;
+}
