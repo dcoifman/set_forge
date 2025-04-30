@@ -257,14 +257,14 @@ class PeriodizationModelManager {
     }
 
     getModelForDay(dayId) {
-        // Just return the instance ID string from the mapping
-        return this.dayModelMapping[dayId] || null;
+        const instanceId = this.dayModelMapping[dayId];
+        return instanceId ? this.modelInstances[instanceId] : null;
     }
 
 }
 
-// Export the class (or create an instance if using as a singleton immediately)
-const periodizationModelManager = new PeriodizationModelManager();
-export default periodizationModelManager;
+// Export the class as the default export
+export default PeriodizationModelManager;
+
 // If not using modules, assign to a global variable:
 // window.periodizationModelManager = new PeriodizationModelManager(); 
