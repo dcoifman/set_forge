@@ -198,17 +198,23 @@
                 <!-- Standard Tab Content -->
                 <div id="library" class="tab-content">
                     <div class="library-controls">
-                        <input type="search" id="inspector-search" class="inspector-search library-controls__search" placeholder="Search exercises...">
+                        <div class="library-controls__search-wrapper">
+                            <div class="search-icon">🔍</div>
+                            <input type="search" id="inspector-search" class="inspector-search library-controls__search" placeholder="Search exercises...">
+                        </div>
                         <div class="library-controls__row">
                             <div class="library-controls__group filter-sort-controls">
+                                <div class="filter-label">Filter:</div>
                                 <select id="library-filter-category" class="library-select" title="Filter by Category">
-                                    <option value="">All Categories</option>
+                                    <option value="all">All Categories</option>
                                     <!-- Options added dynamically -->
                                 </select>
                                 <select id="library-filter-equipment" class="library-select" title="Filter by Equipment">
-                                    <option value="">All Equipment</option>
+                                    <option value="all">All Equipment</option>
                                      <!-- Options added dynamically -->
                                 </select>
+                                <div class="filter-divider"></div>
+                                <div class="filter-label">Sort:</div>
                                 <select id="library-sort" class="library-select" title="Sort Exercises">
                                     <option value="frequency">Most Used</option>
                                     <option value="nameAsc">Name (A-Z)</option>
@@ -219,6 +225,7 @@
                             </div>
                             <div class="library-controls__group view-add-controls">
                                 <div class="view-mode-buttons">
+                                    <span class="view-label">View:</span>
                                     <button id="view-mode-standard" class="library-toggle-btn active" title="Standard View">☰</button>
                                     <button id="view-mode-compact" class="library-toggle-btn" title="Compact View">📄</button>
                                 </div>
@@ -244,7 +251,30 @@
                 </div>
                 <div id="assist" class="tab-content">
                     <!-- Content populated by JS -->
-                    <p>Select an item to see relevant ForgeAssist™ actions.</p>
+                    <h4>ForgeAssist™ Actions</h4>
+                    <p>Select an item on the calendar to view relevant actions and suggestions.</p>
+                    
+                    <div class="assist-action-cards">
+                        <!-- These cards will be populated dynamically by JS -->
+                    </div>
+                    
+                    <div class="assist-chat">
+                        <h4>Ask ForgeAssist</h4>
+                        <div class="assist-chat-container">
+                            <textarea id="forge-assist-input" placeholder="Type a command or ask for help..."></textarea>
+                            <button id="forge-assist-send" class="primary-cta">
+                                <span class="btn-icon">→</span>
+                            </button>
+                        </div>
+                        <div class="assist-examples">
+                            <p><small>Example commands:</small></p>
+                            <div class="assist-example-chips">
+                                <button class="assist-example-chip" data-command="clear week 1">Clear week 1</button>
+                                <button class="assist-example-chip" data-command="shift week 2 forward 1 day">Shift week 2 forward</button>
+                                <button class="assist-example-chip" data-command="decrease intensity by 10%">Decrease intensity</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div id="adaptive" class="tab-content">
                     <!-- Content populated by JS -->
@@ -325,6 +355,39 @@
                  <button title="Redo (coming soon)" disabled>&#8635;</button>
             </div>
         </footer>
+
+        <!-- ForgeAssist Chat Interface -->
+        <div id="forge-chat-container" class="forge-chat-container">
+            <button id="forge-chat-toggle" class="forge-chat-toggle">
+                <span class="forge-chat-icon">💬</span>
+                <span class="forge-chat-label">ForgeAssist</span>
+            </button>
+            <div id="forge-chat-panel" class="forge-chat-panel">
+                <div class="forge-chat-header">
+                    <h4>ForgeAssist™</h4>
+                    <button id="forge-chat-minimize" class="forge-chat-minimize">−</button>
+                </div>
+                <div id="forge-chat-messages" class="forge-chat-messages">
+                    <div class="forge-chat-message assistant">
+                        <div class="forge-chat-avatar">🤖</div>
+                        <div class="forge-chat-bubble">
+                            How can I help with your training block today?
+                        </div>
+                    </div>
+                </div>
+                <div class="forge-chat-input-container">
+                    <input type="text" id="forge-chat-input" class="forge-chat-input" placeholder="Type a command or ask a question...">
+                    <button id="forge-chat-send" class="forge-chat-send">
+                        <span class="send-icon">↗</span>
+                    </button>
+                </div>
+                <div class="forge-chat-suggestions">
+                    <div class="forge-chat-suggestion" data-command="clear week 1">clear week 1</div>
+                    <div class="forge-chat-suggestion" data-command="suggest alternative for squat">suggest alternative for squat</div>
+                    <div class="forge-chat-suggestion" data-command="shift mon wk 2 forward 1 day">shift mon wk 2 forward 1 day</div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- Mobile Preview Modal -->
@@ -397,6 +460,70 @@
                  <!-- Version history will be populated here -->
              </div>
          </div>
+    </div>
+
+    <!-- Templates Modal -->
+    <div id="templates-modal" class="modal-overlay">
+        <div class="modal-content templates-content">
+            <button class="modal-close-btn" id="templates-close-btn">&times;</button>
+            <h4>Training Program Templates</h4>
+            
+            <div class="templates-filter">
+                <input type="search" id="templates-search" placeholder="Search templates...">
+                <div class="templates-categories">
+                    <button class="template-category-btn active" data-category="all">All</button>
+                    <button class="template-category-btn" data-category="strength">Strength</button>
+                    <button class="template-category-btn" data-category="hypertrophy">Hypertrophy</button>
+                    <button class="template-category-btn" data-category="powerlifting">Powerlifting</button>
+                    <button class="template-category-btn" data-category="olympic">Olympic</button>
+                    <button class="template-category-btn" data-category="endurance">Endurance</button>
+                    <button class="template-category-btn" data-category="sport">Sport-Specific</button>
+                </div>
+            </div>
+            
+            <div id="templates-list" class="templates-grid">
+                <!-- Templates will be populated here by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Preview Modal -->
+    <div id="template-preview-modal" class="modal-overlay">
+        <div class="modal-content template-preview-content">
+            <button class="modal-close-btn" id="template-preview-close-btn">&times;</button>
+            <div class="template-preview-header">
+                <h3 class="template-preview-title">Template Title</h3>
+                <p class="template-preview-subtitle">By <span class="template-preview-author">Author</span></p>
+            </div>
+            
+            <div class="template-preview-body">
+                <p class="template-preview-description">Template description will be loaded here.</p>
+                
+                <h4>Program Structure</h4>
+                <div class="template-preview-phases">
+                    <!-- Phase bars will be populated by JS -->
+                </div>
+                
+                <h4>Weekly Schedule</h4>
+                <div class="template-preview-schedule">
+                    <!-- Weekly schedule will be populated here by JS -->
+                </div>
+                
+                <h4>Scientific Background</h4>
+                <div class="template-preview-science">
+                    <!-- Scientific background will be populated by JS -->
+                </div>
+                
+                <h4>Recommended For</h4>
+                <ul class="template-preview-recommended">
+                    <!-- Recommendations will be populated by JS -->
+                </ul>
+            </div>
+            
+            <div class="template-preview-footer">
+                <button id="use-template-btn" class="cta-button primary-cta">Use This Template</button>
+            </div>
+        </div>
     </div>
 
     <!-- Exercise Add/Edit Modal -->
@@ -692,6 +819,7 @@
     <script src="js/analytics/updates.js" type="module"></script>
     <script src="js/blockbuilder.js" type="module"></script>
     <script src="js/forgeassist_education.js"></script>
+    <script src="js/templates.js" type="module"></script>
 </body>
 </html>
  
