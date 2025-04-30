@@ -4087,8 +4087,7 @@ window.blockBuilder = {
             }
         }
         
-        // Generate blocks or call any other initialization needed
-        // For now we'll just generate calendar with template weeks
+        // Generate grid with template weeks - ONLY generate the calendar ONCE
         generateCalendarGrid(template.weeks || 8);
         
         // Load the template data - Create workout cards from the template schedule
