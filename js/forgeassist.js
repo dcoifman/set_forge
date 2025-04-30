@@ -151,7 +151,63 @@ const ForgeAssist = (() => {
         }
 
         if (element.classList.contains('workout-card')) {
-            // --- Add Check for Placeholder ---
+            // --- Add Check for Model-Driven Exercise First ---
+            if (element.dataset.modelDriven === "true") {
+                // It's a model-driven exercise
+                const exerciseName = element.querySelector('.exercise-name')?.textContent || 'Exercise';
+                const exerciseId = findExerciseIdByName(exerciseName);
+                
+                actions.push({ 
+                    id: 'model_view_details', 
+                    label: `View Model Details`, 
+                    description: 'See how this exercise fits into the periodization model.',
+                    type: 'primary',
+                    handler: () => {
+                        // Find the day-cell and model context
+                        const dayCell = element.closest('.day-cell');
+                        if (dayCell && dayCell.dataset.periodizationModelId) {
+                            // Select the model
+                            document.dispatchEvent(new CustomEvent('forge-assist:select-model', {
+                                bubbles: true, 
+                                detail: {
+                                    modelId: dayCell.dataset.periodizationModelId,
+                                    dayId: dayCell.dataset.dayId
+                                }
+                            }));
+                            dependencies.showToast('Showing model details for this exercise', 'info');
+                        } else {
+                            dependencies.showToast('Could not locate model information', 'error');
+                        }
+                    }
+                });
+                
+                actions.push({ 
+                    id: 'model_override', 
+                    label: `Override Model Settings`, 
+                    description: 'Customize this specific exercise while keeping it linked to the model.',
+                    type: 'secondary',
+                    handler: () => {
+                        // Open exercise editor but mark as override
+                        element.dataset.modelOverride = "true";
+                        // Trigger exercise editor UI
+                        element.querySelector('.edit-btn')?.click();
+                        dependencies.showToast('Any changes will be preserved as overrides to the model', 'info');
+                    }
+                });
+                
+                // Also keep some standard actions like technique cues
+                actions.push({
+                    id: 'add-technique-cue', 
+                    label: 'Add Technique Cue',
+                    description: 'Add a coaching note or technique reminder for better execution.',
+                    type: 'coaching',
+                    handler: () => handleAddTechniqueCue(element) 
+                });
+                
+                return actions; // Return early for model-driven cards
+            }
+            
+            // --- Check for Placeholder ---
             if (element.dataset.isPlaceholder === 'true') {
                 // It's a placeholder card, offer different actions (or none for now)
                 actions.push({ 

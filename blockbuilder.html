@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css?v=1.1">
     <link rel="stylesheet" href="blockbuilder.css">
     <link rel="stylesheet" href="css/forgeassist_education.css">
+    <link rel="stylesheet" href="css/template-animations.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
@@ -491,37 +492,46 @@
     <div id="template-preview-modal" class="modal-overlay">
         <div class="modal-content template-preview-content">
             <button class="modal-close-btn" id="template-preview-close-btn">&times;</button>
+            
             <div class="template-preview-header">
-                <h3 class="template-preview-title">Template Title</h3>
-                <p class="template-preview-subtitle">By <span class="template-preview-author">Author</span></p>
+                <div class="template-preview-icon">🏋️</div>
+                <h3 class="template-preview-title">Program Title</h3>
+                <p class="template-preview-author">By Author Name</p>
             </div>
             
-            <div class="template-preview-body">
-                <p class="template-preview-description">Template description will be loaded here.</p>
-                
-                <h4>Program Structure</h4>
-                <div class="template-preview-phases">
-                    <!-- Phase bars will be populated by JS -->
+            <div class="template-visual">
+                <div class="template-visual-content">
+                    <!-- Program-specific animation will be inserted here based on category -->
                 </div>
-                
-                <h4>Weekly Schedule</h4>
-                <div class="template-preview-schedule">
-                    <!-- Weekly schedule will be populated here by JS -->
+            </div>
+            
+            <p class="template-preview-description">Program description will be displayed here.</p>
+            
+            <div class="template-preview-phases">
+                <!-- Phases will be populated dynamically -->
+            </div>
+            
+            <h4>Weekly Schedule</h4>
+            <div class="template-preview-schedule">
+                <!-- Weekly schedule preview will be populated dynamically -->
+            </div>
+            
+            <div class="template-preview-science">
+                <h4>Science Behind This Program</h4>
+                <div class="template-preview-science-content">
+                    <!-- Science explanation will be populated dynamically -->
                 </div>
-                
-                <h4>Scientific Background</h4>
-                <div class="template-preview-science">
-                    <!-- Scientific background will be populated by JS -->
-                </div>
-                
+            </div>
+            
+            <div class="template-preview-recommended">
                 <h4>Recommended For</h4>
-                <ul class="template-preview-recommended">
-                    <!-- Recommendations will be populated by JS -->
+                <ul>
+                    <!-- Recommendations will be populated dynamically -->
                 </ul>
             </div>
             
             <div class="template-preview-footer">
-                <button id="use-template-btn" class="cta-button primary-cta">Use This Template</button>
+                <button id="use-template-btn" class="template-use-btn">Use This Program</button>
             </div>
         </div>
     </div>

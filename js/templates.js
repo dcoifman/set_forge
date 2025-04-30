@@ -352,6 +352,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function init() {
         renderTemplates();
         addEventListeners();
+        applyTemplateGridLayout();
     }
 
     // Render templates in the grid
@@ -396,10 +397,14 @@ document.addEventListener('DOMContentLoaded', function() {
             (halfStar ? '½' : '') + 
             starEmpty.repeat(emptyStars);
         
+        // Get category-specific animation icon
+        const animationIcon = getCategoryIcon(template.category);
+        
         card.innerHTML = `
             <div class="template-header">
                 <h3 class="template-title">${template.title}</h3>
                 <p class="template-author">By ${template.author}</p>
+                <span class="template-animation-icon">${animationIcon}</span>
             </div>
             <div class="template-body">
                 <p class="template-description">${template.description.length > 150 ? template.description.substring(0, 150) + '...' : template.description}</p>
@@ -433,7 +438,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return card;
     }
 
-    // Show template preview modal with detailed info
+    // Show template preview modal with detailed info and animations
     function showTemplatePreview(templateId) {
         const template = trainingTemplates.find(t => t.id === templateId);
         if (!template) return;
@@ -442,8 +447,19 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Set preview content
         document.querySelector('.template-preview-title').textContent = template.title;
-        document.querySelector('.template-preview-author').textContent = template.author;
+        document.querySelector('.template-preview-author').textContent = `By ${template.author}`;
         document.querySelector('.template-preview-description').textContent = template.description;
+        
+        // Set category-specific icon
+        const previewIcon = document.querySelector('.template-preview-icon');
+        previewIcon.textContent = getCategoryIcon(template.category);
+        previewIcon.style.backgroundColor = getCategoryColor(template.category, 0.2);
+        previewIcon.style.color = getCategoryColor(template.category, 1);
+        
+        // Create and insert category-specific animation
+        const visualContent = document.querySelector('.template-visual-content');
+        visualContent.innerHTML = '';
+        visualContent.appendChild(createCategoryAnimation(template.category));
         
         // Render phases
         const phasesContainer = document.querySelector('.template-preview-phases');
@@ -503,11 +519,18 @@ document.addEventListener('DOMContentLoaded', function() {
             scheduleContainer.appendChild(weekElement);
         });
         
+        // Add click to toggle collapse for week headers
+        document.querySelectorAll('.template-preview-week-header').forEach(header => {
+            header.addEventListener('click', function() {
+                this.parentElement.classList.toggle('collapsed');
+            });
+        });
+        
         // Render scientific background
-        document.querySelector('.template-preview-science').textContent = template.science;
+        document.querySelector('.template-preview-science-content').textContent = template.science;
         
         // Render recommendations
-        const recommendedList = document.querySelector('.template-preview-recommended');
+        const recommendedList = document.querySelector('.template-preview-recommended ul');
         recommendedList.innerHTML = '';
         template.recommended.forEach(rec => {
             const li = document.createElement('li');
@@ -613,4 +636,114 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize on load
     init();
-}); 
+});
+
+// Helper function to get category-specific icon
+function getCategoryIcon(category) {
+    switch(category) {
+        case 'strength': return '🏋️';
+        case 'hypertrophy': return '💪';
+        case 'powerlifting': return '🔨';
+        case 'olympic': return '🥇';
+        case 'endurance': return '🏃';
+        case 'sport': return '⚽';
+        default: return '📋';
+    }
+}
+
+// Helper function to get category-specific color
+function getCategoryColor(category, opacity = 1) {
+    switch(category) {
+        case 'strength': return `rgba(58, 123, 213, ${opacity})`;
+        case 'hypertrophy': return `rgba(255, 112, 59, ${opacity})`;
+        case 'powerlifting': return `rgba(204, 43, 94, ${opacity})`;
+        case 'olympic': return `rgba(76, 161, 175, ${opacity})`;
+        case 'endurance': return `rgba(95, 108, 129, ${opacity})`;
+        case 'sport': return `rgba(117, 58, 136, ${opacity})`;
+        default: return `rgba(100, 100, 100, ${opacity})`;
+    }
+}
+
+// Helper function to create category-specific animations
+function createCategoryAnimation(category) {
+    const container = document.createElement('div');
+    container.className = `${category}-animation`;
+    
+    switch(category) {
+        case 'hypertrophy':
+            for (let i = 0; i < 5; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                container.appendChild(bar);
+            }
+            break;
+            
+        case 'strength':
+            const weight = document.createElement('div');
+            weight.className = 'weight';
+            container.appendChild(weight);
+            break;
+            
+        case 'powerlifting':
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            
+            const weightLeft = document.createElement('div');
+            weightLeft.className = 'weight';
+            
+            const weightRight = document.createElement('div');
+            weightRight.className = 'weight';
+            
+            bar.appendChild(weightLeft);
+            bar.appendChild(weightRight);
+            container.appendChild(bar);
+            break;
+            
+        case 'olympic':
+            const obar = document.createElement('div');
+            obar.className = 'bar';
+            
+            const oweightLeft = document.createElement('div');
+            oweightLeft.className = 'weight';
+            
+            const oweightRight = document.createElement('div');
+            oweightRight.className = 'weight';
+            
+            obar.appendChild(oweightLeft);
+            obar.appendChild(oweightRight);
+            container.appendChild(obar);
+            break;
+            
+        case 'endurance':
+            const track = document.createElement('div');
+            track.className = 'track';
+            
+            const runner = document.createElement('div');
+            runner.className = 'runner';
+            
+            container.appendChild(track);
+            container.appendChild(runner);
+            break;
+            
+        case 'sport':
+            const surface = document.createElement('div');
+            surface.className = 'surface';
+            
+            const figure = document.createElement('div');
+            figure.className = 'figure';
+            
+            container.appendChild(surface);
+            container.appendChild(figure);
+            break;
+            
+        default:
+            container.textContent = '📊';
+    }
+    
+    return container;
+}
+
+// Make the templates list display as a grid
+function applyTemplateGridLayout() {
+    templatesList.classList.add('templates-grid');
+} 

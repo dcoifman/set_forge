@@ -2206,102 +2206,69 @@ document.addEventListener('DOMContentLoaded', () => {
     // Placeholder for the function that populates the model inspector view
     function populateInspectorModelView(modelId, dayId) {
         console.log(`[populateInspectorModelView] Populating for model ${modelId}, day ${dayId}`);
-        const model = PeriodizationModelManager.getModelInstance(modelId);
-        const dayCell = workCanvas.querySelector(`[data-day-id="${dayId}"]`);
-
-        if (!model || !dayCell) {
-            console.error(`[populateInspectorModelView] Could not find model (${modelId}) or day cell (${dayId}).`);
-            // Optionally reset inspector to a default state or show error
-            if (inspectorTitle) inspectorTitle.textContent = 'Error Loading Model View';
-            document.getElementById('model-status-content').innerHTML = '<p>Error loading model details.</p>';
-            // Hide other model tabs if they exist
-            document.getElementById('model-config-content')?.classList.remove('active');
-            document.getElementById('model-sim-content')?.classList.remove('active');
+        
+        // Find the model configuration in our stored models
+        const modelConfig = PeriodizationModelManager.getModelById(modelId);
+        if (!modelConfig) {
+            console.error(`[populateInspectorModelView] Model config not found for ID: ${modelId}`);
             return;
         }
 
-        // --- Set Inspector Title --- 
-        const week = dayCell.dataset.week || '?';
-        const day = dayCell.dataset.day || '?';
-        if (inspectorTitle) inspectorTitle.textContent = `Model: ${model.type} (Wk ${week}, ${day})`;
-
-        // --- Populate Status Tab --- 
-        const statusTabContent = document.getElementById('model-status-content');
-        if (!statusTabContent) {
-            console.error("[populateInspectorModelView] #model-status-content element not found!");
+        // Find the day cell that has this model applied
+        const dayCell = document.querySelector(`.day-cell[data-day-id="${dayId}"][data-periodization-model-id="${modelId}"]`);
+        if (!dayCell) {
+            console.error(`[populateInspectorModelView] Day cell not found for day ID: ${dayId}`);
             return;
         }
 
-        // --- Add Try/Catch and Logging ---
-        try {
-            // --- Determine Context Specific Parameters (Example for Triphasic/Wave) ---
-            let contextSpecificParams = [];
-            const weekIndex = parseInt(dayCell.dataset.week, 10) - 1; // Get 0-based week index
-
-            if (model.type === 'triphasic') {
-                const phaseLengths = model.params.phaseLengthWeeks || [2, 2, 2];
-                const eccLength = phaseLengths[0] || 2;
-                const isoLength = phaseLengths[1] || 2;
-                let currentPhaseName = 'concentric';
-                let currentPhaseParams = model.params.concentricFocusParams;
-                if (weekIndex < eccLength) {
-                    currentPhaseName = 'eccentric';
-                    currentPhaseParams = model.params.eccentricFocusParams;
-                } else if (weekIndex < eccLength + isoLength) {
-                    currentPhaseName = 'isometric';
-                    currentPhaseParams = model.params.isometricFocusParams;
-                }
-                contextSpecificParams.push(`<strong>Current Phase:</strong> ${currentPhaseName.charAt(0).toUpperCase() + currentPhaseName.slice(1)}`);
-                contextSpecificParams.push(`<strong>Target (${model.params.loadType || '?'})</strong>: ${currentPhaseParams?.targets?.[0] || 'N/A'}`);
-                contextSpecificParams.push(`<strong>Reps:</strong> ${currentPhaseParams?.reps?.[0] || 'N/A'}`);
-            } else if (model.type === 'wave') {
-                const patternName = model.params.weeklyStructure?.find(e => e.dayOfWeek === day)?.applyWavePattern || Object.keys(model.params.wavePatternDefinitions || {})[0] || 'default';
-                const patternDefinition = model.params.wavePatternDefinitions?.[patternName];
-                if (patternDefinition) {
-                    const patternLength = patternDefinition.patternTargets?.length || 1;
-                    const stepIndexWave = weekIndex % patternLength;
-                    const currentWaveTarget = patternDefinition.patternTargets?.[stepIndexWave] ?? 'N/A';
-                    const currentRepsWave = patternDefinition.repsPerStep?.[stepIndexWave] ?? 'N/A';
-                    contextSpecificParams.push(`<strong>Current Step:</strong> ${stepIndexWave + 1} / ${patternLength}`);
-                    contextSpecificParams.push(`<strong>Target (${model.params.waveLoadType || '?'})</strong>: ${currentWaveTarget}`);
-                    contextSpecificParams.push(`<strong>Reps:</strong> ${currentRepsWave}`);
-                } else {
-                     contextSpecificParams.push(`<i>Wave pattern "${patternName}" not found.</i>`);
-                }
-            } // Add similar logic for Linear or other models if needed
+        // Get all workout cards in this day - separate model-driven from independent
+        const allCards = Array.from(dayCell.querySelectorAll('.workout-card'));
+        const modelDrivenCards = allCards.filter(card => card.dataset.modelDriven === "true");
+        const independentCards = allCards.filter(card => card.dataset.modelDriven !== "true");
+        
+        // Get tab elements
+        const modelStatusTab = document.getElementById('model-status-content');
+        const modelConfigTab = document.getElementById('model-config-content');
+        const modelSimTab = document.getElementById('model-sim-content');
+        
+        // Update inspectorTitle
+        if (inspectorTitle) {
+            const dayData = dayCell.dataset;
+            inspectorTitle.textContent = `Model: ${modelConfig.type} (${dayData.week}, ${dayData.day})`;
+        }
+        
+        // Populate the status tab (summary of current state)
+        if (modelStatusTab) {
+            // Extract model parameters from dayCell dataset
+            const params = JSON.parse(dayCell.dataset.periodizationParams || '{}');
+            const weeklyStructure = params.weeklyStructure || [];
+            const currentDayConfig = weeklyStructure.find(day => 
+                day.dayOfWeek.toLowerCase() === dayCell.dataset.day.toLowerCase().slice(0,3)
+            ) || {};
             
-            // --- Find Model Driven/Independent Cards --- 
-            const modelDrivenCards = [];
-            const independentCards = [];
-            dayCell.querySelectorAll('.workout-card').forEach(card => {
-                if (card.dataset.modelDriven === 'true') {
-                    modelDrivenCards.push(card);
-                } else {
-                    independentCards.push(card);
-                }
-            });
-
-            // --- Refactored HTML Generation for Status Tab ---
+            // Get more detailed information about exercises
+            const mainExercise = currentDayConfig.mainExercise || 'None specified';
+            
+            // Create HTML content with expanded information and highlighting the current exercise information
             let statusHTML = `
-                <div class="model-status-section section-header">
-                    <h4>${model.type.charAt(0).toUpperCase() + model.type.slice(1)} Model Status</h4>
-                    <span class="instance-id" title="Instance ID: ${modelId}"><small>ID: ${modelId.split('_')[0]}_...${modelId.slice(-5)}</small></span>
+                <h4>Model Status</h4>
+                <div class="model-summary">
+                    <p><strong>Type:</strong> ${modelConfig.type}</p>
+                    <p><strong>Day:</strong> Week ${dayCell.dataset.week}, ${dayCell.dataset.day}</p>
+                    <p><strong>Main Exercise:</strong> ${mainExercise}</p>
+                    <p><strong>Wave Position:</strong> 
+                        ${params.wavePatternDefinitions ? 
+                            `Week ${dayCell.dataset.week} (${
+                                (parseInt(dayCell.dataset.week) % 3) === 1 ? 'Light' : 
+                                (parseInt(dayCell.dataset.week) % 3) === 2 ? 'Medium' : 'Heavy'
+                            })` 
+                            : 'N/A'}
+                    </p>
                 </div>
-                
-                <div class="model-status-section section-context">
-                    <h5>Current Context (Wk ${week}, ${day.toUpperCase()})</h5> <!-- MODIFIED: Use 'day' instead of 'dayName' -->
-                    <div class="status-details">
-                         ${contextSpecificParams.map(p => `<div class="status-item"><strong>${p.split(':')[0]}:</strong> ${p.split(':')[1]}</div>`).join('')}
-                    </div>
-                </div>
-                
-                <hr class="detail-separator">
-                
-                <div class="model-status-section section-exercises">
-                    <h5>Exercises on This Day</h5>
                     
                     <div class="exercise-list-container">
-                        <h6>Model-Driven (${modelDrivenCards.length}) <span class="status-icon model-driven-icon" title="Controlled by Model">⚙️</span></h6>
+                    <h6>Model-Driven Exercises (${modelDrivenCards.length}) <span class="status-icon model-icon" title="Driven by Periodization Model">⚙️</span></h6>
+                    <div class="exercise-list-scroll">
                         ${modelDrivenCards.length > 0 ? `
                         <ul class="inspector-card-list model-driven-list">
                             ${modelDrivenCards.map(card => {
@@ -2311,9 +2278,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const loadType = card.dataset.loadType || '';
                                 const loadValue = card.dataset.loadValue || '';
                                 const details = `${sets}x${reps} ${loadType ? (loadType + ' ' + loadValue) : ''}`.trim();
-                                return `<li data-card-id="${card.id}" title="Click to highlight on canvas">
+                                return `<li data-card-id="${card.id}" class="model-card-item" title="Click to highlight on canvas">
                                             <span class="exercise-item-name">${name}</span> 
                                             <small class="exercise-item-details">${details}</small>
+                                            <div class="card-item-hover-actions">
+                                                <button class="card-action-btn edit-override" title="Override settings">Edit</button>
+                                                <button class="card-action-btn view-details" title="View exercise details">Info</button>
+                                            </div>
                                         </li>`;
                             }).join('')}
                         </ul>
@@ -2322,49 +2293,195 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     <div class="exercise-list-container">
                         <h6>Independent (${independentCards.length}) <span class="status-icon independent-icon" title="Manually Edited/Added">✏️</span></h6>
+                        <div class="exercise-list-scroll">
                          ${independentCards.length > 0 ? `
                         <ul class="inspector-card-list independent-list">
                              ${independentCards.map(card => {
                                 const name = card.querySelector('.exercise-name')?.textContent || 'Unknown';
-                                const sets = card.dataset.sets || '?';
-                                const reps = card.dataset.reps || '?';
-                                const loadType = card.dataset.loadType || '';
-                                const loadValue = card.dataset.loadValue || '';
-                                const details = `${sets}x${reps} ${loadType ? (loadType + ' ' + loadValue) : ''}`.trim();
+                                    const details = card.dataset.notes || '';
                                 return `<li data-card-id="${card.id}" title="Click to highlight on canvas">
                                              <span class="exercise-item-name">${name}</span> 
                                              <small class="exercise-item-details">${details}</small>
                                          </li>`;
                             }).join('')}
                          </ul>
-                         ` : '<p><small>No independently edited exercises on this day.</small></p>'}
+                            ` : '<p><small>No independent exercises found.</small></p>'}
+                        </div>
                      </div>
                 </div>
 
-                <hr class="detail-separator">
-
-                <div class="model-status-section section-actions">
-                    <h5>Model Actions for This Day</h5>
-                    <div class="action-buttons-container">
-                        <button class="model-action-btn" data-action="make-all-independent" data-instance-id="${modelId}" data-day-id="${dayId}" title="Make all cards on this day independent (won't update with model changes)">
-                             ✏️ Make All Independent
-                        </button>
-                        <button class="model-action-btn" data-action="revert-to-model" data-instance-id="${modelId}" data-day-id="${dayId}" title="Discard edits and recalculate cards based on the current model state">
-                             🔄 Revert to Model
-                         </button>
-                        <button class="model-action-btn detach-btn" data-action="detach-day" data-instance-id="${modelId}" data-day-id="${dayId}" title="Remove this day from model control completely">
-                             ❌ Detach Day from Model
-                        </button>
+                <div class="model-actions">
+                    <button id="regenerate-model-btn" class="cta-button primary-cta">Regenerate Exercises</button>
+                    <button id="modify-model-btn" class="cta-button secondary-cta">Modify Model</button>
+                </div>
+            `;
+            
+            modelStatusTab.innerHTML = statusHTML;
+            
+            // Add event listeners for the model-driven card items
+            modelStatusTab.querySelectorAll('.model-card-item').forEach(item => {
+                const cardId = item.dataset.cardId;
+                const cardElement = document.getElementById(cardId);
+                
+                // Highlight the card when clicked
+                item.addEventListener('click', () => {
+                    // Remove highlight from all cards
+                    document.querySelectorAll('.workout-card.highlighted').forEach(c => 
+                        c.classList.remove('highlighted')
+                    );
+                    
+                    // Highlight this card
+                    if (cardElement) {
+                        cardElement.classList.add('highlighted');
+                        cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+                
+                // Edit override button
+                item.querySelector('.edit-override')?.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (cardElement) {
+                        cardElement.dataset.modelOverride = "true";
+                        handleSelection(cardElement);
+                        openInspector(cardElement);
+                    }
+                });
+                
+                // View details button
+                item.querySelector('.view-details')?.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (cardElement) {
+                        // Show exercise details modal or info panel
+                        const exerciseName = cardElement.querySelector('.exercise-name')?.textContent;
+                        const exerciseId = cardElement.dataset.exerciseId;
+                        if (exerciseId) {
+                            const exerciseData = dependencies.exerciseLibrary.find(ex => ex.id === exerciseId);
+                            if (exerciseData) {
+                                // Use existing function to show modal if available
+                                if (typeof showExerciseDetailModal === 'function') {
+                                    showExerciseDetailModal(exerciseData);
+                                } else {
+                                    // Or show basic info
+                                    showToast(`Exercise: ${exerciseName}`, 'info');
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+            
+            // Add event listeners for the action buttons
+            modelStatusTab.querySelector('#regenerate-model-btn')?.addEventListener('click', () => {
+                if (confirm('Regenerate all model-driven exercises for this day? This will reset any overrides.')) {
+                    // Call model regeneration function
+                    PeriodizationModelManager.regenerateDay(modelId, dayId);
+                    // Update the inspector view
+                    populateInspectorModelView(modelId, dayId);
+                    showToast('Model exercises regenerated', 'success');
+                }
+            });
+            
+            modelStatusTab.querySelector('#modify-model-btn')?.addEventListener('click', () => {
+                // Show model configuration interface
+                activateTab('model-config-content');
+            });
+        }
+        
+        // Populate the config tab (editable parameters)
+        if (modelConfigTab) {
+            // Extract model parameters for editing
+            const params = JSON.parse(dayCell.dataset.periodizationParams || '{}');
+            
+            let configHTML = `
+                <h4>Model Configuration</h4>
+                <p class="description-text">Adjust the model parameters below to customize the periodization. Changes will affect all days using this model.</p>
+                
+                <form id="model-config-form" class="model-config-form">
+                    <div class="form-group">
+                        <label for="model-base-metric">Base Load Metric</label>
+                        <select id="model-base-metric" name="baseLoadMetric">
+                            <option value="1rm" ${params.baseLoadMetric === '1rm' ? 'selected' : ''}>1RM (One Rep Max)</option>
+                            <option value="rpe" ${params.baseLoadMetric === 'rpe' ? 'selected' : ''}>RPE (Rate of Perceived Exertion)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="model-increment-value">Increment Value</label>
+                        <input type="number" id="model-increment-value" name="incrementValue" value="${params.incrementValue || 0}" min="0" max="10" step="0.5">
+                </div>
+                    
+                    <div class="form-group">
+                        <label for="model-increment-unit">Increment Unit</label>
+                        <select id="model-increment-unit" name="incrementUnit">
+                            <option value="%" ${params.incrementUnit === '%' ? 'selected' : ''}>Percent (%)</option>
+                            <option value="kg" ${params.incrementUnit === 'kg' ? 'selected' : ''}>Kilograms (kg)</option>
+                            <option value="lb" ${params.incrementUnit === 'lb' ? 'selected' : ''}>Pounds (lb)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="model-increment-frequency">Increment Frequency</label>
+                        <select id="model-increment-frequency" name="incrementFrequency">
+                            <option value="weekly" ${params.incrementFrequency === 'weekly' ? 'selected' : ''}>Weekly</option>
+                            <option value="biweekly" ${params.incrementFrequency === 'biweekly' ? 'selected' : ''}>Bi-weekly</option>
+                            <option value="monthly" ${params.incrementFrequency === 'monthly' ? 'selected' : ''}>Monthly</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="cta-button primary-cta">Save Changes</button>
+                        <button type="button" id="cancel-model-config" class="cta-button secondary-cta">Cancel</button>
+                    </div>
+                </form>
+            `;
+            
+            modelConfigTab.innerHTML = configHTML;
+            
+            // Add event listeners for the form
+            modelConfigTab.querySelector('#model-config-form')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                // Collect form data
+                const formData = new FormData(e.target);
+                const updatedParams = { ...params };
+                
+                // Update params object with form values
+                for (const [key, value] of formData.entries()) {
+                    if (key === 'incrementValue') {
+                        updatedParams[key] = parseFloat(value);
+                    } else {
+                        updatedParams[key] = value;
+                    }
+                }
+                
+                // Update the model
+                PeriodizationModelManager.updateModelParams(modelId, updatedParams);
+                
+                // Return to status tab
+                activateTab('model-status-content');
+                showToast('Model configuration updated', 'success');
+            });
+            
+            modelConfigTab.querySelector('#cancel-model-config')?.addEventListener('click', () => {
+                activateTab('model-status-content');
+            });
+        }
+        
+        // Populate the simulation tab (future projections)
+        if (modelSimTab) {
+            let simHTML = `
+                <h4>Model Simulation</h4>
+                <p class="description-text">View projected loads and progress over time for this periodization model.</p>
+                
+                <div class="sim-chart-container">
+                    <p><small>Simulation feature coming soon...</small></p>
+                    <div class="placeholder-chart" style="height: 200px; background: rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <span>Projection Chart Placeholder</span>
                     </div>
                 </div>
-            `; // <<< REMOVED Stray closing div here
-            // --- END REMOVED --- 
-
-            statusTabContent.innerHTML = statusHTML;
-
-        } catch (error) {
-            console.error("Error populating model status content:", error);
-            statusTabContent.innerHTML = '<p>Error loading model details.</p>';
+            `;
+            
+            modelSimTab.innerHTML = simHTML;
         }
     }
 
@@ -2819,20 +2936,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // <<< NEW: Listen for event to re-render assist actions >>>
     const inspectorElement = document.getElementById('inspector');
-    if (inspectorElement) {
-        inspectorElement.addEventListener('forge-assist:render-actions', (e) => {
-            console.log('[BlockBuilder] Received forge-assist:render-actions event. Rendering default actions.');
-            renderAssistTabContent(); // Re-render the default actions
-        });
-    }
-    // <<< END NEW LISTENER >>>
-
-    // <<< MODIFIED: Listen on document.body >>>
-    document.body.addEventListener('forge-assist:render-actions', (e) => {
-        console.log('[BlockBuilder] Received forge-assist:render-actions event on body. Rendering default actions.');
-        renderAssistTabContent(); // Re-render the default actions
+    
+    // Listen for the select-model event from ForgeAssist
+    document.addEventListener('forge-assist:select-model', (event) => {
+        if (event.detail && event.detail.modelId && event.detail.dayId) {
+            console.log(`[forge-assist:select-model] Selecting model ${event.detail.modelId} for day ${event.detail.dayId}`);
+            handleModelContextSelection(event.detail.modelId, event.detail.dayId);
+        } else {
+            console.error('[forge-assist:select-model] Event missing modelId or dayId', event.detail);
+        }
     });
-    // <<< END MODIFICATION >>>
+    
+    // --- Register event listeners for inspector tabs ---
 
     // <<< NEW: Function to handle workout card clicks (opens modal) >>>
     function handleCardClick(cardElement, isShiftKey) {
@@ -3704,206 +3819,5 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    /**
-     * Populates the ForgeAssist tab with contextual actions based on the current selection.
-     * Uses the new card-based UI format.
-     */
-    function populateForgeAssistTab() {
-        const assistTab = document.getElementById('assist');
-        const actionCardsContainer = assistTab.querySelector('.assist-action-cards');
-        
-        // Clear previous content
-        actionCardsContainer.innerHTML = '';
-        
-        // Get contextual actions from ForgeAssist
-        const actions = ForgeAssist.getContextualActions();
-        
-        if (actions.length === 0) {
-            // Show empty state
-            actionCardsContainer.innerHTML = `
-                <div class="assist-empty-state">
-                    <div class="assist-empty-state-icon">⚡</div>
-                    <p>Select an item on the calendar to see relevant actions and suggestions.</p>
-                </div>
-            `;
-            return;
-        }
-        
-        // Group actions by type
-        const groupedActions = {};
-        actions.forEach(action => {
-            const type = action.type || 'other';
-            if (!groupedActions[type]) {
-                groupedActions[type] = [];
-            }
-            groupedActions[type].push(action);
-        });
-        
-        // Define type order and labels
-        const typeOrder = ['primary', 'secondary', 'analytics', 'coaching', 'recovery', 'other'];
-        const typeLabels = {
-            primary: 'Recommended Actions',
-            secondary: 'Other Actions',
-            analytics: 'Analytics & Insights',
-            coaching: 'Coaching Suggestions',
-            recovery: 'Recovery Options',
-            other: 'Additional Options'
-        };
-        
-        // Create action cards by type
-        typeOrder.forEach(type => {
-            if (groupedActions[type] && groupedActions[type].length > 0) {
-                // Add type header
-                const typeHeader = document.createElement('h5');
-                typeHeader.textContent = typeLabels[type] || 'Actions';
-                typeHeader.className = 'assist-type-header';
-                actionCardsContainer.appendChild(typeHeader);
-                
-                // Add actions for this type
-                groupedActions[type].forEach(action => {
-                    const card = document.createElement('div');
-                    card.className = 'assist-action-card';
-                    card.dataset.actionId = action.id;
-                    
-                    // Determine if there should be one or two buttons
-                    const hasPrimaryButton = !action.disabled;
-                    const hasSecondaryButton = action.secondaryAction || false;
-                    
-                    card.innerHTML = `
-                        <h5>${action.label}</h5>
-                        <p>${action.description || ''}</p>
-                        <div class="assist-action-btns">
-                            ${hasSecondaryButton ? 
-                                `<button class="assist-action-btn secondary" data-action="${action.secondaryAction}">
-                                    ${action.secondaryLabel || 'Cancel'}
-                                </button>` : ''}
-                            ${hasPrimaryButton ? 
-                                `<button class="assist-action-btn primary" data-action="${action.id}">
-                                    ${type === 'primary' ? 'Apply' : 'Run'}
-                                </button>` : 
-                                `<button class="assist-action-btn" disabled>
-                                    Coming Soon
-                                </button>`}
-                        </div>
-                    `;
-                    
-                    // Add the card to the container
-                    actionCardsContainer.appendChild(card);
-                    
-                    // Add click handler for the primary button if not disabled
-                    if (hasPrimaryButton) {
-                        const primaryBtn = card.querySelector('.assist-action-btn.primary');
-                        primaryBtn.addEventListener('click', () => {
-                            if (typeof action.handler === 'function') {
-                                action.handler();
-                            }
-                        });
-                    }
-                    
-                    // Add click handler for the secondary button if present
-                    if (hasSecondaryButton) {
-                        const secondaryBtn = card.querySelector('.assist-action-btn.secondary');
-                        secondaryBtn.addEventListener('click', () => {
-                            if (typeof action.secondaryHandler === 'function') {
-                                action.secondaryHandler();
-                            }
-                        });
-                    }
-                });
-            }
-        });
-    }
-
-    // Add event listeners for ForgeAssist example chips
-    function setupForgeAssistExamples() {
-        const exampleChips = document.querySelectorAll('.assist-example-chip');
-        const assistInput = document.getElementById('forge-assist-input');
-        
-        exampleChips.forEach(chip => {
-            chip.addEventListener('click', () => {
-                const command = chip.dataset.command;
-                if (command && assistInput) {
-                    assistInput.value = command;
-                    assistInput.focus();
-                }
-            });
-        });
-    }
-
-    // Initialize ForgeAssist chat integration
-    function initForgeAssistChat() {
-        const sendButton = document.getElementById('forge-assist-send');
-        const inputField = document.getElementById('forge-assist-input');
-        
-        if (sendButton && inputField) {
-            sendButton.addEventListener('click', () => {
-                const command = inputField.value.trim();
-                if (command) {
-                    // Process the command
-                    ForgeAssist.processCommand(command);
-                    // Clear the input
-                    inputField.value = '';
-                }
-            });
-            
-            // Add Enter key support
-            inputField.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendButton.click();
-                }
-            });
-        }
-        
-        // Setup example chips
-        setupForgeAssistExamples();
-    }
-
-    // This edit needs to be added to the openInspector function
-    function openInspector() {
-        inspectorPanel.classList.add('is-visible');
-        document.body.classList.add('inspector-is-visible');
-        
-        // Update ForgeAssist tab with current context
-        populateForgeAssistTab();
-    }
-
-    // This edit needs to be added to the handleSelection function or wherever selection updates are handled
-    function handleSelection(element, isMultiSelect = false) {
-        if (!isMultiSelect) {
-            // Clear previous selection when not in multi-select
-            clearSelection();
-        }
-
-        // Add selection styling
-        element.classList.add('selected');
-        selectedElements.add(element);
-        selectedElement = element;
-
-        // Open inspector or update if already open
-        if (!inspectorPanel.classList.contains('is-visible')) {
-            openInspector();
-        } else {
-            // Just update the tabs with the new selection
-            populateDetailsTab(element);
-            populateForgeAssistTab(); // Update ForgeAssist with new selection
-        }
-
-        // Update ForgeAssist context
-        if (typeof ForgeAssist !== 'undefined' && ForgeAssist.updateContext) {
-            ForgeAssist.updateContext(selectedElement, selectedElements);
-        }
-    }
-
-    // Add initialization of ForgeAssist chat in the DOMContentLoaded event handler
-    document.addEventListener('DOMContentLoaded', () => {
-        // Existing initialization code...
-        
-        // Initialize ForgeAssist related features
-        initForgeAssistChat();
-        
-        // More existing code...
-    });
 
 }); // End DOMContentLoaded 
