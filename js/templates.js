@@ -780,11 +780,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (hubBrowseTemplatesBtn) {
             hubBrowseTemplatesBtn.addEventListener('click', () => {
                 console.log("Templates: Opening templates modal");
+                const templatesModal = document.getElementById('templates-modal');
                 if (templatesModal) {
                     // Reset any inline styles that might have been applied when closing
                     templatesModal.style.display = '';
                     templatesModal.style.opacity = '';
                     templatesModal.style.visibility = '';
+                    
+                    // Re-render templates before showing the modal
+                    const templatesList = document.getElementById('templates-list');
+                    if (templatesList) {
+                        renderTemplates();
+                    }
                     
                     // Add the visible class 
                     templatesModal.classList.add('is-visible');
@@ -853,24 +860,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Open template preview modal when Preview button is clicked
-        templatesList.addEventListener('click', (e) => {
-            const previewBtn = e.target.closest('.template-preview-btn');
-            const useBtn = e.target.closest('.template-use-btn');
-            
-            if (previewBtn) {
-                e.preventDefault();
-                const templateId = previewBtn.getAttribute('data-id');
-                if (templateId) {
-                    showTemplatePreview(templateId);
+        if (templatesList) {
+            templatesList.addEventListener('click', (e) => {
+                const previewBtn = e.target.closest('.template-preview-btn');
+                const useBtn = e.target.closest('.template-use-btn');
+                
+                if (previewBtn) {
+                    e.preventDefault();
+                    const templateId = previewBtn.getAttribute('data-id');
+                    if (templateId) {
+                        showTemplatePreview(templateId);
+                    }
+                } else if (useBtn) {
+                    e.preventDefault();
+                    const templateId = useBtn.getAttribute('data-id');
+                    if (templateId) {
+                        useTemplate(templateId);
+                    }
                 }
-            } else if (useBtn) {
-                e.preventDefault();
-                const templateId = useBtn.getAttribute('data-id');
-                if (templateId) {
-                    useTemplate(templateId);
-                }
-            }
-        });
+            });
+        } else {
+            console.error("Templates module: Cannot attach click event to templatesList - element not found");
+        }
         
         // Use template button in preview modal
         if (useTemplateBtn && currentTemplateId) {
