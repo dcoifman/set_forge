@@ -465,4 +465,331 @@
 
 .template-card[data-category="sport"] .template-header {
     background-color: rgba(117, 58, 136, 0.2);
+}
+
+/* Template Browser Styles */
+
+/* Modal Header */
+.templates-content h4 {
+    font-size: 1.8rem;
+    margin: 0 0 1.5rem 0;
+    color: white;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* Filter Section */
+.templates-filter {
+    margin-bottom: 2rem;
+}
+
+#templates-search {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background-color: rgba(30, 30, 40, 0.6);
+    color: white;
+    font-size: 1rem;
+    margin-bottom: 1.2rem;
+    transition: all 0.2s ease;
+}
+
+#templates-search:focus {
+    outline: none;
+    border-color: rgba(58, 123, 213, 0.5);
+    box-shadow: 0 0 0 2px rgba(58, 123, 213, 0.2);
+}
+
+.templates-categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.template-category-btn {
+    padding: 7px 15px;
+    background-color: rgba(40, 40, 50, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 50px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.template-category-btn:hover {
+    background-color: rgba(58, 123, 213, 0.15);
+    color: white;
+}
+
+.template-category-btn.active {
+    background-color: rgba(58, 123, 213, 0.25);
+    border-color: rgba(58, 123, 213, 0.7);
+    color: white;
+    font-weight: 500;
+}
+
+/* Template Grid */
+.templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 20px;
+}
+
+/* Template Card */
+.template-card {
+    background: linear-gradient(135deg, rgba(30, 32, 40, 0.8), rgba(20, 22, 30, 0.9));
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    animation: cardAppear 0.5s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+    display: flex;
+    flex-direction: column;
+}
+
+.template-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes cardAppear {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.templates-grid .template-card:nth-child(1) { animation-delay: 0.05s; }
+.templates-grid .template-card:nth-child(2) { animation-delay: 0.1s; }
+.templates-grid .template-card:nth-child(3) { animation-delay: 0.15s; }
+.templates-grid .template-card:nth-child(4) { animation-delay: 0.2s; }
+.templates-grid .template-card:nth-child(5) { animation-delay: 0.25s; }
+.templates-grid .template-card:nth-child(6) { animation-delay: 0.3s; }
+.templates-grid .template-card:nth-child(7) { animation-delay: 0.35s; }
+.templates-grid .template-card:nth-child(8) { animation-delay: 0.4s; }
+
+/* Card Header */
+.template-header {
+    padding: 15px 20px;
+    margin-bottom: 5px;
+}
+
+.template-card[data-category="strength"] .template-header {
+    background: linear-gradient(135deg, rgba(58, 123, 213, 0.2), rgba(58, 123, 213, 0.3));
+}
+
+.template-card[data-category="hypertrophy"] .template-header {
+    background: linear-gradient(135deg, rgba(255, 112, 59, 0.2), rgba(255, 112, 59, 0.3));
+}
+
+.template-card[data-category="powerlifting"] .template-header {
+    background: linear-gradient(135deg, rgba(204, 43, 94, 0.2), rgba(204, 43, 94, 0.3));
+}
+
+.template-card[data-category="olympic"] .template-header {
+    background: linear-gradient(135deg, rgba(76, 161, 175, 0.2), rgba(76, 161, 175, 0.3));
+}
+
+.template-card[data-category="endurance"] .template-header {
+    background: linear-gradient(135deg, rgba(95, 108, 129, 0.2), rgba(95, 108, 129, 0.3));
+}
+
+.template-card[data-category="sport"] .template-header {
+    background: linear-gradient(135deg, rgba(117, 58, 136, 0.2), rgba(117, 58, 136, 0.3));
+}
+
+.template-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: white;
+    line-height: 1.3;
+}
+
+.template-author {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+}
+
+.template-category-icon {
+    font-size: 1.8rem;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    opacity: 0.8;
+}
+
+/* Template Body */
+.template-body {
+    padding: 10px 20px 15px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.template-description {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0 0 15px 0;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+/* Template Metadata */
+.template-metadata {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 15px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+}
+
+.template-metadata span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Template Focus Areas */
+.template-focus-areas {
+    margin-bottom: 15px;
+}
+
+.template-focus-tag {
+    display: inline-block;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+    cursor: default;
+    transition: background-color 0.2s ease;
+}
+
+.template-focus-tag:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: white;
+}
+
+/* Star Rating */
+.template-rating {
+    display: flex;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rating-stars {
+    color: #FFD700;
+    font-size: 1rem;
+    letter-spacing: 2px;
+}
+
+.rating-value {
+    margin-left: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+}
+
+/* Template Card Footer */
+.template-footer {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.template-preview-btn,
+.template-use-btn {
+    flex: 1;
+    padding: 8px 0;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.template-preview-btn {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.template-preview-btn:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+.template-use-btn {
+    background-color: rgba(58, 123, 213, 0.4);
+    color: white;
+}
+
+.template-use-btn:hover {
+    background-color: rgba(58, 123, 213, 0.6);
+}
+
+/* Template Preview Modal */
+.template-preview-content {
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalFadeIn 0.4s ease-out;
+}
+
+.template-preview-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.template-preview-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.template-preview-title {
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+    color: white;
+}
+
+.template-preview-author {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+}
+
+.template-preview-description {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 2rem;
+}
+
+.no-templates-msg {
+    text-align: center;
+    padding: 3rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.1rem;
 } 

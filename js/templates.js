@@ -404,31 +404,29 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="template-header">
                 <h3 class="template-title">${template.title}</h3>
                 <p class="template-author">By ${template.author}</p>
-                <span class="template-animation-icon">${animationIcon}</span>
+                <div class="template-category-icon">${animationIcon}</div>
             </div>
             <div class="template-body">
                 <p class="template-description">${template.description.length > 150 ? template.description.substring(0, 150) + '...' : template.description}</p>
                 <div class="template-metadata">
-                    <span class="template-meta-item">
-                        <span class="template-meta-icon">⏱️</span> ${template.weeks} weeks
+                    <span>
+                        ⏱️ ${template.weeks} weeks
                     </span>
-                    <span class="template-meta-item">
-                        <span class="template-meta-icon">💪</span> ${template.level}
+                    <span>
+                        💪 ${template.level}
                     </span>
-                    <span class="template-meta-item">
-                        <span class="template-meta-icon">🔄</span> ${template.sessions}x/week
+                    <span>
+                        🔄 ${template.sessions}x/week
                     </span>
                 </div>
                 <div class="template-focus-areas">
                     ${template.focus.map(area => `<span class="template-focus-tag">${area}</span>`).join('')}
                 </div>
-            </div>
-            <div class="template-footer">
                 <div class="template-rating">
-                    <span class="template-rating-stars">${starsHtml}</span>
-                    <span>${template.rating}</span>
+                    <div class="rating-stars">${starsHtml}</div>
+                    <div class="rating-value">${template.rating}</div>
                 </div>
-                <div>
+                <div class="template-footer">
                     <button class="template-preview-btn" data-id="${template.id}">Preview</button>
                     <button class="template-use-btn" data-id="${template.id}">Use</button>
                 </div>
