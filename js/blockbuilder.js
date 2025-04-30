@@ -162,7 +162,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Periodization Model Manager
     if (typeof PeriodizationModelManager !== 'undefined') {
         const periodizationManagerInstance = new PeriodizationModelManager();
-        periodizationManagerInstance.init({ showToast, createWorkoutCard, getBlockStateHelper, getTotalWeeksHelper });
+        periodizationManagerInstance.init({ 
+            showToast, 
+            createWorkoutCard, 
+            getBlockStateHelper, 
+            getTotalWeeksHelper,
+            getPeriodizationEngine // Add the missing dependency function
+        });
         // Make the instance available globally if needed by other parts (optional)
         window.periodizationManager = periodizationManagerInstance; 
     } else {

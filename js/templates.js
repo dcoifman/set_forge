@@ -722,7 +722,14 @@ document.addEventListener('DOMContentLoaded', function() {
             hubBrowseTemplatesBtn.addEventListener('click', () => {
                 console.log("Templates: Opening templates modal");
                 if (templatesModal) {
+                    // Reset any inline styles that might have been applied when closing
+                    templatesModal.style.display = '';
+                    templatesModal.style.opacity = '';
+                    templatesModal.style.visibility = '';
+                    
+                    // Add the visible class 
                     templatesModal.classList.add('is-visible');
+                    
                     // Force layout calculation for animation
                     window.requestAnimationFrame(() => {
                         templatesModal.style.opacity = '1';
@@ -739,8 +746,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log("Templates modal close button clicked");
                 templatesModal.classList.remove('is-visible');
                 
-                // Added direct style changes as backup for visibility
-                templatesModal.style.display = 'none';
+                // Only modify opacity and visibility, DO NOT set display:none
                 templatesModal.style.opacity = '0';
                 templatesModal.style.visibility = 'hidden';
             });
@@ -756,8 +762,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log("Template preview modal close button clicked");
                 templatePreviewModal.classList.remove('is-visible');
                 
-                // Added direct style changes as backup for visibility
-                templatePreviewModal.style.display = 'none';
+                // Only modify opacity and visibility, DO NOT set display:none
                 templatePreviewModal.style.opacity = '0';
                 templatePreviewModal.style.visibility = 'hidden';
             });
