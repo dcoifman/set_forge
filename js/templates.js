@@ -939,6 +939,11 @@ function createCategoryAnimation(category) {
     
     switch(category) {
         case 'hypertrophy':
+            // Create the floor gradient line
+            const floor = document.createElement('div');
+            floor.className = 'floor';
+            container.appendChild(floor);
+            
             for (let i = 0; i < 5; i++) {
                 const bar = document.createElement('div');
                 bar.className = 'bar';
@@ -950,6 +955,13 @@ function createCategoryAnimation(category) {
             const weight = document.createElement('div');
             weight.className = 'weight';
             container.appendChild(weight);
+            
+            // Add barbell plates
+            for (let i = 0; i < 2; i++) {
+                const plate = document.createElement('div');
+                plate.className = 'plate';
+                container.appendChild(plate);
+            }
             break;
             
         case 'powerlifting':
@@ -989,6 +1001,13 @@ function createCategoryAnimation(category) {
             const runner = document.createElement('div');
             runner.className = 'runner';
             
+            // Add dust particles
+            for (let i = 0; i < 3; i++) {
+                const dust = document.createElement('div');
+                dust.className = 'dust';
+                container.appendChild(dust);
+            }
+            
             container.appendChild(track);
             container.appendChild(runner);
             break;
@@ -1000,8 +1019,13 @@ function createCategoryAnimation(category) {
             const figure = document.createElement('div');
             figure.className = 'figure';
             
+            // Add shadow element
+            const shadow = document.createElement('div');
+            shadow.className = 'shadow';
+            
             container.appendChild(surface);
             container.appendChild(figure);
+            container.appendChild(shadow);
             break;
             
         default:

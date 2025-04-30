@@ -485,14 +485,31 @@ body > .template-card,
 }
 
 .template-visual {
-    height: 150px;
-    margin-bottom: 20px;
-    border-radius: 8px;
+    height: 180px;
+    margin-bottom: 30px;
+    border-radius: 12px;
     overflow: hidden;
     position: relative;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     animation: fadeIn 0.5s ease-out 0.4s forwards;
     opacity: 0;
+    background: linear-gradient(135deg, rgba(20, 22, 30, 0.8), rgba(30, 32, 40, 0.9));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    transform-style: preserve-3d;
+    perspective: 800px;
+}
+
+.template-visual::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 50%);
+    z-index: 1;
+    pointer-events: none;
 }
 
 .template-visual-content {
@@ -504,201 +521,492 @@ body > .template-card,
     display: flex;
     align-items: center;
     justify-content: center;
+    transform-style: preserve-3d;
+    perspective: 800px;
+    z-index: 2;
 }
 
 /* Program-specific animations */
+/* HYPERTROPHY ANIMATION */
+.hypertrophy-animation {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    perspective: 800px;
+    transform-style: preserve-3d;
+    position: relative;
+}
+
+.hypertrophy-animation::before {
+    content: '';
+    position: absolute;
+    bottom: 20px;
+    width: 80%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(230, 90, 42, 0.5), transparent);
+    z-index: 0;
+}
+
 .hypertrophy-animation .bar {
-    width: 10px;
-    height: 30px;
-    background-color: #e65a2a;
-    margin: 0 5px;
-    border-radius: 2px;
-    animation: grow 1.5s infinite;
+    width: 14px;
+    height: 40px;
+    background: linear-gradient(to top, #e65a2a, #ff8a5c);
+    margin: 0 8px;
+    border-radius: 3px;
+    box-shadow: 0 4px 12px rgba(230, 90, 42, 0.3);
+    position: relative;
+    animation: grow 1.8s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: bottom;
+}
+
+.hypertrophy-animation .bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 30%;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), transparent);
+    border-radius: 3px 3px 0 0;
+}
+
+.hypertrophy-animation .bar:nth-child(1) {
+    animation-delay: 0s;
+    height: 50px;
 }
 
 .hypertrophy-animation .bar:nth-child(2) {
     animation-delay: 0.2s;
-    height: 40px;
+    height: 70px;
 }
 
 .hypertrophy-animation .bar:nth-child(3) {
     animation-delay: 0.4s;
-    height: 50px;
+    height: 90px;
 }
 
 .hypertrophy-animation .bar:nth-child(4) {
     animation-delay: 0.6s;
-    height: 60px;
+    height: 70px;
 }
 
 .hypertrophy-animation .bar:nth-child(5) {
     animation-delay: 0.8s;
-    height: 70px;
+    height: 50px;
 }
 
 @keyframes grow {
     0%, 100% { transform: scaleY(1); }
-    50% { transform: scaleY(1.2); }
+    50% { transform: scaleY(1.3); filter: brightness(1.2); }
+}
+
+/* STRENGTH ANIMATION */
+.strength-animation {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 800px;
+    transform-style: preserve-3d;
 }
 
 .strength-animation .weight {
     width: 80px;
     height: 80px;
-    background-color: #3a7bd5;
+    background: radial-gradient(circle at 30% 30%, #6ca6ff, #3a7bd5);
     border-radius: 50%;
     position: relative;
-    animation: pulse 2s infinite;
+    animation: pulse 3s infinite;
+    box-shadow: 0 5px 25px rgba(58, 123, 213, 0.4);
+    transform-style: preserve-3d;
 }
 
 .strength-animation .weight::before,
 .strength-animation .weight::after {
     content: '';
     position: absolute;
-    width: 100px;
-    height: 10px;
-    background-color: #3a7bd5;
-    top: 35px;
+    width: 120px;
+    height: 12px;
+    background: linear-gradient(90deg, #3a7bd5, #6ca6ff);
+    border-radius: 6px;
+    top: 34px;
+    box-shadow: 0 4px 15px rgba(58, 123, 213, 0.3);
 }
 
 .strength-animation .weight::before {
-    left: -90px;
+    left: -110px;
+    transform: translateZ(5px);
 }
 
 .strength-animation .weight::after {
-    right: -90px;
+    right: -110px;
+    transform: translateZ(5px);
+}
+
+.strength-animation .plate {
+    position: absolute;
+    width: 35px;
+    height: 85px;
+    background: radial-gradient(circle at 30% 30%, #3a7bd5, #2950a1);
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.strength-animation .plate:nth-child(1) {
+    left: -125px;
+    transform: translateZ(10px);
+}
+
+.strength-animation .plate:nth-child(2) {
+    right: -125px;
+    transform: translateZ(10px);
 }
 
 @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    25% { transform: scale(1.1) rotate(-2deg); filter: brightness(1.1); }
+    75% { transform: scale(1.1) rotate(2deg); filter: brightness(1.1); }
+}
+
+/* POWERLIFTING ANIMATION */
+.powerlifting-animation {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1000px;
+    position: relative;
+}
+
+.powerlifting-animation::after {
+    content: '';
+    position: absolute;
+    bottom: 25px;
+    width: 100px;
+    height: 8px;
+    background: radial-gradient(ellipse at center, rgba(204, 43, 94, 0.3), transparent 70%);
+    border-radius: 50%;
+    filter: blur(3px);
+    animation: shadowMove 3s infinite;
 }
 
 .powerlifting-animation .bar {
-    width: 120px;
-    height: 10px;
-    background-color: #cc2b5e;
+    width: 130px;
+    height: 12px;
+    background: linear-gradient(90deg, #cc2b5e, #ec466a);
     position: relative;
-    animation: lift 3s infinite;
+    border-radius: 6px;
+    animation: lift 3s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(204, 43, 94, 0.3);
+    transform-style: preserve-3d;
+    z-index: 2;
 }
 
 .powerlifting-animation .weight {
-    width: 30px;
-    height: 30px;
-    background-color: #cc2b5e;
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle at 30% 30%, #ff5b82, #cc2b5e);
     border-radius: 50%;
     position: absolute;
+    box-shadow: 0 4px 12px rgba(204, 43, 94, 0.3);
+    z-index: 1;
 }
 
 .powerlifting-animation .weight:first-child {
-    left: -15px;
-    top: -10px;
+    left: -20px;
+    top: -14px;
+    transform: translateZ(5px);
 }
 
 .powerlifting-animation .weight:last-child {
-    right: -15px;
-    top: -10px;
+    right: -20px;
+    top: -14px;
+    transform: translateZ(5px);
 }
 
 @keyframes lift {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-20px); }
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    10% { transform: translateY(-5px) rotate(0deg); }
+    40% { transform: translateY(-40px) rotate(0deg); }
+    50% { transform: translateY(-40px) rotate(0deg); filter: brightness(1.2); }
+    60% { transform: translateY(-40px) rotate(0deg); }
+    90% { transform: translateY(-5px) rotate(0deg); }
+}
+
+@keyframes shadowMove {
+    0%, 100% { transform: scale(1) opacity(0.5); }
+    50% { transform: scale(0.7) opacity(0.2); }
+}
+
+/* OLYMPIC ANIMATION */
+.olympic-animation {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1000px;
+    position: relative;
+}
+
+.olympic-animation::after {
+    content: '';
+    position: absolute;
+    bottom: 25px;
+    width: 100px;
+    height: 8px;
+    background: radial-gradient(ellipse at center, rgba(76, 161, 175, 0.3), transparent 70%);
+    border-radius: 50%;
+    filter: blur(3px);
+    animation: shadowMove 3s infinite;
 }
 
 .olympic-animation .bar {
-    width: 100px;
-    height: 8px;
-    background-color: #4ca1af;
+    width: 120px;
+    height: 10px;
+    background: linear-gradient(90deg, #4ca1af, #7dd8e6);
     position: relative;
-    animation: clean 3s infinite;
+    border-radius: 5px;
+    animation: clean 3.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(76, 161, 175, 0.3);
+    transform-style: preserve-3d;
 }
 
 .olympic-animation .weight {
-    width: 25px;
-    height: 25px;
-    background-color: #4ca1af;
+    width: 35px;
+    height: 35px;
+    background: radial-gradient(circle at 30% 30%, #7dd8e6, #4ca1af);
     border-radius: 50%;
     position: absolute;
+    box-shadow: 0 4px 12px rgba(76, 161, 175, 0.3);
 }
 
 .olympic-animation .weight:first-child {
-    left: -20px;
-    top: -8px;
+    left: -22px;
+    top: -12px;
+    transform: translateZ(5px);
 }
 
 .olympic-animation .weight:last-child {
-    right: -20px;
-    top: -8px;
+    right: -22px;
+    top: -12px;
+    transform: translateZ(5px);
 }
 
 @keyframes clean {
-    0%, 100% { transform: translateY(0); }
-    25% { transform: translateY(-40px); }
-    50% { transform: translateY(-20px) rotate(-180deg); }
-    75% { transform: translateY(0) rotate(-180deg); }
+    0%, 100% { transform: translateY(0) rotateX(0deg); }
+    25% { transform: translateY(-40px) rotateX(0deg); }
+    30% { transform: translateY(-38px) rotateX(10deg); }
+    40% { transform: translateY(-30px) rotateX(180deg); filter: brightness(1.2); }
+    50% { transform: translateY(-20px) rotateX(180deg); }
+    60% { transform: translateY(-10px) rotateX(180deg); }
+    75% { transform: translateY(0) rotateX(180deg); }
+    85% { transform: translateY(0) rotateX(90deg); }
+}
+
+/* ENDURANCE ANIMATION */
+.endurance-animation {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.endurance-animation .track {
+    width: 140%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent 0%, rgba(95, 108, 129, 0.3) 20%, rgba(95, 108, 129, 0.3) 80%, transparent 100%);
+    position: absolute;
+    bottom: 30px;
+    left: -20%;
+    border-radius: 2px;
+}
+
+.endurance-animation .track::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 15px;
+    bottom: -15px;
+    background: radial-gradient(ellipse at top, rgba(95, 108, 129, 0.15), transparent 70%);
+    filter: blur(3px);
 }
 
 .endurance-animation .runner {
-    width: 15px;
-    height: 30px;
-    background-color: #5f6c81;
-    border-radius: 50% 50% 0 0;
-    position: relative;
-    animation: run 3s infinite linear;
+    width: 12px;
+    height: 25px;
+    background: linear-gradient(to top, #5f6c81, #8a99b1);
+    border-radius: 6px 6px 0 0;
+    position: absolute;
+    bottom: 32px;
+    animation: run 3s infinite cubic-bezier(0.4, 0, 0.2, 1), bounce 0.5s infinite alternate;
+    transform-origin: bottom;
 }
 
 .endurance-animation .runner::before {
     content: '';
     position: absolute;
-    width: 15px;
-    height: 15px;
-    background-color: #5f6c81;
+    width: 12px;
+    height: 12px;
+    background: radial-gradient(circle at 30% 30%, #8a99b1, #5f6c81);
     border-radius: 50%;
-    bottom: -8px;
+    bottom: -6px;
     left: 0;
 }
 
-.endurance-animation .track {
-    width: 200px;
-    height: 2px;
-    background-color: #5f6c81;
+.endurance-animation .runner::after {
+    content: '';
     position: absolute;
-    bottom: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    top: 4px;
+    left: 2px;
+}
+
+.endurance-animation .dust {
+    position: absolute;
+    bottom: 32px;
+    width: 5px;
+    height: 5px;
+    background: rgba(95, 108, 129, 0.3);
+    border-radius: 50%;
+    animation: dust 0.5s infinite both;
+}
+
+.endurance-animation .dust:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.endurance-animation .dust:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.endurance-animation .dust:nth-child(3) {
+    animation-delay: 0.5s;
 }
 
 @keyframes run {
-    0% { transform: translateX(-100px); }
-    100% { transform: translateX(100px); }
+    0% { transform: translateX(-60px) rotate(0deg); }
+    15% { transform: translateX(-30px) rotate(10deg); }
+    30% { transform: translateX(0px) rotate(0deg); }
+    45% { transform: translateX(30px) rotate(-10deg); }
+    60% { transform: translateX(60px) rotate(0deg); }
+    75% { transform: translateX(30px) rotate(10deg); }
+    90% { transform: translateX(0px) rotate(0deg); }
+    100% { transform: translateX(-60px) rotate(-10deg); }
+}
+
+@keyframes bounce {
+    0% { transform: scaleY(0.95); }
+    100% { transform: scaleY(1.05); }
+}
+
+@keyframes dust {
+    0% { transform: translateX(0) translateY(0) scale(1); opacity: 0.7; }
+    100% { transform: translateX(-20px) translateY(-10px) scale(0); opacity: 0; }
+}
+
+/* SPORT ANIMATION */
+.sport-animation {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    perspective: 800px;
+}
+
+.sport-animation .surface {
+    width: 120px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, rgba(117, 58, 136, 0.3), transparent);
+    position: absolute;
+    bottom: 30px;
+    border-radius: 1px;
+}
+
+.sport-animation .surface::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 10px;
+    bottom: -10px;
+    left: 0;
+    background: radial-gradient(ellipse at top, rgba(117, 58, 136, 0.15), transparent 70%);
+    filter: blur(3px);
 }
 
 .sport-animation .figure {
-    width: 15px;
+    width: 14px;
     height: 30px;
-    background-color: #753a88;
-    position: relative;
-    animation: jump 2s infinite;
+    background: linear-gradient(to top, #753a88, #a86ccc);
+    position: absolute;
+    bottom: 33px;
+    border-radius: 7px 7px 0 0;
+    animation: jump 1.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: bottom;
+    transform-style: preserve-3d;
 }
 
 .sport-animation .figure::before {
     content: '';
     position: absolute;
-    width: 15px;
-    height: 15px;
-    background-color: #753a88;
+    width: 14px;
+    height: 14px;
+    background: radial-gradient(circle at 30% 30%, #a86ccc, #753a88);
     border-radius: 50%;
-    top: -15px;
+    top: -10px;
+    left: 0;
 }
 
-.sport-animation .surface {
-    width: 100px;
-    height: 2px;
-    background-color: #753a88;
+.sport-animation .figure::after {
+    content: '';
     position: absolute;
-    bottom: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    top: 0;
+    left: 4px;
+}
+
+.sport-animation .shadow {
+    position: absolute;
+    bottom: 28px;
+    width: 25px;
+    height: 5px;
+    background: radial-gradient(ellipse at center, rgba(117, 58, 136, 0.4), transparent 70%);
+    border-radius: 50%;
+    filter: blur(2px);
+    animation: shadow-jump 1.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes jump {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-30px); }
+    0%, 100% { transform: translateY(0) scaleY(1); }
+    10% { transform: translateY(-5px) scaleY(1.05); }
+    30% { transform: translateY(-40px) scaleY(1.1); filter: brightness(1.2); }
+    50% { transform: translateY(-20px) scaleY(1); }
+    70% { transform: translateY(-5px) scaleY(0.95); }
+    75% { transform: translateY(0) scaleY(0.9); }
+    85% { transform: translateY(0) scaleY(1.05); }
+}
+
+@keyframes shadow-jump {
+    0%, 100% { transform: scale(1); opacity: 0.4; }
+    30% { transform: scale(0.6); opacity: 0.1; }
+    75% { transform: scale(1.2); opacity: 0.5; }
+    85% { transform: scale(1); opacity: 0.4; }
 }
 
 /* Category specific colors */
