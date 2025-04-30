@@ -97,7 +97,7 @@ export function getBlockState() {
 
     // Get Periodization Model State
     try {
-        state.periodizationModels = PeriodizationModelManager.getState();
+        state.periodizationModels = window.periodizationManager ? window.periodizationManager.getState() : null;
     } catch (error) {
         console.error("Error getting periodization model state:", error);
         state.periodizationModels = { modelInstances: {}, dayModelMapping: {} }; // Default empty state on error

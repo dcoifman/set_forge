@@ -52,6 +52,9 @@ const blockBuilderContainer = document.querySelector('.block-builder-container')
 const createNewBtn = document.getElementById('hub-create-new'); // Added missing reference
 const browseTemplatesBtn = document.getElementById('hub-browse-templates'); // Added missing reference
 
+// Global variables for managing state
+let currentLoadedVersionTimestamp = null; // Initialize the timestamp variable
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM fully loaded and parsed for blockbuilder.js");
 
@@ -992,7 +995,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveSettingsToLocalStorage(); // Save cleared/updated settings
 
         // 6. Clear Version Tracking & Autosave Keys
-        currentLoadedVersionTimestamp = null;
+        // We've now initialized currentLoadedVersionTimestamp globally, so we don't need to set it here
         localStorage.removeItem(SAVE_KEY);
         // Do NOT remove VERSIONS_KEY or RECENT_BLOCKS_KEY
 
