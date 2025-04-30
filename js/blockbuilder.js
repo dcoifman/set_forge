@@ -155,9 +155,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize Periodization Model Manager
     if (typeof PeriodizationModelManager !== 'undefined') {
-        PeriodizationModelManager.initialize({ showToast, createWorkoutCard, getBlockStateHelper, getTotalWeeksHelper });
+        const periodizationManagerInstance = new PeriodizationModelManager();
+        periodizationManagerInstance.init({ showToast, createWorkoutCard, getBlockStateHelper, getTotalWeeksHelper });
+        // Make the instance available globally if needed by other parts (optional)
+        window.periodizationManager = periodizationManagerInstance; 
     } else {
-        console.error("PeriodizationModelManager is not defined!");
+        console.error("PeriodizationModelManager Class is not defined!");
     }
 
     // Initialize Analytics Updater (if available)

@@ -667,6 +667,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Make the templates list display as a grid
+    function applyTemplateGridLayout() {
+        // Ensure templatesList is defined before adding class
+        if (templatesList) { 
+            templatesList.classList.add('templates-grid');
+        } else {
+             console.error("applyTemplateGridLayout: templatesList not found when trying to add class.");
+        }
+    }
+    
     // Initialize on load
     init();
 });
@@ -774,9 +784,4 @@ function createCategoryAnimation(category) {
     }
     
     return container;
-}
-
-// Make the templates list display as a grid
-function applyTemplateGridLayout() {
-    templatesList.classList.add('templates-grid');
 } 
