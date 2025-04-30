@@ -390,11 +390,18 @@ document.addEventListener('DOMContentLoaded', function() {
     function init() {
         console.log("Templates module initializing...");
         try {
+            console.log("Templates available:", trainingTemplates.length);
+            console.log("DOM Element check:");
+            console.log("- templatesList:", templatesList);
+            console.log("- templatesModal:", templatesModal);
+            
             renderTemplates();
             addEventListeners();
+            
             if (templatesList) {
                 applyTemplateGridLayout();
                 console.log("Templates module initialized successfully");
+                console.log("Current templatesList content:", templatesList.innerHTML);
             } else {
                 console.error("Failed to initialize templates: templatesList element not found");
             }
@@ -405,12 +412,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Render templates in the grid
     function renderTemplates() {
+        console.log("renderTemplates: Starting to render templates");
         if (!templatesList) {
             console.error("renderTemplates: templatesList element not found.");
             return;
         }
+        
+        console.log("renderTemplates: Clearing templatesList innerHTML");
         templatesList.innerHTML = '';
         
+        console.log("renderTemplates: Filtering templates with category:", currentCategory, "and search term:", currentSearchTerm);
         const filteredTemplates = trainingTemplates.filter(template => {
             const matchesCategory = currentCategory === 'all' || template.category === currentCategory;
             const matchesSearch = template.title.toLowerCase().includes(currentSearchTerm.toLowerCase()) || 
@@ -418,19 +429,27 @@ document.addEventListener('DOMContentLoaded', function() {
             return matchesCategory && matchesSearch;
         });
         
+        console.log("renderTemplates: Filtered templates count:", filteredTemplates.length);
+        
         if (filteredTemplates.length === 0) {
+            console.log("renderTemplates: No templates to display, showing message");
             templatesList.innerHTML = '<p class="no-templates">No templates found matching your criteria.</p>';
             return;
         }
         
-        filteredTemplates.forEach(template => {
+        console.log("renderTemplates: Creating and appending template cards");
+        filteredTemplates.forEach((template, index) => {
+            console.log(`renderTemplates: Creating card ${index + 1}/${filteredTemplates.length} - ${template.title}`);
             const templateCard = createTemplateCard(template);
             templatesList.appendChild(templateCard);
         });
+        
+        console.log("renderTemplates: All template cards appended");
     }
 
     // Create a template card element
     function createTemplateCard(template) {
+        console.log("createTemplateCard: Creating card for", template.id);
         const card = document.createElement('div');
         card.className = 'template-card';
         card.setAttribute('data-id', template.id);
@@ -452,6 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Get category-specific animation icon
         const animationIcon = getCategoryIcon(template.category);
         
+        console.log("createTemplateCard: Building HTML content");
         card.innerHTML = `
             <div class="template-header">
                 <h3 class="template-title">${template.title}</h3>
@@ -485,6 +505,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
+        console.log("createTemplateCard: Card created with dimensions", card.offsetWidth, "x", card.offsetHeight);
         return card;
     }
 
