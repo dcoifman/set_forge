@@ -743,7 +743,6 @@ function _calculateLinearDay(modelInstance, weekIndex, dayOfWeek, isDeloadWeek) 
             // Generate card for the main linear exercise
             exercises.push({
                 exerciseName: exerciseName,
-                id: exerciseId, // <<< ADDED ID FIELD >>>
                 sets: sets,
                 reps: baseReps,
                 loadType: loadType,

@@ -1276,8 +1276,10 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="card-face card-front">
                 <!-- Badge Placeholder - content added dynamically -->
                 <div class="card-model-badge-indicator" style="display: none;"></div> 
-                <!-- Name and Details moved out of wrapper -->
-                <div class="exercise-name">${exerciseName}</div>
+                <!-- Make exercise name more prominent with larger text, background, and padding -->
+                <div class="exercise-name-container">
+                    <div class="exercise-name">${exerciseName}</div>
+                </div>
                 <div class="exercise-details">
                     <span class="sets-reps">${card.dataset.sets}x${card.dataset.reps}</span>
                     <span class="load">${card.dataset.loadType} ${card.dataset.loadValue}</span>
