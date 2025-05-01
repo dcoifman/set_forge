@@ -3182,13 +3182,13 @@ body.show-hub #back-to-hub-btn {
     padding-bottom: 0.7em;
 }
 
-/* Basic glass-like workout card */
+/* Compact by default, expand on week-expanded */
 .workout-card {
   background: rgba(40, 44, 52, 0.7);
-  border-radius: 14px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
-  backdrop-filter: blur(8px) saturate(1.1);
-  padding: 1em 1.2em 0.7em 1.2em;
+  border-radius: 9px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.10);
+  backdrop-filter: blur(6px) saturate(1.05);
+  padding: 0.5em 0.7em 0.4em 0.7em;
   margin: 0;
   width: 100%;
   min-width: 0;
@@ -3196,58 +3196,85 @@ body.show-hub #back-to-hub-btn {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.5em;
+  gap: 0.3em;
+  transition: all 0.18s cubic-bezier(.4,0,.2,1);
 }
 
 .exercise-name {
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: 0.98rem;
+  font-weight: 600;
   color: #fff;
-  margin: 0 0 0.2em 0;
+  margin: 0 0 0.12em 0;
   letter-spacing: 0.01em;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.13);
   white-space: normal;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: font-size 0.18s cubic-bezier(.4,0,.2,1);
 }
 
 .card-details-row {
   display: flex;
   flex-direction: row;
-  gap: 1em;
+  gap: 0.6em;
   align-items: center;
-  font-size: 0.98em;
+  font-size: 0.85em;
   color: #e6e6e6;
   width: 100%;
+  transition: font-size 0.18s cubic-bezier(.4,0,.2,1);
 }
 
-.card-reps {
-  font-weight: 600;
-  background: rgba(255,255,255,0.10);
-  color: #fff;
-  border-radius: 7px;
-  padding: 0.15em 0.8em;
+.card-reps, .card-difficulty {
+  font-size: 0.95em;
+  border-radius: 5px;
+  padding: 0.09em 0.6em;
 }
 
-.card-difficulty {
-  font-weight: 500;
-  background: rgba(255,255,255,0.08);
-  color: #ff703b;
-  border-radius: 7px;
-  padding: 0.15em 0.8em;
+/* Expanded week: make cards larger and more readable */
+.week-expanded .workout-card {
+  border-radius: 15px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.13);
+  padding: 1.1em 1.5em 1em 1.5em;
+  gap: 0.7em;
+}
+.week-expanded .workout-card .exercise-name {
+  font-size: 1.22rem;
+  font-weight: 700;
+  margin-bottom: 0.22em;
+}
+.week-expanded .workout-card .card-details-row {
+  font-size: 1.05em;
+  gap: 1.1em;
+}
+.week-expanded .workout-card .card-reps, .week-expanded .workout-card .card-difficulty {
+  font-size: 1.08em;
+  border-radius: 8px;
+  padding: 0.18em 0.9em;
 }
 
 @media (max-width: 600px) {
   .workout-card {
-    padding: 0.7em 0.6em 0.5em 0.6em;
-    gap: 0.3em;
+    padding: 0.4em 0.4em 0.3em 0.4em;
+    gap: 0.18em;
+  }
+  .exercise-name {
+    font-size: 0.9rem;
   }
   .card-details-row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.2em;
+    gap: 0.13em;
+    font-size: 0.8em;
   }
-  .exercise-name {
-    font-size: 1rem;
+  .week-expanded .workout-card {
+    padding: 0.7em 0.7em 0.5em 0.7em;
+    gap: 0.3em;
+  }
+  .week-expanded .workout-card .exercise-name {
+    font-size: 1.05rem;
+  }
+  .week-expanded .workout-card .card-details-row {
+    font-size: 0.95em;
+    gap: 0.5em;
   }
 }
