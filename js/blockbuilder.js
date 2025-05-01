@@ -1272,27 +1272,29 @@ document.addEventListener('DOMContentLoaded', () => {
         // TODO: Add visual icon if modelDriven is true (Phase 4)
 
         // --- Card Content ---
-        // Look up difficulty from library if not provided
-        let difficultyText = options.difficulty || card.dataset.difficulty || '';
-        if (!difficultyText && options.exerciseId && typeof findExerciseById === 'function') {
-            const exObj = findExerciseById(options.exerciseId);
-            if (exObj && exObj.difficulty) {
-                difficultyText = exObj.difficulty;
+        // Compose intensity string based on loadType and loadValue
+        let intensityText = '';
+        const loadType = options.loadType || card.dataset.loadType || '';
+        const loadValue = options.loadValue || card.dataset.loadValue || '';
+        if (loadType && loadValue) {
+            if (loadType === 'rpe') {
+                intensityText = `RPE ${loadValue}`;
+            } else if (loadType === 'percent' || loadType === '%') {
+                intensityText = `${loadValue}%`;
+            } else if (loadType === 'weight' || loadType === 'kg' || loadType === 'lb') {
+                intensityText = `${loadValue}${loadType === 'kg' || loadType === 'weight' ? 'kg' : loadType === 'lb' ? 'lb' : ''}`;
+            } else {
+                intensityText = `${loadValue} ${loadType}`;
             }
+        } else {
+            intensityText = '-';
         }
         const repsText = options.sets && options.reps ? `${options.sets}×${options.reps}` : (card.dataset.sets && card.dataset.reps ? `${card.dataset.sets}×${card.dataset.reps}` : '-');
-        let difficultyStars = '';
-        if (difficultyText && !isNaN(Number(difficultyText))) {
-            const level = Math.max(1, Math.min(5, Number(difficultyText)));
-            difficultyStars = '★'.repeat(level);
-        } else if (difficultyText) {
-            difficultyStars = difficultyText;
-        }
         card.innerHTML = `
             <div class="exercise-name">${exerciseName}</div>
             <div class="card-details-row">
                 <span class="card-reps">${repsText}</span>
-                <span class="card-difficulty">${difficultyStars || '-'}</span>
+                <span class="card-intensity">${intensityText}</span>
             </div>
             <div class="card-actions">
                 <button class="card-action-btn edit-btn" title="Edit Exercise">✏️</button>
