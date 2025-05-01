@@ -187,18 +187,21 @@ body {
 
 /* Style for the main day cells */
 .day-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.7em;
+    position: relative;
     grid-column: span 1; /* Each cell takes one column */
     min-height: 120px; /* Minimum height */
     background-color: var(--deep-slate); /* Cell background */
     padding: 0.5rem;
-    position: relative;
     /* Add transition for height change & background/border */
     transition: background-color var(--transition-speed) ease-in-out, 
                 min-height 300ms ease-out,
                 border-color 0.2s ease-in-out; 
     display: flex; /* Allow vertical stacking of cards */
     flex-direction: column;
-    gap: 0.3rem; /* Space between cards */
     overflow: hidden; /* Hide card overflow initially */
     border: 1px solid transparent; /* Add transparent border for smooth hover transition */
 }
@@ -347,6 +350,13 @@ body {
 
 /* --- Enhanced Workout Card Styling --- */
 .workout-card {
+    position: static;
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    z-index: 1;
     background: none;
     border: none;
     box-shadow: none;
@@ -357,6 +367,8 @@ body {
 }
 
 .card-top-bubble {
+    padding: 0.7em 1em 0.5em 1em;
+    min-height: unset;
     background: rgba(30, 32, 38, 0.75);
     border-radius: 18px 18px 0 0;
     box-shadow: 0 4px 24px 0 rgba(0,0,0,0.18), 0 1.5px 6px 0 rgba(var(--primary-rgb,255,112,59),0.08);
@@ -364,62 +376,67 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1em 1.2em 0.7em 1.2em;
     position: relative;
     z-index: 1;
 }
 
 .card-top-bubble .exercise-name {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 800;
     color: #fff;
     letter-spacing: 0.01em;
     text-shadow: 0 2px 8px rgba(0,0,0,0.22), 0 1px 0 rgba(var(--primary-rgb,255,112,59),0.12);
-    margin: 0 0.7em 0 0;
+    margin: 0 0.5em 0 0;
     flex: 1 1 auto;
     text-align: left;
     line-height: 1.2;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60%;
 }
 
 .card-reps, .card-difficulty {
-    display: flex;
-    align-items: center;
     font-size: 1em;
-    font-weight: 600;
+    font-weight: 700;
+    background: rgba(255,255,255,0.10);
+    color: #fff;
     border-radius: 8px;
     padding: 0.18em 0.7em;
     margin-left: 0.2em;
     margin-right: 0;
-    background: rgba(255,255,255,0.10);
-    color: #e6e6e6;
     box-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
 
 .card-difficulty {
+    font-size: 0.95em;
+    font-weight: 600;
     color: var(--primary-accent, #ff703b);
     background: rgba(var(--primary-rgb,255,112,59), 0.13);
-    font-weight: 700;
+    border-radius: 8px;
+    padding: 0.18em 0.7em;
+    margin-left: 0.2em;
+    margin-right: 0;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
 
 .card-bottom-band {
-    background: linear-gradient(90deg, var(--primary-accent, #ff703b) 60%, #ffb88c 100%);
+    padding: 0.3em 1em;
+    min-height: 1.6em;
     border-radius: 0 0 18px 18px;
+    background: linear-gradient(90deg, var(--primary-accent, #ff703b) 60%, #ffb88c 100%);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.5em 1.2em;
-    min-height: 2.2em;
     box-shadow: 0 2px 8px 0 rgba(var(--primary-rgb,255,112,59),0.08);
     position: relative;
     z-index: 0;
 }
 
 .card-bottom-band .card-reps {
-    background: rgba(255,255,255,0.18);
-    color: #fff;
-    font-weight: 700;
-    margin-right: 0.5em;
+    display: none;
 }
+
 .card-bottom-band .card-difficulty {
     background: rgba(255,255,255,0.10);
     color: #fff;
@@ -430,13 +447,21 @@ body {
 /* Responsive tweaks for mobile */
 @media (max-width: 600px) {
     .card-top-bubble {
-        padding: 0.7em 0.6em 0.5em 0.6em;
+        padding: 0.5em 0.5em 0.3em 0.5em;
     }
     .card-bottom-band {
-        padding: 0.4em 0.6em;
+        padding: 0.2em 0.5em;
     }
     .card-top-bubble .exercise-name {
-        font-size: 1.05rem;
+        font-size: 0.95rem;
+        max-width: 50%;
+    }
+    .card-reps, .card-difficulty {
+        font-size: 0.9em;
+        padding: 0.12em 0.5em;
+    }
+    .day-cell {
+        gap: 0.4em;
     }
 }
 
