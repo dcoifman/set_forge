@@ -251,37 +251,41 @@
                             <input type="search" id="inspector-search" class="inspector-search library-controls__search" placeholder="Search exercises...">
                         </div>
                         <div class="library-controls__row">
-                            <div class="library-controls__group filter-sort-controls">
-                                <div class="filter-label">Filter:</div>
-                                <select id="library-filter-category" class="library-select" title="Filter by Category">
-                                    <option value="all">All Categories</option>
-                                    <!-- Options added dynamically -->
-                                </select>
-                                <select id="library-filter-equipment" class="library-select" title="Filter by Equipment">
-                                    <option value="all">All Equipment</option>
-                                     <!-- Options added dynamically -->
-                                </select>
-                                <div class="filter-divider"></div>
-                                <div class="filter-label">Sort:</div>
-                                <select id="library-sort" class="library-select" title="Sort Exercises">
-                                    <option value="frequency">Most Used</option>
-                                    <option value="nameAsc">Name (A-Z)</option>
-                                    <option value="nameDesc">Name (Z-A)</option>
-                                    <option value="category">Category</option>
-                                </select>
-                                <button id="library-toggle-favorites" class="library-toggle-btn" title="Show Favorites Only">⭐</button>
-                            </div>
-                            <div class="library-controls__group view-add-controls">
-                                <div class="view-mode-buttons">
-                                    <span class="view-label">View:</span>
-                                    <button id="view-mode-standard" class="library-toggle-btn active" title="Standard View">☰</button>
-                                    <button id="view-mode-compact" class="library-toggle-btn" title="Compact View">📄</button>
+                            <div class="filter-sort-controls-wrapper">
+                                <div class="library-controls__group filter-sort-controls">
+                                    <div class="filter-label">Filter:</div>
+                                    <select id="library-filter-category" class="library-select" title="Filter by Category">
+                                        <option value="all">All Categories</option>
+                                        <!-- Options added dynamically -->
+                                    </select>
+                                    <select id="library-filter-equipment" class="library-select" title="Filter by Equipment">
+                                        <option value="all">All Equipment</option>
+                                         <!-- Options added dynamically -->
+                                    </select>
+                                    <div class="filter-divider"></div>
+                                    <div class="filter-label">Sort:</div>
+                                    <select id="library-sort" class="library-select" title="Sort Exercises">
+                                        <option value="frequency">Most Used</option>
+                                        <option value="nameAsc">Name (A-Z)</option>
+                                        <option value="nameDesc">Name (Z-A)</option>
+                                        <option value="category">Category</option>
+                                    </select>
+                                    <button id="library-toggle-favorites" class="library-toggle-btn" title="Show Favorites Only">⭐</button>
                                 </div>
-                                <div class="add-import-export-buttons">
-                                   <input type="file" id="import-exercises-input" accept=".json" style="display: none;">
-                                   <label for="import-exercises-input" id="import-exercises-label" class="cta-button secondary-cta" title="Import User Exercises">Import</label>
-                                   <button id="export-exercises-btn" class="cta-button secondary-cta" title="Export User Exercises">Export</button>
-                                   <button id="add-exercise-btn" class="cta-button tertiary-cta">+ Add Exercise</button>
+                            </div>
+                            <div class="view-add-controls-wrapper">
+                                <div class="library-controls__group view-add-controls">
+                                    <div class="view-mode-buttons">
+                                        <span class="view-label">View:</span>
+                                        <button id="view-mode-standard" class="library-toggle-btn active" title="Standard View">☰</button>
+                                        <button id="view-mode-compact" class="library-toggle-btn" title="Compact View">📄</button>
+                                    </div>
+                                    <div class="add-import-export-buttons">
+                                       <input type="file" id="import-exercises-input" accept=".json" style="display: none;">
+                                       <label for="import-exercises-input" id="import-exercises-label" class="cta-button secondary-cta" title="Import User Exercises">Import</label>
+                                       <button id="export-exercises-btn" class="cta-button secondary-cta" title="Export User Exercises">Export</button>
+                                       <button id="add-exercise-btn" class="cta-button tertiary-cta">+ Add Exercise</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

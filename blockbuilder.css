@@ -3509,3 +3509,66 @@ body.show-hub #back-to-hub-btn {
     margin-bottom: 0.4em;
   }
 }
+
+/* --- Enhanced Library Controls Grouping & Layout --- */
+.filter-sort-controls-wrapper {
+  background: rgba(40,44,52,0.5);
+  border-radius: 7px;
+  padding: 0.7em 1em;
+  margin-right: 1.2em;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.view-add-controls-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.2em;
+}
+.library-controls__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2em;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+.library-controls__row--stacked {
+  flex-direction: column;
+  gap: 0.7em;
+}
+.filter-label, .view-label {
+  font-weight: 600;
+  color: var(--text-color-light);
+  margin-right: 0.4em;
+  font-size: 0.97em;
+  letter-spacing: 0.01em;
+}
+.filter-divider {
+  height: 1.6em;
+  margin: 0 0.7em;
+  background: rgba(204,209,217,0.18);
+}
+.library-select, .library-toggle-btn {
+  min-width: 120px;
+  font-size: 0.92em;
+}
+.library-toggle-btn {
+  margin-left: 0.2em;
+}
+@media (max-width: 700px) {
+  .library-controls__row {
+    flex-direction: column;
+    gap: 0.7em;
+  }
+  .filter-sort-controls-wrapper, .view-add-controls-wrapper {
+    width: 100%;
+    margin-right: 0;
+    padding: 0.5em 0.5em;
+    justify-content: flex-start;
+  }
+  .add-import-export-buttons {
+    flex-direction: column;
+    gap: 0.5em;
+    width: 100%;
+  }
+}

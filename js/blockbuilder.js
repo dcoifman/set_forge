@@ -3105,30 +3105,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // <<< NEW: Function to handle workout card clicks (opens modal) >>>
     function handleCardClick(cardElement, isShiftKey) {
-        // First handle the selection state
+        console.log('[handleCardClick] Card clicked:', cardElement?.id, 'Shift:', isShiftKey);
+        // Original selection handling logic
         handleSelection(cardElement, isShiftKey);
-        
-        // Update the selected context
         const { selectedElement, selectedElements } = getSelectionState();
+        console.log('[handleCardClick] After handleSelection, selectedElement:', selectedElement?.id, 'selectedElements:', Array.from(selectedElements).map(e => e.id));
         selectedContext.type = 'exercise';
         selectedContext.elements = new Set(selectedElements);
-        
-        // Update multi-select toolbar visibility
         updateMultiSelectToolbarVisibility();
-        
-        // Update ForgeAssist context to ensure it has the latest selection
-        ForgeAssist.updateContext(selectedElement, selectedElements);
-        
-        // Open inspector based on selection count
+        // Always update inspector for selection
+        updateInspectorForSelection();
+        // If it's a single card selection, open inspector
         if (selectedContext.elements.size === 1 && !isShiftKey) {
-            // Single selection - show exercise details
-            updateInspectorForSelection(); // Ensure details are updated before opening
             openInspector(cardElement);
         } else if (selectedContext.elements.size > 1) {
-            // Multi-selection - show multi-select inspector
             openMultiSelectInspector();
         } else {
-            // No selection - close inspector
             closeInspector();
         }
     }
@@ -3351,8 +3343,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (detailModalSwapBtn) detailModalSwapBtn.textContent = 'Suggest Swap'; // Reset text
             detailModalEditBtn.onclick = () => {
                 closeExerciseDetailModal();
-                openInspector(document.getElementById(cardData.id)); // Find card by ID
-                activateTab('details');
+                const cardElement = document.getElementById(cardData.id);
+                if (cardElement) {
+                    handleSelection(cardElement); // Set selection context
+                    updateInspectorForSelection(); // Render correct details
+                    openInspector(cardElement);
+                    activateTab('details');
+                }
             };
             detailModalSwapBtn.onclick = () => {
                 closeExerciseDetailModal();
@@ -3379,22 +3376,38 @@ document.addEventListener('DOMContentLoaded', () => {
             if (detailModalSwapBtn) detailModalSwapBtn.textContent = 'Find Alternatives'; // Change text
             detailModalSwapBtn.onclick = () => {
                 closeExerciseDetailModal();
-                // Trigger swap using only the ID
-                 ForgeAssist.updateContext(null, new Set()); // Clear card context
-                 // Directly call the handler if possible (assuming ForgeAssist is accessible)
-                 // It might be better to have a dedicated ForgeAssist function that accepts only an ID
-                 console.warn('Triggering swap from library context - handler might expect a card element.');
-                 const swapAction = ForgeAssist.getContextualActions().find(a => a.id === 'suggest_swap' || a.id === 'find-alternative');
-                 if(swapAction && typeof swapAction.handler === 'function'){
-                    // The handler currently expects currentContext.selectedElement to be the card
-                    // This won't work perfectly without refactoring handleSuggestSwap.
-                    // For now, we can *try* calling it but it might fail gracefully or require a selected card.
-                    // A better approach: ForgeAssist.suggestSwapById(libraryData.id);
-                    // Let's just show a toast for now.
-                    showToast(`Alternative suggestions for ${libraryData.name} would appear here. (Needs handler update)`, 'info');
-                 } else {
-                    showToast('Could not trigger alternative suggestion.', 'warning');
-                 }
+                // Get swap suggestions for this exercise
+                const suggestions = (typeof ForgeAssist.suggestSwapById === 'function')
+                    ? ForgeAssist.suggestSwapById(libraryData.id)
+                    : [];
+                if (suggestions && suggestions.length > 0) {
+                    let html = `<div class='swap-suggestion-list'><strong>Alternatives for ${libraryData.name}:</strong><ul style='margin:0;padding-left:1.2em;'>`;
+                    suggestions.forEach(sugg => {
+                        html += `<li style='margin-bottom:0.5em;'><span>${sugg.name}</span> <button class='cta-button micro-cta add-alt-btn' data-exercise-id='${sugg.id}' data-exercise-name='${sugg.name}'>Add</button></li>`;
+                    });
+                    html += '</ul></div>';
+                    showToast(html, 'info', 15000);
+                    // Add event listeners to the add buttons after toast renders
+                    setTimeout(() => {
+                        document.querySelectorAll('.add-alt-btn').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                const exId = btn.dataset.exerciseId;
+                                const exName = btn.dataset.exerciseName;
+                                // TODO: Implement logic to add the exercise to the current block/day
+                                showToast(`Added ${exName} to your block (demo only).`, 'success');
+                                // Optionally, close the toast
+                                const toast = btn.closest('.toast');
+                                if (toast) {
+                                    toast.classList.remove('show');
+                                    toast.classList.add('hide');
+                                    setTimeout(() => toast.remove(), 300);
+                                }
+                            });
+                        });
+                    }, 200);
+                } else {
+                    showToast('No suitable alternatives found.', 'info');
+                }
             };
         }
 
