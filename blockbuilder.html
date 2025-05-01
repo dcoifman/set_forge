@@ -645,33 +645,27 @@
                 </div>
                 <h2 id="exercise-detail-title" class="exercise-title">Exercise Details</h2>
             </div>
-            
             <div class="exercise-detail-body">
-                <!-- Left Column for Exercise Info -->
-                <div class="detail-column-left">
-                    <div class="detail-section library-info">
-                        <h5>Exercise Information</h5>
-                        <p><strong>Category:</strong> <span id="detail-library-category">-</span></p>
-                        <p><strong>Description:</strong> <span id="detail-library-description">-</span></p>
-                        <p><strong>Primary Muscles:</strong> <span id="detail-library-muscles">-</span></p>
-                        <p><strong>Equipment:</strong> <span id="detail-library-equipment">-</span></p>
-                        <p><strong>Difficulty:</strong> <span id="detail-library-difficulty">-</span></p>
+                <div class="exercise-info-card">
+                    <div class="info-pill-row">
+                        <span class="info-pill" id="detail-library-category-pill"><!-- icon --> <span id="detail-library-category">-</span></span>
+                        <span class="info-pill" id="detail-library-equipment-pill"><!-- icon --> <span id="detail-library-equipment">-</span></span>
+                        <span class="info-pill" id="detail-library-difficulty-pill"><!-- icon --> <span id="detail-library-difficulty">-</span></span>
                     </div>
+                    <div class="exercise-info-label">Description</div>
+                    <div class="exercise-info-value" id="detail-library-description">-</div>
+                    <div class="exercise-info-label">Primary Muscles</div>
+                    <div class="exercise-info-value" id="detail-library-muscles">-</div>
                 </div>
-
-                <!-- Right Column for Current Specs -->
-                <div class="detail-column-right">
-                    <div class="detail-section current-specs">
-                        <h5>Current Workout Specs</h5>
-                        <p><strong>Sets:</strong> <span id="detail-current-sets">-</span></p>
-                        <p><strong>Reps:</strong> <span id="detail-current-reps">-</span></p>
-                        <p><strong>Load:</strong> <span id="detail-current-load-type">-</span> <span id="detail-current-load-value">-</span></p>
-                        <p><strong>Rest:</strong> <span id="detail-current-rest">-</span></p>
-                        <p><strong>Notes:</strong> <span id="detail-current-notes">-</span></p>
-                    </div>
+                <div class="detail-section current-specs">
+                    <h5>Current Workout Specs</h5>
+                    <p><strong>Sets:</strong> <span id="detail-current-sets">-</span></p>
+                    <p><strong>Reps:</strong> <span id="detail-current-reps">-</span></p>
+                    <p><strong>Load:</strong> <span id="detail-current-load-type">-</span> <span id="detail-current-load-value">-</span></p>
+                    <p><strong>Rest:</strong> <span id="detail-current-rest">-</span></p>
+                    <p><strong>Notes:</strong> <span id="detail-current-notes">-</span></p>
                 </div>
             </div>
-
             <div class="exercise-detail-footer">
                 <button id="detail-modal-edit-btn" class="cta-button secondary-cta">Edit in Inspector</button>
                 <button id="detail-modal-swap-btn" class="cta-button tertiary-cta">Suggest Swap</button>

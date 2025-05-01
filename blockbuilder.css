@@ -2876,9 +2876,9 @@ body.show-hub #back-to-hub-btn {
 }
 
 .version-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 0.75rem 1rem;
     background-color: rgba(255, 255, 255, 0.05);
     border-radius: 6px;
@@ -3115,7 +3115,7 @@ body.show-hub #back-to-hub-btn {
     position: absolute;
     top: 10px;
     right: 8px;
-  display: flex;
+    display: flex;
     gap: 4px;
     opacity: 0;
     transition: opacity 0.2s ease;
@@ -3202,19 +3202,19 @@ body.show-hub #back-to-hub-btn {
 
 .exercise-name {
   font-size: 0.98rem;
-  font-weight: 600;
+    font-weight: 600;
   color: #fff;
   margin: 0 0 0.12em 0;
   letter-spacing: 0.01em;
   text-shadow: 0 1px 2px rgba(0,0,0,0.13);
   white-space: normal;
-  overflow: hidden;
+    overflow: hidden;
   text-overflow: ellipsis;
   transition: font-size 0.18s cubic-bezier(.4,0,.2,1);
 }
 
 .card-details-row {
-  display: flex;
+    display: flex;
   flex-direction: row;
   gap: 0.6em;
   align-items: center;
@@ -3296,9 +3296,9 @@ body.show-hub #back-to-hub-btn {
 .exercise-hero-section {
   background: linear-gradient(90deg, rgba(var(--primary-rgb,255,112,59),0.13), rgba(40,44,52,0.13));
   padding: 1.2em 1.5em 0.7em 1.5em;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   border-radius: 16px 16px 0 0;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
@@ -3314,17 +3314,17 @@ body.show-hub #back-to-hub-btn {
 }
 
 #exercise-video-container {
-  width: 100%;
+    width: 100%;
   max-width: 340px;
   aspect-ratio: 16/9;
   background: rgba(30,32,38,0.7);
   border-radius: 10px;
-  overflow: hidden;
+    overflow: hidden;
   margin: 0 auto 0.7em auto;
   box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    display: flex;
+    align-items: center;
+        justify-content: center;
 }
 
 .exercise-detail-body {
@@ -3346,7 +3346,7 @@ body.show-hub #back-to-hub-btn {
 }
 .library-info h5, .current-specs h5 {
   font-size: 1.02rem;
-  font-weight: 700;
+    font-weight: 700;
   color: var(--primary-accent, #ff703b);
   margin: 0 0 0.5em 0;
 }
@@ -3361,15 +3361,15 @@ body.show-hub #back-to-hub-btn {
 }
 
 .current-specs {
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
   gap: 0.18em;
 }
 
 /* Specs row: sets, reps, load, rest - visually grouped */
 .current-specs p {
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
   gap: 0.5em;
   margin-bottom: 0.13em;
 }
@@ -3400,12 +3400,12 @@ body.show-hub #back-to-hub-btn {
   right: 22px;
   background: rgba(255,255,255,0.08);
   color: #fff;
-  border: none;
+    border: none;
   border-radius: 50%;
   width: 2.2em;
   height: 2.2em;
   font-size: 1.3em;
-  cursor: pointer;
+    cursor: pointer;
   z-index: 10;
   transition: background 0.18s;
 }
@@ -3420,7 +3420,7 @@ body.show-hub #back-to-hub-btn {
     padding: 0 0 0.7em 0;
   }
   .exercise-detail-body {
-    flex-direction: column;
+  flex-direction: column;
     gap: 0.7em;
     padding: 0.7em 0.7em 0.2em 0.7em;
   }
@@ -3439,5 +3439,73 @@ body.show-hub #back-to-hub-btn {
   }
   .exercise-detail-footer {
     padding: 0.5em 0.7em 0.1em 0.7em;
+  }
+}
+
+/* --- Exercise Info Card Glassmorphism --- */
+.exercise-info-card {
+  background: rgba(40,44,52,0.82);
+  border-radius: 14px;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.18);
+  backdrop-filter: blur(10px) saturate(1.1);
+  padding: 1.2em 1.5em;
+  margin: 1.2em 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  min-width: 0;
+}
+.info-pill-row {
+  display: flex;
+  gap: 0.5em;
+  margin-bottom: 0.7em;
+  flex-wrap: wrap;
+}
+.info-pill {
+  background: rgba(255,112,59,0.13);
+  color: #ff703b;
+  border-radius: 8px;
+  padding: 0.18em 0.7em;
+  font-weight: 600;
+  font-size: 0.95em;
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  line-height: 1.2;
+}
+.exercise-info-label {
+  color: #ff703b;
+  font-weight: 700;
+  margin-bottom: 0.2em;
+  font-size: 1.05em;
+  letter-spacing: 0.01em;
+}
+.exercise-info-value {
+  color: #e6e6e6;
+  font-weight: 500;
+  font-size: 1em;
+  margin-bottom: 0.5em;
+  line-height: 1.6;
+}
+.exercise-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0.7em 0 0.2em 0;
+  text-align: center;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.22), 0 1px 0 rgba(var(--primary-rgb,255,112,59),0.12);
+}
+@media (max-width: 700px) {
+  .exercise-info-card {
+    padding: 0.7em 0.7em;
+    margin: 0.7em 0 0 0;
+  }
+  .exercise-title {
+    font-size: 1.08rem;
+  }
+  .info-pill-row {
+    gap: 0.3em;
+    margin-bottom: 0.4em;
   }
 }
