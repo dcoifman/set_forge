@@ -3041,3 +3041,36 @@ body.show-hub #back-to-hub-btn {
         padding: 0.5em 0.3em 0.4em 0.3em;
     }
 }
+
+/* Remove extra margin between name and details */
+.exercise-name-container {
+    margin-bottom: 0.1em;
+}
+.exercise-details {
+    margin-top: 0;
+    margin-bottom: 0.1em;
+    justify-content: center;
+}
+
+/* Optionally, make details visually grouped with the name */
+.exercise-name-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 0.2em;
+}
+.exercise-name {
+    margin-bottom: 0.1em;
+}
+
+/* Make sets-reps and load appear as part of the same block visually */
+.sets-reps, .load {
+    margin-right: 0.3em;
+    margin-left: 0;
+    margin-bottom: 0;
+}
+
+/* Remove margin below the card if only details follow */
+.workout-card {
+    padding-bottom: 0.7em;
+}
