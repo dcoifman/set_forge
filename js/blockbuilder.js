@@ -4057,201 +4057,201 @@ window.blockBuilder = {
     loadTemplateBlock: function(template) {
         console.log("Loading template block:", template.title);
         
-        // Switch to builder view
-        document.body.classList.add('show-builder');
-        document.body.classList.remove('show-hub');
-        document.getElementById('back-to-hub-btn').style.display = 'inline-block';
-        
-        // Set the block name from template
-        const blockNameInput = document.getElementById('block-name');
-        if (blockNameInput) {
-            blockNameInput.value = template.title;
-        }
-        
-        // Configure phases based on template
-        if (template.phases && template.phases.length > 0) {
-            // Clear existing phases
-            const phaseRibbon = document.getElementById('phase-ribbon');
-            phaseRibbon.innerHTML = '';
+        try {
+            // Switch to builder view
+            document.body.classList.add('show-builder');
+            document.body.classList.remove('show-hub');
             
-            // Add phases from template
-            let totalWidth = 100;
-            template.phases.forEach((phase, index) => {
-                const isLast = index === template.phases.length - 1;
-                const phaseWidth = phase.duration / template.weeks * 100;
-                
-                const phaseBar = document.createElement('div');
-                phaseBar.className = `phase-bar phase-${phase.color}`;
-                phaseBar.style.width = `${phaseWidth}%`;
-                phaseBar.setAttribute('data-phase', phase.color);
-                
-                const phaseLabel = document.createElement('span');
-                phaseLabel.className = 'phase-bar-label';
-                phaseLabel.textContent = phase.name;
-                phaseBar.appendChild(phaseLabel);
-                
-                if (!isLast) {
-                    const resizeHandle = document.createElement('div');
-                    resizeHandle.className = 'phase-resize-handle';
-                    phaseBar.appendChild(resizeHandle);
-                }
-                
-                phaseRibbon.appendChild(phaseBar);
-            });
-            
-            // Reinitialize phase resizing
-            if (typeof initializePhaseResizing === 'function') {
-                initializePhaseResizing();
+            const backToHubBtn = document.getElementById('back-to-hub-btn');
+            if (backToHubBtn) {
+                backToHubBtn.style.display = 'inline-block';
             }
-        }
-        
-        // Generate grid with template weeks - ONLY generate the calendar ONCE
-        generateCalendarGrid(template.weeks || 8);
-        
-        // Load the template data - Create workout cards from the template schedule
-        if (template.schedule && template.schedule.length > 0) {
-            console.log("Found schedule data in template - creating workout cards");
             
-            // Get a reference to the workCanvas
-            const workCanvas = document.getElementById('work-canvas');
-            console.log("Got workCanvas reference:", workCanvas ? "Found" : "Missing");
+            // Set the block name from template
+            const blockNameInput = document.getElementById('block-name');
+            if (blockNameInput) {
+                blockNameInput.value = template.title;
+            }
             
-            // Log all day cells for debugging
-            const allDayCells = workCanvas ? workCanvas.querySelectorAll('.day-cell') : [];
-            console.log(`Found ${allDayCells.length} day cells in workCanvas`);
-            
-            // Create a map of all available day IDs for easier lookup
-            const availableDayIds = {};
-            allDayCells.forEach(cell => {
-                const id = cell.getAttribute('data-day-id');
-                if (id) {
-                    availableDayIds[id] = true;
-                    console.log(`Available day cell: ${id}`);
+            // Configure phases based on template
+            if (template.phases && template.phases.length > 0) {
+                // Clear existing phases
+                const phaseRibbon = document.getElementById('phase-ribbon');
+                if (phaseRibbon) {
+                    phaseRibbon.innerHTML = '';
+                    
+                    // Add phases from template
+                    let totalWidth = 100;
+                    template.phases.forEach((phase, index) => {
+                        const isLast = index === template.phases.length - 1;
+                        const phaseWidth = phase.duration / template.weeks * 100;
+                        
+                        const phaseBar = document.createElement('div');
+                        phaseBar.className = `phase-bar phase-${phase.color}`;
+                        phaseBar.style.width = `${phaseWidth}%`;
+                        phaseBar.setAttribute('data-phase', phase.color);
+                        
+                        const phaseLabel = document.createElement('span');
+                        phaseLabel.className = 'phase-bar-label';
+                        phaseLabel.textContent = phase.name;
+                        phaseBar.appendChild(phaseLabel);
+                        
+                        if (!isLast) {
+                            const resizeHandle = document.createElement('div');
+                            resizeHandle.className = 'phase-resize-handle';
+                            phaseBar.appendChild(resizeHandle);
+                        }
+                        
+                        phaseRibbon.appendChild(phaseBar);
+                    });
+                    
+                    // Reinitialize phase resizing
+                    if (typeof initializePhaseResizing === 'function') {
+                        initializePhaseResizing();
+                    }
                 }
-            });
+            }
             
-            // Process each week in the schedule
-            template.schedule.forEach(weekData => {
-                const weekNum = weekData.week;
-                console.log(`Processing template week ${weekNum}`);
+            // Generate grid with template weeks
+            const gridResult = generateCalendarGrid(template.weeks || 8);
+            if (!gridResult) {
+                console.error("Failed to generate calendar grid");
+                return false;
+            }
+            
+            // Load the template data - Create workout cards from the template schedule
+            if (template.schedule && template.schedule.length > 0) {
+                console.log("Found schedule data in template - creating workout cards");
                 
-                // Process each day in the week
-                weekData.days.forEach(dayData => {
-                    const dayName = dayData.day; // e.g., "Monday"
-                    console.log(`Processing day: ${dayName} in week ${weekNum}`);
+                // Get a reference to the workCanvas
+                const workCanvas = document.getElementById('work-canvas');
+                console.log("Got workCanvas reference:", workCanvas ? "Found" : "Missing");
+                
+                if (!workCanvas) {
+                    console.error("Work canvas not found when trying to populate template");
+                    return false;
+                }
+                
+                // Process each week in the schedule
+                template.schedule.forEach(weekData => {
+                    const weekNum = weekData.week;
+                    console.log(`Processing template week ${weekNum}`);
                     
-                    // Convert day name to abbreviated format (Mon, Tue, etc.)
-                    const dayAbbr = dayName.substring(0, 3).toLowerCase();
-                    
-                    // Generate day ID using the correct format that matches grid.js
-                    const dayId = `wk${weekNum}-${dayAbbr}`;
-                    console.log(`Looking for day cell with ID: ${dayId}`);
-                    
-                    // Check if this day ID exists in our map
-                    if (!availableDayIds[dayId]) {
-                        console.warn(`Day ID ${dayId} not found in available day cells`);
-                    }
-                    
-                    // Find the day cell for this specific day
-                    const dayCell = workCanvas.querySelector(`[data-day-id="${dayId}"]`);
-                    
-                    if (!dayCell) {
-                        console.warn(`Could not find day cell for ${dayId}`);
-                        return; // Skip this day
-                    }
-                    
-                    // Add the workout title as a header to the day
-                    if (dayData.title && dayData.title !== 'Rest') {
-                        const headerCard = document.createElement('div');
-                        headerCard.className = 'day-header';
-                        headerCard.textContent = dayData.title;
-                        dayCell.appendChild(headerCard);
-                    }
-                    
-                    // Create exercise cards for this day
-                    if (dayData.exercises && dayData.exercises.length > 0) {
-                        dayData.exercises.forEach(exerciseText => {
-                            if (exerciseText) {
-                                // Parse the exercise text (e.g., "Bench Press 4x8")
-                                const parts = exerciseText.split(' ');
-                                
-                                // Extract sets and reps if available
-                                const lastPart = parts[parts.length - 1];
-                                let sets = '';
-                                let reps = '';
-                                
-                                // Check for common pattern like 3x10, 5x5, etc.
-                                if (lastPart.includes('x')) {
-                                    const setsReps = lastPart.split('x');
-                                    if (setsReps.length === 2) {
-                                        sets = setsReps[0];
-                                        reps = setsReps[1];
-                                        // Remove the sets/reps part from exercise name
-                                        parts.pop();
-                                    }
-                                }
-                                
-                                // Join the remaining parts as the exercise name
-                                const exerciseName = parts.join(' ');
-                                
-                                // Create workout details object
-                                const details = {
-                                    sets: sets,
-                                    reps: reps,
-                                    load: '',
-                                    loadType: 'weight',
-                                    rest: '90s',
-                                    notes: ''
-                                };
-                                
-                                // Create the workout card
-                                try {
-                                    // Format the details string properly to match what createWorkoutCard expects
-                                    const detailsString = `${sets || ''}x${reps || ''} ${details.load || ''} ${details.loadType || ''} ${details.rest || ''}`.trim();
+                    // Process each day in the week
+                    weekData.days.forEach(dayData => {
+                        const dayName = dayData.day; // e.g., "Monday"
+                        console.log(`Processing day: ${dayName} in week ${weekNum}`);
+                        
+                        // Convert day name to abbreviated format (Mon, Tue, etc.)
+                        const dayAbbr = dayName.substring(0, 3);
+                        
+                        // Generate day ID using the correct format
+                        const dayId = `wk${weekNum}-${dayAbbr.toLowerCase()}`;
+                        console.log(`Looking for day cell with ID: ${dayId}`);
+                        
+                        // Find the day cell for this specific day
+                        const dayCell = workCanvas.querySelector(`[data-day-id="${dayId}"]`);
+                        
+                        if (!dayCell) {
+                            console.warn(`Could not find day cell for ${dayId}`);
+                            return; // Skip this day
+                        }
+                        
+                        // Add the workout title as a header to the day
+                        if (dayData.title && dayData.title !== 'Rest') {
+                            const headerCard = document.createElement('div');
+                            headerCard.className = 'day-header';
+                            headerCard.textContent = dayData.title;
+                            dayCell.appendChild(headerCard);
+                        }
+                        
+                        // Create exercise cards for this day
+                        if (dayData.exercises && dayData.exercises.length > 0) {
+                            dayData.exercises.forEach(exerciseText => {
+                                if (exerciseText) {
+                                    // Parse the exercise text (e.g., "Bench Press 4x8")
+                                    const parts = exerciseText.split(' ');
                                     
-                                    const card = createWorkoutCard(exerciseName, detailsString, { 
+                                    // Extract sets and reps if available
+                                    const lastPart = parts[parts.length - 1];
+                                    let sets = '';
+                                    let reps = '';
+                                    
+                                    // Check for common pattern like 3x10, 5x5, etc.
+                                    if (lastPart.includes('x')) {
+                                        const setsReps = lastPart.split('x');
+                                        if (setsReps.length === 2) {
+                                            sets = setsReps[0];
+                                            reps = setsReps[1];
+                                            // Remove the sets/reps part from exercise name
+                                            parts.pop();
+                                        }
+                                    }
+                                    
+                                    // Join the remaining parts as the exercise name
+                                    const exerciseName = parts.join(' ');
+                                    
+                                    // Create workout details object
+                                    const details = {
                                         sets: sets,
                                         reps: reps,
-                                        loadValue: details.load,
-                                        loadType: details.loadType,
-                                        rest: details.rest,
-                                        notes: details.notes,
-                                        dayId: dayId
-                                    });
+                                        load: '',
+                                        loadType: 'weight',
+                                        rest: '90s',
+                                        notes: ''
+                                    };
                                     
-                                    if (card) {
-                                        dayCell.appendChild(card);
-                                        console.log(`Added exercise "${exerciseName}" to ${dayId}`);
+                                    try {
+                                        if (typeof createWorkoutCard === 'function') {
+                                            // Create the workout card
+                                            const card = createWorkoutCard(exerciseName, `${sets || ''}x${reps || ''}`, { 
+                                                sets: sets,
+                                                reps: reps,
+                                                loadValue: details.load,
+                                                loadType: details.loadType,
+                                                rest: details.rest,
+                                                notes: details.notes,
+                                                dayId: dayId
+                                            });
+                                            
+                                            if (card) {
+                                                dayCell.appendChild(card);
+                                                console.log(`Added exercise "${exerciseName}" to ${dayId}`);
+                                            } else {
+                                                console.warn(`Failed to create card for ${exerciseName}`);
+                                            }
+                                        } else {
+                                            console.error("createWorkoutCard function not found");
+                                        }
+                                    } catch (error) {
+                                        console.error(`Error creating card for ${exerciseName}:`, error);
                                     }
-                                } catch (error) {
-                                    console.error(`Error creating card for ${exerciseName}:`, error);
                                 }
-                            }
-                        });
-                    }
+                            });
+                        }
+                    });
                 });
-            });
-            
-            // Trigger analytics update after loading all workouts
-            if (typeof triggerAnalyticsUpdate === 'function') {
-                triggerAnalyticsUpdate(workCanvas);
+                
+                // Trigger analytics update after loading all workouts
+                if (typeof triggerAnalyticsUpdate === 'function') {
+                    triggerAnalyticsUpdate(workCanvas);
+                }
+                
+                // Trigger save state
+                if (typeof triggerSaveState === 'function') {
+                    triggerSaveState();
+                }
+                
+                return true;
+            } else {
+                console.warn("No schedule data found in template");
+                return true; // Still return true as the template was loaded, just without schedule data
             }
-            
-            // Trigger save state
-            if (typeof triggerSaveState === 'function') {
-                triggerSaveState();
-            }
-        } else {
-            console.warn("No schedule data found in template");
+        } catch (error) {
+            console.error("Error loading template block:", error);
+            return false;
         }
-        
-        // Fire any custom events needed
-        const loadedEvent = new CustomEvent('templateLoaded', { detail: template });
-        window.dispatchEvent(loadedEvent);
-        
-        return true;
-    },
-    // Add other exposed functions as needed
+    }
 };
 
 // Dispatch blockbuilderReady event when initialization is complete
@@ -4308,4 +4308,66 @@ function syncSelectedContext(contextType, data = {}) {
     if (typeof updateInspectorForSelection === 'function') {
         updateInspectorForSelection();
     }
+}
+
+// Fix the loadTemplateBlock function to properly generate the grid and populate it
+function generateCalendarGrid(weeks) {
+    console.log(`Generating calendar grid for ${weeks} weeks`);
+    
+    const workCanvas = document.getElementById('work-canvas');
+    if (!workCanvas) {
+        console.error("Work canvas not found");
+        return false;
+    }
+    
+    // Check if we've already generated the grid
+    const existingWeekLabels = workCanvas.querySelectorAll('.week-label');
+    if (existingWeekLabels.length >= weeks) {
+        console.log(`Grid already exists with ${existingWeekLabels.length} weeks, keeping it`);
+        return true;
+    }
+    
+    // Clear existing grid if any
+    workCanvas.innerHTML = '';
+    
+    // Add day headers
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    days.forEach(day => {
+        const header = document.createElement('div');
+        header.className = 'calendar-header';
+        header.textContent = day;
+        workCanvas.appendChild(header);
+    });
+    
+    // Generate week rows
+    for (let week = 1; week <= weeks; week++) {
+        // Week label
+        const weekLabel = document.createElement('div');
+        weekLabel.className = 'week-label';
+        weekLabel.setAttribute('data-week', week);
+        weekLabel.textContent = `Wk ${week}`;
+        workCanvas.appendChild(weekLabel);
+        
+        // Day cells for this week
+        days.forEach(day => {
+            const dayCell = document.createElement('div');
+            dayCell.className = 'day-cell session-slot';
+            dayCell.setAttribute('data-week', week);
+            dayCell.setAttribute('data-day', day);
+            
+            // Create a standardized day ID (important for template loading)
+            const dayId = `wk${week}-${day.toLowerCase()}`;
+            dayCell.setAttribute('data-day-id', dayId);
+            
+            workCanvas.appendChild(dayCell);
+        });
+    }
+    
+    // Reattach drag-drop listeners to new grid
+    if (typeof attachDragDropListeners === 'function') {
+        attachDragDropListeners();
+    }
+    
+    console.log(`Calendar grid generated with ${weeks} weeks`);
+    return true;
 }

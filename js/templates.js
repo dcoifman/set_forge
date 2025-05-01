@@ -387,26 +387,27 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentTemplateId = null;
 
     // Initialize templates
-    function init() {
+    function initialize() {
         console.log("Templates module initializing...");
-        try {
-            console.log("Templates available:", trainingTemplates.length);
-            console.log("DOM Element check:");
-            console.log("- templatesList:", templatesList);
-            console.log("- templatesModal:", templatesModal);
-            
+        console.log(`Templates available: ${trainingTemplates.length}`);
+        
+        // Set up category buttons
+        setCategoryFilters();
+        
+        // Set up event listeners
+        addEventListeners();
+        
+        // Set up search functionality
+        setupSearch();
+        
+        // Set up preview use button
+        setupPreviewUseButton();
+        
+        // Initial render of templates
+        if (templatesList) {
             renderTemplates();
-            addEventListeners();
-            
-            if (templatesList) {
-                applyTemplateGridLayout();
-                console.log("Templates module initialized successfully");
-                console.log("Current templatesList content:", templatesList.innerHTML);
-            } else {
-                console.error("Failed to initialize templates: templatesList element not found");
-            }
-        } catch (error) {
-            console.error("Error initializing templates module:", error);
+        } else {
+            console.error("Templates list container not found during initialization");
         }
     }
 
@@ -618,14 +619,48 @@ document.addEventListener('DOMContentLoaded', function() {
     // Show template preview modal with detailed info and animations
     function showTemplatePreview(templateId) {
         const template = trainingTemplates.find(t => t.id === templateId);
-        if (!template) return;
+        if (!template) {
+            console.error(`Template with ID ${templateId} not found for preview`);
+            return;
+        }
+        
+        console.log(`Showing preview for template: ${template.title}`);
         
         currentTemplateId = templateId;
         
+        // Get fresh references to DOM elements
+        const templatePreviewModal = document.getElementById('template-preview-modal');
+        const templatePreviewCloseBtn = document.getElementById('template-preview-close-btn');
+        
+        if (!templatePreviewModal) {
+            console.error("Template preview modal not found in DOM");
+            return;
+        }
+        
+        // Ensure close button has click handler
+        if (templatePreviewCloseBtn) {
+            // Remove any existing handlers to prevent duplicates
+            templatePreviewCloseBtn.onclick = function(e) {
+                console.log("Template preview close button clicked");
+                e.preventDefault();
+                e.stopPropagation();
+                templatePreviewModal.classList.remove('is-visible');
+                templatePreviewModal.style.opacity = '0';
+                templatePreviewModal.style.visibility = 'hidden';
+            };
+        } else {
+            console.error("Template preview close button not found");
+        }
+        
         // Set preview content
-        document.querySelector('.template-preview-title').textContent = template.title;
-        document.querySelector('.template-preview-author').textContent = `By ${template.author}`;
-        document.querySelector('.template-preview-description').textContent = template.description;
+        const titleElement = document.querySelector('.template-preview-title');
+        if (titleElement) titleElement.textContent = template.title;
+        
+        const authorElement = document.querySelector('.template-preview-author');
+        if (authorElement) authorElement.textContent = `By ${template.author}`;
+        
+        const descriptionElement = document.querySelector('.template-preview-description');
+        if (descriptionElement) descriptionElement.textContent = template.description;
         
         // Set category-specific icon
         const previewIcon = document.querySelector('.template-preview-icon');
@@ -730,69 +765,90 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Use selected template to create new block
+    // Fix useTemplate function to properly load and apply templates
     function useTemplate(templateId) {
         const template = trainingTemplates.find(t => t.id === templateId);
         if (!template) {
-            console.error(`Template with ID ${templateId} not found`);
+            console.error(`Template with ID ${templateId} not found for use`);
             return;
         }
-
+        
         console.log(`Using template: ${template.title}`);
-
-        // Close the modals first
+        
+        // First ensure we close all template modals
         const templatesModal = document.getElementById('templates-modal');
+        const templatePreviewModal = document.getElementById('template-preview-modal');
+        
         if (templatesModal) {
             templatesModal.classList.remove('is-visible');
+            templatesModal.style.opacity = '0';
+            templatesModal.style.visibility = 'hidden';
+            
+            // Clear templates list to prevent it from showing later
+            if (templatesList) {
+                templatesList.innerHTML = '';
+            }
         }
         
-        const templatePreviewModal = document.getElementById('template-preview-modal');
         if (templatePreviewModal) {
             templatePreviewModal.classList.remove('is-visible');
+            templatePreviewModal.style.opacity = '0';
+            templatePreviewModal.style.visibility = 'hidden';
         }
-
-        // Function to actually load the block
-        const executeLoad = () => {
+        
+        // Wait for blockBuilder to be ready (if not already)
+        const loadBlockBuilder = () => {
+            console.log("Block builder ready immediately.");
+            
+            // If we have a global reference to the blockBuilder
             if (window.blockBuilder && typeof window.blockBuilder.loadTemplateBlock === 'function') {
-                console.log("Calling blockBuilder.loadTemplateBlock with template:", template.title);
-                window.blockBuilder.loadTemplateBlock(template);
+                console.log(`Calling blockBuilder.loadTemplateBlock with template: "${template.title}"`);
+                const success = window.blockBuilder.loadTemplateBlock(template);
+                
+                if (!success) {
+                    console.error("Failed to load template into block builder");
+                    showToast("Failed to load template. Please try again.", "error");
+                } else {
+                    showToast(`Template "${template.title}" applied successfully!`, "success");
+                }
             } else {
-                // Fallback if integration still fails after waiting
-                console.error("Block builder or loadTemplateBlock function not available.");
-                alert(`Error: Could not load template ${template.title}. Block builder unavailable.`);
-                // Revert to hub view on error
-                document.body.classList.add('show-hub');
-                document.body.classList.remove('show-builder');
+                console.error("blockBuilder.loadTemplateBlock function not available");
+                showToast("Template system is not initialized properly.", "error");
             }
         };
-
-        // Check if blockBuilder is ready, otherwise wait for the event
-        if (window.blockBuilder && typeof window.blockBuilder.loadTemplateBlock === 'function') {
-            console.log("Block builder ready immediately.");
-            executeLoad();
+        
+        // If blockBuilder is already ready, use it directly
+        if (document.readyState === 'complete' && window.blockBuilder) {
+            loadBlockBuilder();
         } else {
-            console.log("Block builder not ready, waiting for 'blockbuilderReady' event...");
-            
-            // Listen for the blockbuilderReady event
-            const readyHandler = () => {
-                console.log("'blockbuilderReady' event received.");
-                window.removeEventListener('blockbuilderReady', readyHandler);
-                executeLoad();
-            };
-            
-            window.addEventListener('blockbuilderReady', readyHandler);
-            
-            // Timeout fallback in case the event never fires
+            // Otherwise wait for the blockbuilderReady event
+            window.addEventListener('blockbuilderReady', loadBlockBuilder, { once: true });
+            // Also set a timeout in case the event never fires
             setTimeout(() => {
-                window.removeEventListener('blockbuilderReady', readyHandler);
-                if (!(window.blockBuilder && typeof window.blockBuilder.loadTemplateBlock === 'function')) {
-                    console.error("Timeout waiting for blockbuilderReady event.");
-                    alert(`Error: Could not load template ${template.title}. Block builder did not initialize.`);
-                    // Revert to hub view on timeout
-                    document.body.classList.add('show-hub');
-                    document.body.classList.remove('show-builder');
+                if (window.blockBuilder) {
+                    loadBlockBuilder();
+                } else {
+                    console.error("blockBuilder not available after timeout");
+                    showToast("Failed to initialize template. Please refresh the page and try again.", "error");
                 }
-            }, 3000); // Wait 3 seconds
+            }, 2000);
+        }
+    }
+
+    // Add click handler for preview use button
+    function setupPreviewUseButton() {
+        const previewUseTemplateBtn = document.getElementById('preview-use-template-btn');
+        if (previewUseTemplateBtn) {
+            previewUseTemplateBtn.addEventListener('click', function() {
+                console.log("Use template button clicked from preview");
+                if (currentTemplateId) {
+                    useTemplate(currentTemplateId);
+                } else {
+                    console.error("No template ID found when Use Template clicked");
+                }
+            });
+        } else {
+            console.warn("Preview use template button not found");
         }
     }
 
@@ -960,7 +1016,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Initialize on load
-    init();
+    initialize();
 
     console.log("Templates module setup complete");
 });

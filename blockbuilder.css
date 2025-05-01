@@ -2640,8 +2640,8 @@ body.show-hub #back-to-hub-btn {
     border-radius: 20px; /* Inner screen radius */
     height: 550px; /* Typical phone height */
     overflow: hidden;
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
 }
 
 .mobile-header {
@@ -2710,12 +2710,12 @@ body.show-hub #back-to-hub-btn {
 /* Template animations and visual improvements */
 @keyframes templateCardFadeIn {
     from {
-        opacity: 0;
+    opacity: 0;
         transform: translateY(20px);
-    }
+}
     to {
-        opacity: 1;
-        transform: translateY(0);
+    opacity: 1;
+    transform: translateY(0);
     }
 }
 
@@ -2751,7 +2751,7 @@ body.show-hub #back-to-hub-btn {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
-    width: 100%;
+     width: 100%;
     overflow-y: auto;
     max-height: 70vh;
 }
@@ -2796,4 +2796,94 @@ body.show-hub #back-to-hub-btn {
 
 #templates-modal:not(.is-visible) #templates-list {
     display: none !important;
+}
+
+/* ... existing code ... */
+
+/* Enhanced Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    pointer-events: none;
+}
+
+.modal-overlay.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background-color: var(--bg-color);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    max-width: 90%;
+    width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    animation: modalFadeIn 0.3s ease forwards;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--text-muted);
+    cursor: pointer;
+    z-index: 10;
+    padding: 4px 10px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: var(--text-color);
+}
+
+/* Template Modal Specific Styles */
+#templates-modal:not(.is-visible) {
+    display: none !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+#templates-modal .templates-list {
+    position: relative;
+    z-index: 1;
+}
+
+#template-preview-modal:not(.is-visible) {
+    display: none !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Animation for modals */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

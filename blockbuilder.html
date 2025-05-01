@@ -539,41 +539,38 @@
     <div id="template-preview-modal" class="modal-overlay">
         <div class="modal-content template-preview-content">
             <button id="template-preview-close-btn" class="modal-close-btn">&times;</button>
-            
             <div class="template-preview-header">
-                <div class="template-preview-icon">📋</div>
-                <h2 class="template-preview-title">Template Title</h2>
-                <p class="template-preview-author">By Author</p>
+                <h3 class="template-preview-title">Template Title</h3>
+                <p class="template-preview-author">By Author Name</p>
             </div>
-            
-            <div class="template-preview-description">
-                Program description will appear here.
-            </div>
-            
-            <div class="template-preview-phases"></div>
-            
-            <div class="template-visual">
-                <h4>Visual Representation</h4>
-                <div class="template-visual-content"></div>
-            </div>
-            
-            <div class="template-preview-schedule-container">
-                <h4>Weekly Schedule</h4>
-                <div class="template-preview-schedule"></div>
-            </div>
-            
-            <div class="template-preview-science">
-                <h4>Scientific Background</h4>
-                <div class="template-preview-science-content"></div>
-            </div>
-            
-            <div class="template-preview-recommended">
-                <h4>Recommended For</h4>
-                <ul></ul>
-            </div>
-            
-            <div class="template-preview-footer">
-                <button id="use-template-btn" class="cta-button">Use This Template</button>
+            <div class="template-preview-body">
+                <p class="template-preview-description">Template description goes here...</p>
+                
+                <div class="template-preview-details">
+                    <div class="template-preview-metadata">
+                        <span class="preview-metadata-item">⏱️ Duration: <span class="preview-duration">8 weeks</span></span>
+                        <span class="preview-metadata-item">💪 Level: <span class="preview-level">Intermediate</span></span>
+                        <span class="preview-metadata-item">🔄 Frequency: <span class="preview-frequency">3-4x/week</span></span>
+                    </div>
+                    
+                    <div class="template-preview-focus">
+                        <h4>Focus Areas:</h4>
+                        <div class="template-focus-tags">
+                            <!-- Tags will be populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="template-preview-structure">
+                    <h4>Program Structure:</h4>
+                    <div class="template-phases">
+                        <!-- Phases will be populated dynamically -->
+                    </div>
+                </div>
+                
+                <div class="template-preview-footer">
+                    <button id="preview-use-template-btn" class="cta-button">Use This Template</button>
+                </div>
             </div>
         </div>
     </div>
