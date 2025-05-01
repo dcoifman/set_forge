@@ -1272,24 +1272,32 @@ document.addEventListener('DOMContentLoaded', () => {
         // TODO: Add visual icon if modelDriven is true (Phase 4)
 
         // --- Card Content ---
+        const repsText = options.sets && options.reps ? `${options.sets}×${options.reps}` : (card.dataset.sets && card.dataset.reps ? `${card.dataset.sets}×${card.dataset.reps}` : '-');
+        const difficultyText = options.difficulty || card.dataset.difficulty || '';
+        // For stars, you could use: '★'.repeat(difficultyLevel) or a mapping
+        let difficultyStars = '';
+        if (difficultyText && !isNaN(Number(difficultyText))) {
+            const level = Math.max(1, Math.min(5, Number(difficultyText)));
+            difficultyStars = '★'.repeat(level);
+        } else if (difficultyText) {
+            difficultyStars = difficultyText;
+        }
         card.innerHTML = `
             <div class="card-face card-front">
-                <!-- Badge Placeholder - content added dynamically -->
-                <div class="card-model-badge-indicator" style="display: none;"></div> 
-                <!-- Make exercise name more prominent with larger text, background, and padding -->
-                <div class="exercise-name-container">
-                    <div class="exercise-name">${exerciseName}</div>
+                <div class="card-top-bubble">
+                    <span class="exercise-name">${exerciseName}</span>
+                    <span class="card-reps">${repsText}</span>
+                    <span class="card-difficulty">${difficultyStars}</span>
                 </div>
-                <div class="exercise-details">
-                    <span class="sets-reps">${card.dataset.sets}x${card.dataset.reps}</span>
-                    <span class="load">${card.dataset.loadType} ${card.dataset.loadValue}</span>
+                <div class="card-bottom-band">
+                    <span class="card-reps">${repsText}</span>
+                    <span class="card-difficulty">${difficultyText || '-'}</span>
                 </div>
-                <!-- card-main-content wrapper removed -->
                 <div class="card-actions">
                     <button class="card-action-btn edit-btn" title="Edit Exercise">✏️</button>
                     <button class="card-action-btn delete-btn" title="Delete Exercise">🗑️</button>
                 </div>
-                 <div class="vbt-indicator" style="display: none;" title="Velocity Loss Target"></div>
+                <div class="vbt-indicator" style="display: none;" title="Velocity Loss Target"></div>
             </div>
             <div class="card-face card-back" style="display: none;">
                 <!-- Back content for editing/details -->

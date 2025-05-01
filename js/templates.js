@@ -449,7 +449,7 @@ function initialize() {
                             card.style.opacity = '1';
                             card.style.transform = 'translateY(0)';
                         }, 50);
-                    });
+                });
                 }
             });
         }
@@ -478,11 +478,11 @@ function initialize() {
     const author = document.createElement('p');
     author.className = 'template-author';
     author.textContent = `By ${template.author}`;
-    
+        
     const categoryIcon = document.createElement('div');
     categoryIcon.className = 'template-category-icon';
     categoryIcon.textContent = getCategoryIcon(template.category);
-    
+        
     header.appendChild(title);
     header.appendChild(author);
     header.appendChild(categoryIcon);
@@ -758,7 +758,7 @@ function initialize() {
         templatesModal.classList.remove('is-visible');
         templatesModal.style.opacity = '0';
         templatesModal.style.visibility = 'hidden';
-        
+
         // Clear templates list to prevent it from showing later
         if (templatesList) {
             templatesList.innerHTML = '';
@@ -769,7 +769,7 @@ function initialize() {
         templatePreviewModal.classList.remove('is-visible');
         templatePreviewModal.style.opacity = '0';
         templatePreviewModal.style.visibility = 'hidden';
-    }
+            }
     
     // Wait for blockBuilder to be ready (if not already)
     const loadBlockBuilder = () => {

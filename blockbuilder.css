@@ -347,17 +347,99 @@ body {
 
 /* --- Enhanced Workout Card Styling --- */
 .workout-card {
-    background: rgba(30, 32, 38, 0.75);
-    border: 1.5px solid rgba(var(--primary-rgb, 255,112,59), 0.18);
-    border-radius: 18px;
-    box-shadow: 0 4px 24px 0 rgba(0,0,0,0.18), 0 1.5px 6px 0 rgba(var(--primary-rgb,255,112,59),0.08);
-    backdrop-filter: blur(6px) saturate(1.2);
-    transition: box-shadow 0.18s, border 0.18s, transform 0.12s;
-    margin-bottom: 1.2em;
-    padding: 0.5em 0.5em 1.1em 0.5em;
-    position: relative;
-    overflow: visible;
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin-bottom: 2em;
+    margin-top: 0.5em;
+    position: static;
 }
+
+.card-top-bubble {
+    background: rgba(30, 32, 38, 0.75);
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 4px 24px 0 rgba(0,0,0,0.18), 0 1.5px 6px 0 rgba(var(--primary-rgb,255,112,59),0.08);
+    backdrop-filter: blur(8px) saturate(1.2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1em 1.2em 0.7em 1.2em;
+    position: relative;
+    z-index: 1;
+}
+
+.card-top-bubble .exercise-name {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.01em;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.22), 0 1px 0 rgba(var(--primary-rgb,255,112,59),0.12);
+    margin: 0 0.7em 0 0;
+    flex: 1 1 auto;
+    text-align: left;
+    line-height: 1.2;
+}
+
+.card-reps, .card-difficulty {
+    display: flex;
+    align-items: center;
+    font-size: 1em;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 0.18em 0.7em;
+    margin-left: 0.2em;
+    margin-right: 0;
+    background: rgba(255,255,255,0.10);
+    color: #e6e6e6;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+
+.card-difficulty {
+    color: var(--primary-accent, #ff703b);
+    background: rgba(var(--primary-rgb,255,112,59), 0.13);
+    font-weight: 700;
+}
+
+.card-bottom-band {
+    background: linear-gradient(90deg, var(--primary-accent, #ff703b) 60%, #ffb88c 100%);
+    border-radius: 0 0 18px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5em 1.2em;
+    min-height: 2.2em;
+    box-shadow: 0 2px 8px 0 rgba(var(--primary-rgb,255,112,59),0.08);
+    position: relative;
+    z-index: 0;
+}
+
+.card-bottom-band .card-reps {
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+    font-weight: 700;
+    margin-right: 0.5em;
+}
+.card-bottom-band .card-difficulty {
+    background: rgba(255,255,255,0.10);
+    color: #fff;
+    font-weight: 700;
+    margin-left: 0.5em;
+}
+
+/* Responsive tweaks for mobile */
+@media (max-width: 600px) {
+    .card-top-bubble {
+        padding: 0.7em 0.6em 0.5em 0.6em;
+    }
+    .card-bottom-band {
+        padding: 0.4em 0.6em;
+    }
+    .card-top-bubble .exercise-name {
+        font-size: 1.05rem;
+    }
+}
+
 .workout-card:hover {
     box-shadow: 0 8px 32px 0 rgba(var(--primary-rgb,255,112,59),0.18), 0 2px 8px 0 rgba(0,0,0,0.18);
     border-color: rgba(var(--primary-rgb,255,112,59), 0.35);
@@ -2769,9 +2851,9 @@ body.show-hub #back-to-hub-btn {
 }
 
 .version-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 0.75rem 1rem;
     background-color: rgba(255, 255, 255, 0.05);
     border-radius: 6px;
