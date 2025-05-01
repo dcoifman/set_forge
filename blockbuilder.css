@@ -2876,9 +2876,9 @@ body.show-hub #back-to-hub-btn {
 }
 
 .version-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
     padding: 0.75rem 1rem;
     background-color: rgba(255, 255, 255, 0.05);
     border-radius: 6px;
@@ -3510,65 +3510,64 @@ body.show-hub #back-to-hub-btn {
   }
 }
 
-/* --- Enhanced Library Controls Grouping & Layout --- */
-.filter-sort-controls-wrapper {
-  background: rgba(40,44,52,0.5);
-  border-radius: 7px;
-  padding: 0.7em 1em;
-  margin-right: 1.2em;
-  display: flex;
-  align-items: center;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-}
-.view-add-controls-wrapper {
-  display: flex;
-  align-items: flex-end;
-  gap: 1.2em;
-}
+/* --- Ultra-Compact Exercise Library Filter Controls --- */
 .library-controls__row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1.2em;
-  align-items: flex-end;
-  justify-content: space-between;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.3em;
+  justify-content: flex-start;
+  margin-bottom: 0.1em;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-bottom: 2px;
 }
-.library-controls__row--stacked {
-  flex-direction: column;
-  gap: 0.7em;
+.filter-sort-controls, .view-add-controls {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.2em;
+  min-width: 0;
 }
-.filter-label, .view-label {
-  font-weight: 600;
-  color: var(--text-color-light);
-  margin-right: 0.4em;
-  font-size: 0.97em;
-  letter-spacing: 0.01em;
+.filter-label {
+  margin-right: 0.1em;
+  font-size: 0.82em;
 }
-.filter-divider {
-  height: 1.6em;
-  margin: 0 0.7em;
-  background: rgba(204,209,217,0.18);
+.library-select {
+  padding: 0.18em 0.5em;
+  font-size: 0.82em;
+  min-width: 70px;
+  margin-right: 0.05em;
+  max-width: 110px;
 }
-.library-select, .library-toggle-btn {
-  min-width: 120px;
-  font-size: 0.92em;
+#library-sort {
+  margin-right: 0.05em;
 }
-.library-toggle-btn {
-  margin-left: 0.2em;
+#library-toggle-favorites {
+  font-size: 1em;
+  padding: 0.15em 0.4em;
+  margin-left: 0.05em;
+}
+.view-mode-buttons {
+  gap: 0.1em;
+}
+.add-import-export-buttons {
+  gap: 0.1em;
+}
+#add-exercise-btn, #import-exercises-label, #export-exercises-btn {
+  padding: 0.22em 0.5em;
+  font-size: 0.82em;
 }
 @media (max-width: 700px) {
   .library-controls__row {
     flex-direction: column;
-    gap: 0.7em;
+    align-items: stretch;
+    gap: 0.3em;
+    overflow-x: visible;
   }
-  .filter-sort-controls-wrapper, .view-add-controls-wrapper {
-    width: 100%;
-    margin-right: 0;
-    padding: 0.5em 0.5em;
-    justify-content: flex-start;
-  }
-  .add-import-export-buttons {
+  .filter-sort-controls, .view-add-controls {
     flex-direction: column;
-    gap: 0.5em;
-    width: 100%;
+    align-items: stretch;
+    gap: 0.1em;
   }
 }
