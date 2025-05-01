@@ -4112,8 +4112,8 @@ window.blockBuilder = {
                 }
             }
             
-            // Generate grid with template weeks
-            const gridResult = generateCalendarGrid(template.weeks || 8);
+            // Generate grid with template weeks - using the method from this object
+            const gridResult = this.generateCalendarGrid(template.weeks || 8);
             if (!gridResult) {
                 console.error("Failed to generate calendar grid");
                 return false;
@@ -4169,48 +4169,38 @@ window.blockBuilder = {
                         if (dayData.exercises && dayData.exercises.length > 0) {
                             dayData.exercises.forEach(exerciseText => {
                                 if (exerciseText) {
-                                    // Parse the exercise text (e.g., "Bench Press 4x8")
-                                    const parts = exerciseText.split(' ');
-                                    
-                                    // Extract sets and reps if available
-                                    const lastPart = parts[parts.length - 1];
-                                    let sets = '';
-                                    let reps = '';
-                                    
-                                    // Check for common pattern like 3x10, 5x5, etc.
-                                    if (lastPart.includes('x')) {
-                                        const setsReps = lastPart.split('x');
-                                        if (setsReps.length === 2) {
-                                            sets = setsReps[0];
-                                            reps = setsReps[1];
-                                            // Remove the sets/reps part from exercise name
-                                            parts.pop();
-                                        }
-                                    }
-                                    
-                                    // Join the remaining parts as the exercise name
-                                    const exerciseName = parts.join(' ');
-                                    
-                                    // Create workout details object
-                                    const details = {
-                                        sets: sets,
-                                        reps: reps,
-                                        load: '',
-                                        loadType: 'weight',
-                                        rest: '90s',
-                                        notes: ''
-                                    };
-                                    
                                     try {
-                                        if (typeof createWorkoutCard === 'function') {
-                                            // Create the workout card
-                                            const card = createWorkoutCard(exerciseName, `${sets || ''}x${reps || ''}`, { 
+                                        // Parse the exercise text (e.g., "Bench Press 4x8")
+                                        const parts = exerciseText.split(' ');
+                                        
+                                        // Extract sets and reps if available
+                                        const lastPart = parts[parts.length - 1];
+                                        let sets = '';
+                                        let reps = '';
+                                        
+                                        // Check for common pattern like 3x10, 5x5, etc.
+                                        if (lastPart.includes('x')) {
+                                            const setsReps = lastPart.split('x');
+                                            if (setsReps.length === 2) {
+                                                sets = setsReps[0];
+                                                reps = setsReps[1];
+                                                // Remove the sets/reps part from exercise name
+                                                parts.pop();
+                                            }
+                                        }
+                                        
+                                        // Join the remaining parts as the exercise name
+                                        const exerciseName = parts.join(' ');
+                                        
+                                        // Use the globally available createWorkoutCard function
+                                        if (typeof window.createWorkoutCard === 'function') {
+                                            const card = window.createWorkoutCard(exerciseName, `${sets || ''}x${reps || ''}`, {
                                                 sets: sets,
                                                 reps: reps,
-                                                loadValue: details.load,
-                                                loadType: details.loadType,
-                                                rest: details.rest,
-                                                notes: details.notes,
+                                                loadValue: '',
+                                                loadType: 'weight',
+                                                rest: '90s',
+                                                notes: '',
                                                 dayId: dayId
                                             });
                                             
@@ -4221,10 +4211,10 @@ window.blockBuilder = {
                                                 console.warn(`Failed to create card for ${exerciseName}`);
                                             }
                                         } else {
-                                            console.error("createWorkoutCard function not found");
+                                            console.error("createWorkoutCard function not available globally");
                                         }
                                     } catch (error) {
-                                        console.error(`Error creating card for ${exerciseName}:`, error);
+                                        console.error(`Error creating card for ${exerciseText}:`, error);
                                     }
                                 }
                             });
@@ -4232,14 +4222,9 @@ window.blockBuilder = {
                     });
                 });
                 
-                // Trigger analytics update after loading all workouts
-                if (typeof triggerAnalyticsUpdate === 'function') {
-                    triggerAnalyticsUpdate(workCanvas);
-                }
-                
-                // Trigger save state
-                if (typeof triggerSaveState === 'function') {
-                    triggerSaveState();
+                // Trigger analytics update
+                if (typeof window.triggerAnalyticsUpdate === 'function') {
+                    window.triggerAnalyticsUpdate(workCanvas);
                 }
                 
                 return true;
@@ -4251,6 +4236,67 @@ window.blockBuilder = {
             console.error("Error loading template block:", error);
             return false;
         }
+    },
+    
+    generateCalendarGrid: function(weeks) {
+        console.log(`Generating calendar grid for ${weeks} weeks`);
+        
+        const workCanvas = document.getElementById('work-canvas');
+        if (!workCanvas) {
+            console.error("Work canvas not found");
+            return false;
+        }
+        
+        // Check if we've already generated the grid
+        const existingWeekLabels = workCanvas.querySelectorAll('.week-label');
+        if (existingWeekLabels.length >= weeks) {
+            console.log(`Grid already exists with ${existingWeekLabels.length} weeks, keeping it`);
+            return true;
+        }
+        
+        // Clear existing grid if any
+        workCanvas.innerHTML = '';
+        
+        // Add day headers
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        days.forEach(day => {
+            const header = document.createElement('div');
+            header.className = 'calendar-header';
+            header.textContent = day;
+            workCanvas.appendChild(header);
+        });
+        
+        // Generate week rows
+        for (let week = 1; week <= weeks; week++) {
+            // Week label
+            const weekLabel = document.createElement('div');
+            weekLabel.className = 'week-label';
+            weekLabel.setAttribute('data-week', week);
+            weekLabel.textContent = `Wk ${week}`;
+            workCanvas.appendChild(weekLabel);
+            
+            // Day cells for this week
+            days.forEach(day => {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day-cell session-slot';
+                dayCell.setAttribute('data-week', week);
+                dayCell.setAttribute('data-day', day);
+                
+                // Create a standardized day ID (important for template loading)
+                const dayId = `wk${week}-${day.toLowerCase()}`;
+                dayCell.setAttribute('data-day-id', dayId);
+                
+                workCanvas.appendChild(dayCell);
+            });
+        }
+        
+        // Reattach drag-drop listeners to new grid
+        if (typeof attachDragDropListeners === 'function') {
+            attachDragDropListeners();
+        }
+        
+        console.log(`Calendar grid generated with ${weeks} weeks`);
+        return true;
     }
 };
 
@@ -4308,66 +4354,4 @@ function syncSelectedContext(contextType, data = {}) {
     if (typeof updateInspectorForSelection === 'function') {
         updateInspectorForSelection();
     }
-}
-
-// Fix the loadTemplateBlock function to properly generate the grid and populate it
-function generateCalendarGrid(weeks) {
-    console.log(`Generating calendar grid for ${weeks} weeks`);
-    
-    const workCanvas = document.getElementById('work-canvas');
-    if (!workCanvas) {
-        console.error("Work canvas not found");
-        return false;
-    }
-    
-    // Check if we've already generated the grid
-    const existingWeekLabels = workCanvas.querySelectorAll('.week-label');
-    if (existingWeekLabels.length >= weeks) {
-        console.log(`Grid already exists with ${existingWeekLabels.length} weeks, keeping it`);
-        return true;
-    }
-    
-    // Clear existing grid if any
-    workCanvas.innerHTML = '';
-    
-    // Add day headers
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    days.forEach(day => {
-        const header = document.createElement('div');
-        header.className = 'calendar-header';
-        header.textContent = day;
-        workCanvas.appendChild(header);
-    });
-    
-    // Generate week rows
-    for (let week = 1; week <= weeks; week++) {
-        // Week label
-        const weekLabel = document.createElement('div');
-        weekLabel.className = 'week-label';
-        weekLabel.setAttribute('data-week', week);
-        weekLabel.textContent = `Wk ${week}`;
-        workCanvas.appendChild(weekLabel);
-        
-        // Day cells for this week
-        days.forEach(day => {
-            const dayCell = document.createElement('div');
-            dayCell.className = 'day-cell session-slot';
-            dayCell.setAttribute('data-week', week);
-            dayCell.setAttribute('data-day', day);
-            
-            // Create a standardized day ID (important for template loading)
-            const dayId = `wk${week}-${day.toLowerCase()}`;
-            dayCell.setAttribute('data-day-id', dayId);
-            
-            workCanvas.appendChild(dayCell);
-        });
-    }
-    
-    // Reattach drag-drop listeners to new grid
-    if (typeof attachDragDropListeners === 'function') {
-        attachDragDropListeners();
-    }
-    
-    console.log(`Calendar grid generated with ${weeks} weeks`);
-    return true;
 }

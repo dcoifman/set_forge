@@ -835,8 +835,60 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Add click handler for preview use button
+    // Add a missing function for setting up category filters
+    function setCategoryFilters() {
+        console.log("Setting up template category filters");
+        
+        // Get all category buttons
+        const categoryButtons = document.querySelectorAll('.template-category-btn');
+        if (categoryButtons.length === 0) {
+            console.warn("No category buttons found to initialize");
+            return;
+        }
+        
+        // Add click event listeners to category buttons
+        categoryButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove active class from all buttons
+                categoryButtons.forEach(b => b.classList.remove('active'));
+                // Add active class to clicked button
+                this.classList.add('active');
+                // Set the current category
+                currentCategory = this.getAttribute('data-category');
+                console.log(`Category filter set to: ${currentCategory}`);
+                // Render templates with the new filter
+                renderTemplates();
+            });
+        });
+        
+        console.log("Category filters initialized");
+    }
+    
+    // Add a missing function for setting up search
+    function setupSearch() {
+        console.log("Setting up template search functionality");
+        
+        const searchInput = document.getElementById('templates-search');
+        if (!searchInput) {
+            console.warn("Template search input not found");
+            return;
+        }
+        
+        // Add input event listener
+        searchInput.addEventListener('input', function() {
+            currentSearchTerm = this.value.trim();
+            console.log(`Search term updated: "${currentSearchTerm}"`);
+            renderTemplates();
+        });
+        
+        console.log("Template search initialized");
+    }
+
+    // Fix the function to set up the preview use button
     function setupPreviewUseButton() {
+        console.log("Setting up template preview use button");
+        
+        // Use the correct ID that matches the HTML
         const previewUseTemplateBtn = document.getElementById('preview-use-template-btn');
         if (previewUseTemplateBtn) {
             previewUseTemplateBtn.addEventListener('click', function() {
@@ -847,8 +899,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error("No template ID found when Use Template clicked");
                 }
             });
+            console.log("Preview use template button initialized");
         } else {
-            console.warn("Preview use template button not found");
+            console.warn("Preview use template button not found with ID 'preview-use-template-btn'");
         }
     }
 
