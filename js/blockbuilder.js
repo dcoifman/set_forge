@@ -1272,8 +1272,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // TODO: Add visual icon if modelDriven is true (Phase 4)
 
         // --- Card Content ---
+        // Look up difficulty from library if not provided
+        let difficultyText = options.difficulty || card.dataset.difficulty || '';
+        if (!difficultyText && options.exerciseId && typeof findExerciseById === 'function') {
+            const exObj = findExerciseById(options.exerciseId);
+            if (exObj && exObj.difficulty) {
+                difficultyText = exObj.difficulty;
+            }
+        }
         const repsText = options.sets && options.reps ? `${options.sets}×${options.reps}` : (card.dataset.sets && card.dataset.reps ? `${card.dataset.sets}×${card.dataset.reps}` : '-');
-        const difficultyText = options.difficulty || card.dataset.difficulty || '';
         let difficultyStars = '';
         if (difficultyText && !isNaN(Number(difficultyText))) {
             const level = Math.max(1, Math.min(5, Number(difficultyText)));
