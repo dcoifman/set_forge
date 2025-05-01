@@ -4377,3 +4377,72 @@ function syncSelectedContext(contextType, data = {}) {
         updateInspectorForSelection();
     }
 }
+
+// --- Selection Handling ---
+function handleSelection(element, isShiftKey) {
+    // Clear previous selection
+    document.querySelectorAll('.workout-card.selected').forEach(el => el.classList.remove('selected'));
+    if (!selectedContext) selectedContext = { type: 'none', elements: new Set() };
+    selectedContext.elements = new Set();
+
+    if (element && element.classList.contains('workout-card')) {
+        element.classList.add('selected');
+        selectedContext.type = 'exercise';
+        selectedContext.elements = new Set([element]);
+        // Debug log
+        console.log('[handleSelection] Selected card:', element.id, element.dataset);
+    } else if (element && element.classList.contains('day-cell')) {
+        selectedContext.type = 'day';
+        selectedContext.elements = new Set([element]);
+        console.log('[handleSelection] Selected day cell:', element.id || element.dataset.dayId, element.dataset);
+    } else if (element && element.classList.contains('phase-bar')) {
+        selectedContext.type = 'phase';
+        selectedContext.elements = new Set([element]);
+        console.log('[handleSelection] Selected phase:', element.id, element.dataset);
+    } else {
+        selectedContext.type = 'none';
+        selectedContext.elements = new Set();
+        console.log('[handleSelection] Cleared selection.');
+    }
+}
+
+// --- Card Click Handler ---
+function handleCardClick(cardElement, isShiftKey) {
+    handleSelection(cardElement, isShiftKey);
+    updateMultiSelectToolbarVisibility();
+    updateInspectorForSelection();
+    if (selectedContext.elements.size === 1 && !isShiftKey) {
+        openInspector(cardElement);
+    } else if (selectedContext.elements.size > 1) {
+        openMultiSelectInspector();
+    } else {
+        closeInspector();
+    }
+}
+
+// --- Workout Card Creation ---
+function createWorkoutCard(exerciseName, details, options = {}) {
+    const card = document.createElement('div');
+    card.className = 'workout-card';
+    card.draggable = true;
+    card.id = options.id || `workout-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    // Ensure exerciseId is set
+    let exerciseId = options.exerciseId;
+    if (!exerciseId && exerciseLibraryData && exerciseName) {
+        const found = exerciseLibraryData.find(ex => ex.name === exerciseName);
+        if (found) exerciseId = found.id;
+    }
+
+    card.dataset.sets = options.sets || '';
+    card.dataset.reps = options.reps || '';
+    card.dataset.loadType = options.loadType || 'rpe';
+    card.dataset.loadValue = options.loadValue || '';
+    card.dataset.rest = options.rest || '';
+    card.dataset.exerciseId = exerciseId || '';
+    card.dataset.notes = options.notes || details || '';
+    card.dataset.load = options.load || calculateEstimatedLoad(card.dataset);
+    card.dataset.modelDriven = options.modelDriven === true ? 'true' : 'false';
+    if (options.sourceModelId) card.dataset.sourceModelId = options.sourceModelId;
+    // ... rest of createWorkoutCard ...
+}
