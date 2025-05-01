@@ -3571,3 +3571,39 @@ body.show-hub #back-to-hub-btn {
     gap: 0.1em;
   }
 }
+
+/* === Periodization Model Badge Styles === */
+.model-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 10;
+  background: rgba(255, 112, 59, 0.92); /* Default accent, can be overridden by model-type class */
+  color: #fff;
+  font-size: 0.85em;
+  font-weight: 700;
+  border-radius: 16px;
+  padding: 0.18em 0.7em 0.18em 0.5em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.model-badge .badge-icon {
+  font-size: 1.1em;
+  margin-right: 0.3em;
+}
+.model-badge .badge-text {
+  font-size: 0.85em;
+  letter-spacing: 0.04em;
+}
+/* Color overrides for different model types */
+.model-badge.model-type-linear { background: linear-gradient(90deg, #3a7bd5, #3a60d5); }
+.model-badge.model-type-wave { background: linear-gradient(90deg, #ff703b, #e65a2a); }
+.model-badge.model-type-triphasic { background: linear-gradient(90deg, #cc2b5e, #753a88); }
+.model-badge.model-type-undulating { background: linear-gradient(90deg, #4ca1af, #2c3e50); }
+
+.day-cell { position: relative; /* Ensure badges can be absolutely positioned */ }
