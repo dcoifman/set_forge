@@ -1274,7 +1274,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Card Content ---
         const repsText = options.sets && options.reps ? `${options.sets}×${options.reps}` : (card.dataset.sets && card.dataset.reps ? `${card.dataset.sets}×${card.dataset.reps}` : '-');
         const difficultyText = options.difficulty || card.dataset.difficulty || '';
-        // For stars, you could use: '★'.repeat(difficultyLevel) or a mapping
         let difficultyStars = '';
         if (difficultyText && !isNaN(Number(difficultyText))) {
             const level = Math.max(1, Math.min(5, Number(difficultyText)));
@@ -1283,25 +1282,16 @@ document.addEventListener('DOMContentLoaded', () => {
             difficultyStars = difficultyText;
         }
         card.innerHTML = `
-            <div class="card-face card-front">
-                <div class="card-top-bubble">
-                    <span class="exercise-name">${exerciseName}</span>
-                    <span class="card-reps">${repsText}</span>
-                    <span class="card-difficulty">${difficultyStars}</span>
-                </div>
-                <div class="card-bottom-band">
-                    <span class="card-reps">${repsText}</span>
-                    <span class="card-difficulty">${difficultyText || '-'}</span>
-                </div>
-                <div class="card-actions">
-                    <button class="card-action-btn edit-btn" title="Edit Exercise">✏️</button>
-                    <button class="card-action-btn delete-btn" title="Delete Exercise">🗑️</button>
-                </div>
-                <div class="vbt-indicator" style="display: none;" title="Velocity Loss Target"></div>
+            <div class="exercise-name">${exerciseName}</div>
+            <div class="card-details-row">
+                <span class="card-reps">${repsText}</span>
+                <span class="card-difficulty">${difficultyStars || '-'}</span>
             </div>
-            <div class="card-face card-back" style="display: none;">
-                <!-- Back content for editing/details -->
+            <div class="card-actions">
+                <button class="card-action-btn edit-btn" title="Edit Exercise">✏️</button>
+                <button class="card-action-btn delete-btn" title="Delete Exercise">🗑️</button>
             </div>
+            <div class="vbt-indicator" style="display: none;" title="Velocity Loss Target"></div>
         `;
 
         // Add event listeners 
