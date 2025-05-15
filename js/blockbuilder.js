@@ -419,13 +419,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const weekNumber = weeklyTarget.week; // 1-based from PPO
                 const dayAbbreviation = exTarget.dayPreference; // mon, tue, etc.
                 
-                // Map day abbreviation to day index (0-6)
-                const dayIndices = { mon: 0, tue: 1, wed: 2, thu: 3, fri: 4, sat: 5, sun: 6 };
-                const dayIndex = dayIndices[dayAbbreviation] !== undefined ? dayIndices[dayAbbreviation] : 0;
-                
-                // Calculate cell ID (week index is 0-based in grid, so subtract 1 from week number)
-                const cellId = `week-${weekNumber - 1}-day-${dayIndex}`;
-                const targetCell = document.getElementById(cellId);
+                // Capitalize first letter for data-day attribute
+                const cellWeek = weekNumber;
+                const cellDay = dayAbbreviation.charAt(0).toUpperCase() + dayAbbreviation.slice(1);
+                const targetCell = document.querySelector(`.day-cell[data-week='${cellWeek}'][data-day='${cellDay}']`);
                 
                 if (targetCell) {
                     // Create card data object with exercise info and goal-driven flag
