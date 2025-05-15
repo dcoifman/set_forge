@@ -4944,9 +4944,148 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to load a template into the block builder
     function loadTemplateBlock(template) {
         console.log(`Loading template: ${template.title}`);
-        // Always generate the grid before loading
-        this.generateCalendarGrid(template.weeks || 8);
-        // ... rest of the function ...
+        try {
+            // 1. Generate Grid based on template weeks
+            generateCalendarGrid(template.weeks || 8);
+            
+            // 2. Stay in builder view
+            showView('builder');
+            
+            // 3. Set block name based on template
+            const blockNameInput = document.getElementById('block-name-input');
+            if (blockNameInput) {
+                blockNameInput.value = template.title || 'Untitled Block';
+            }
+            
+            // 4. Process schedule and add exercises
+            if (template.schedule && template.schedule.length > 0) {
+                console.log(`Loading schedule data for ${template.schedule.length} weeks`);
+                
+                // Get a reference to the work canvas
+                const workCanvas = document.getElementById('work-canvas');
+                if (!workCanvas) {
+                    console.error("Work canvas not found when trying to populate template");
+                    return false;
+                }
+                
+                // Process each week in the schedule
+                template.schedule.forEach(weekData => {
+                    const weekNum = weekData.week;
+                    console.log(`Processing template week ${weekNum}`);
+                    
+                    // Process each day in the week
+                    weekData.days.forEach(dayData => {
+                        const dayName = dayData.day;
+                        console.log(`Processing day: ${dayName} in week ${weekNum}`);
+                        
+                        // Convert day name to abbreviated format (mon, tue, etc.)
+                        const dayAbbr = dayName.substring(0, 3).toLowerCase();
+                        
+                        // Generate day ID using the correct format
+                        const dayId = `wk${weekNum}-${dayAbbr}`;
+                        console.log(`Looking for day cell with ID: ${dayId}`);
+                        
+                        // Find the day cell for this specific day
+                        const dayCell = workCanvas.querySelector(`[data-day-id="${dayId}"]`);
+                        
+                        if (!dayCell) {
+                            console.warn(`Could not find day cell for ${dayId}`);
+                            return; // Skip this day
+                        }
+                        
+                        // Add the workout title as a header to the day
+                        if (dayData.title && dayData.title !== 'Rest') {
+                            const headerCard = document.createElement('div');
+                            headerCard.className = 'day-header';
+                            headerCard.textContent = dayData.title;
+                            dayCell.appendChild(headerCard);
+                        }
+                        
+                        // Create exercise cards for this day
+                        if (dayData.exercises && dayData.exercises.length > 0) {
+                            dayData.exercises.forEach(exerciseText => {
+                                if (exerciseText) {
+                                    try {
+                                        // Parse the exercise text (e.g., "Bench Press 4x8")
+                                        const parts = exerciseText.split(' ');
+                                        
+                                        // Extract sets and reps if available
+                                        const lastPart = parts[parts.length - 1];
+                                        let sets = '';
+                                        let reps = '';
+                                        
+                                        // Check for common pattern like 3x10, 5x5, etc.
+                                        if (lastPart.includes('x')) {
+                                            const setsReps = lastPart.split('x');
+                                            if (setsReps.length === 2) {
+                                                sets = setsReps[0];
+                                                reps = setsReps[1];
+                                                // Remove the sets/reps part from exercise name
+                                                parts.pop();
+                                            }
+                                        }
+                                        
+                                        // Join the remaining parts as the exercise name
+                                        const exerciseName = parts.join(' ');
+                                        
+                                        console.log(`Creating card for ${exerciseName} (${sets}x${reps})`);
+                                        
+                                        // Create workout card
+                                        let card;
+                                        if (typeof window.createWorkoutCard === 'function') {
+                                            card = window.createWorkoutCard(exerciseName, {
+                                                sets: sets,
+                                                reps: reps,
+                                                loadType: 'weight',
+                                                loadValue: '',
+                                                rest: '90s'
+                                            });
+                                            
+                                            if (card) {
+                                                dayCell.appendChild(card);
+                                                console.log(`Added exercise "${exerciseName}" to ${dayId}`);
+                                            } else {
+                                                console.warn(`Failed to create card for ${exerciseName}`);
+                                            }
+                                        } else {
+                                            console.error("createWorkoutCard function not available");
+                                            
+                                            // Fallback to basic card creation
+                                            card = document.createElement('div');
+                                            card.className = 'workout-card';
+                                            card.innerHTML = `
+                                                <div class="exercise-name">${exerciseName}</div>
+                                                <div class="card-details">
+                                                    <span class="card-reps">${sets}x${reps}</span>
+                                                </div>
+                                            `;
+                                            card.draggable = true;
+                                            dayCell.appendChild(card);
+                                            console.log(`Added basic card for "${exerciseName}" to ${dayId}`);
+                                        }
+                                    } catch (error) {
+                                        console.error(`Error creating card for ${exerciseText}:`, error);
+                                    }
+                                }
+                            });
+                        }
+                    });
+                });
+                
+                // Trigger analytics update if available
+                if (typeof triggerAnalyticsUpdate === 'function') {
+                    triggerAnalyticsUpdate(workCanvas);
+                }
+            } else {
+                console.warn("No schedule data found in template");
+            }
+            
+            // Return true to indicate success
+            return true;
+        } catch (error) {
+            console.error("Error loading template:", error);
+            return false;
+        }
     }
 
     // Make loadTemplateBlock accessible to other modules

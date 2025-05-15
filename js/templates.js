@@ -627,7 +627,7 @@ function showTemplatePreview(templateId) {
         console.error("Template preview close button not found");
     }
     
-    // Set preview content
+    // Set preview content - with null checks for all elements
     const titleElement = document.querySelector('.template-preview-title');
     if (titleElement) titleElement.textContent = template.title;
     
@@ -637,93 +637,122 @@ function showTemplatePreview(templateId) {
     const descriptionElement = document.querySelector('.template-preview-description');
     if (descriptionElement) descriptionElement.textContent = template.description;
     
-    // Set category-specific icon
+    // Set category-specific icon - with null check
     const previewIcon = document.querySelector('.template-preview-icon');
-    previewIcon.textContent = getCategoryIcon(template.category);
-    previewIcon.style.backgroundColor = getCategoryColor(template.category, 0.2);
-    previewIcon.style.color = getCategoryColor(template.category, 1);
+    if (previewIcon) {
+        previewIcon.textContent = getCategoryIcon(template.category);
+        previewIcon.style.backgroundColor = getCategoryColor(template.category, 0.2);
+        previewIcon.style.color = getCategoryColor(template.category, 1);
+    } else {
+        console.error("Template preview icon element not found in DOM");
+    }
     
-    // Create and insert category-specific animation
+    // Create and insert category-specific animation - with null check
     const visualContent = document.querySelector('.template-visual-content');
-    visualContent.innerHTML = '';
-    visualContent.appendChild(createCategoryAnimation(template.category));
+    if (visualContent) {
+        visualContent.innerHTML = '';
+        visualContent.appendChild(createCategoryAnimation(template.category));
+    } else {
+        console.error("Template visual content element not found in DOM");
+    }
     
-    // Render phases
+    // Render phases - with null check
     const phasesContainer = document.querySelector('.template-preview-phases');
-    phasesContainer.innerHTML = '';
-    template.phases.forEach(phase => {
-        const phaseElement = document.createElement('div');
-        phaseElement.className = `template-preview-phase ${phase.color}`;
-        phaseElement.style.width = `${phase.duration / template.weeks * 100}%`;
-        phaseElement.textContent = `${phase.name} (${phase.duration}wk)`;
-        phasesContainer.appendChild(phaseElement);
-    });
-    
-    // Render weekly schedule
-    const scheduleContainer = document.querySelector('.template-preview-schedule');
-    scheduleContainer.innerHTML = '';
-    
-    template.schedule.forEach(week => {
-        const weekElement = document.createElement('div');
-        weekElement.className = 'template-preview-week';
-        
-        const weekHeader = document.createElement('div');
-        weekHeader.className = 'template-preview-week-header';
-        weekHeader.textContent = `Week ${week.week} - ${week.phase}`;
-        weekElement.appendChild(weekHeader);
-        
-        const daysGrid = document.createElement('div');
-        daysGrid.className = 'template-preview-days';
-        
-        for (let i = 0; i < 7; i++) {
-            const dayOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][i];
-            const dayData = week.days.find(d => d.day === dayOfWeek);
-            
-            const dayElement = document.createElement('div');
-            dayElement.className = 'template-preview-day';
-            
-            if (!dayData || dayData.title === 'Rest' || dayData.exercises.length === 0) {
-                dayElement.classList.add('rest-day');
-                dayElement.textContent = 'Rest Day';
-            } else {
-                const sessionTitle = document.createElement('div');
-                sessionTitle.className = 'template-preview-session-title';
-                sessionTitle.textContent = dayData.title;
-                dayElement.appendChild(sessionTitle);
-                
-                dayData.exercises.forEach(exercise => {
-                    const exerciseElement = document.createElement('div');
-                    exerciseElement.className = 'template-preview-exercise';
-                    exerciseElement.textContent = exercise;
-                    dayElement.appendChild(exerciseElement);
-                });
-            }
-            
-            daysGrid.appendChild(dayElement);
-        }
-        
-        weekElement.appendChild(daysGrid);
-        scheduleContainer.appendChild(weekElement);
-    });
-    
-    // Add click to toggle collapse for week headers
-    document.querySelectorAll('.template-preview-week-header').forEach(header => {
-        header.addEventListener('click', function() {
-            this.parentElement.classList.toggle('collapsed');
+    if (phasesContainer) {
+        phasesContainer.innerHTML = '';
+        template.phases.forEach(phase => {
+            const phaseElement = document.createElement('div');
+            phaseElement.className = `template-preview-phase ${phase.color}`;
+            phaseElement.style.width = `${phase.duration / template.weeks * 100}%`;
+            phaseElement.textContent = `${phase.name} (${phase.duration}wk)`;
+            phasesContainer.appendChild(phaseElement);
         });
-    });
+    } else {
+        console.error("Template phases container not found in DOM");
+    }
     
-    // Render scientific background
-    document.querySelector('.template-preview-science-content').textContent = template.science;
+    // Render weekly schedule - with null check
+    const scheduleContainer = document.querySelector('.template-preview-schedule');
+    if (scheduleContainer) {
+        scheduleContainer.innerHTML = '';
+        
+        if (template.schedule && template.schedule.length > 0) {
+            template.schedule.forEach(week => {
+                const weekElement = document.createElement('div');
+                weekElement.className = 'template-preview-week';
+                
+                const weekHeader = document.createElement('div');
+                weekHeader.className = 'template-preview-week-header';
+                weekHeader.textContent = `Week ${week.week} - ${week.phase}`;
+                weekElement.appendChild(weekHeader);
+                
+                const daysGrid = document.createElement('div');
+                daysGrid.className = 'template-preview-days';
+                
+                for (let i = 0; i < 7; i++) {
+                    const dayOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][i];
+                    const dayData = week.days.find(d => d.day === dayOfWeek);
+                    
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'template-preview-day';
+                    
+                    if (!dayData || dayData.title === 'Rest' || !dayData.exercises || dayData.exercises.length === 0) {
+                        dayElement.classList.add('rest-day');
+                        dayElement.textContent = 'Rest Day';
+                    } else {
+                        const sessionTitle = document.createElement('div');
+                        sessionTitle.className = 'template-preview-session-title';
+                        sessionTitle.textContent = dayData.title;
+                        dayElement.appendChild(sessionTitle);
+                        
+                        dayData.exercises.forEach(exercise => {
+                            const exerciseElement = document.createElement('div');
+                            exerciseElement.className = 'template-preview-exercise';
+                            exerciseElement.textContent = exercise;
+                            dayElement.appendChild(exerciseElement);
+                        });
+                    }
+                    
+                    daysGrid.appendChild(dayElement);
+                }
+                
+                weekElement.appendChild(daysGrid);
+                scheduleContainer.appendChild(weekElement);
+            });
+            
+            // Add click to toggle collapse for week headers
+            document.querySelectorAll('.template-preview-week-header').forEach(header => {
+                header.addEventListener('click', function() {
+                    this.parentElement.classList.toggle('collapsed');
+                });
+            });
+        } else {
+            scheduleContainer.innerHTML = '<div class="no-schedule">No detailed schedule available for this template.</div>';
+        }
+    } else {
+        console.error("Template schedule container not found in DOM");
+    }
     
-    // Render recommendations
+    // Render scientific background - with null check
+    const scienceContent = document.querySelector('.template-preview-science-content');
+    if (scienceContent) {
+        scienceContent.textContent = template.science || 'No scientific background available for this template.';
+    }
+    
+    // Render recommendations - with null check
     const recommendedList = document.querySelector('.template-preview-recommended ul');
-    recommendedList.innerHTML = '';
-    template.recommended.forEach(rec => {
-        const li = document.createElement('li');
-        li.textContent = rec;
-        recommendedList.appendChild(li);
-    });
+    if (recommendedList) {
+        recommendedList.innerHTML = '';
+        if (template.recommended && template.recommended.length > 0) {
+            template.recommended.forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                recommendedList.appendChild(li);
+            });
+        } else {
+            recommendedList.innerHTML = '<li>No specific recommendations available.</li>';
+        }
+    }
     
     // Reset any inline styles that might have been applied when closing
     templatePreviewModal.style.display = '';
