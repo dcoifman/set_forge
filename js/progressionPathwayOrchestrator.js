@@ -5,20 +5,30 @@
 const ProgressionPathwayOrchestrator = {
     /**
      * Calculates goal-driven pathways for multiple exercises, potentially modulated by a periodization model.
+     * Now also considers daily readiness and simulated past performance.
      * @param {object} goalInstance - Contains all goal parameters including targetExercises, timeframe, model.
      * @param {object} periodizationEngine - Instance of PeriodizationEngine.
      * @param {object} exerciseLibrary - Instance of ExerciseLibrary.
+     * @param {object} [dailyReadinessScores={}] - Map of dayId (e.g., "wk0-mon") to readiness score (0-100).
+     * @param {Array<object>} [previousCardData=[]] - Array of data objects from existing cards on the calendar.
      * @returns {Array<object>} An array of weekly targets: 
      * [{ week: number, exercises: [ { exerciseId, name, load, sets, reps, dayPreference, detailsString } , ... ],
      *    suggestedAccessories: [ { exerciseId, exerciseName, sets, reps, notes, dayPreference } , ... ] }, ...]
      */
-    calculateGoalDrivenPathways: function(goalInstance, periodizationEngine, exerciseLibrary) {
+    calculateGoalDrivenPathways: function(
+        goalInstance, 
+        periodizationEngine, 
+        exerciseLibrary,
+        dailyReadinessScores = {},
+        previousCardData = []
+    ) {
         const {
             targetExercises, // Array: [{ exerciseId, exerciseName, currentPerf, targetPerf, goalType, athleteLevel }]
             timeframeWeeks,
             overallGoalType, // The main goal type selected (Strength, Hypertrophy etc.)
             athleteLevel,    // Overall athlete level
             periodizationModelName, // Optional: e.g., "linear", "wave"
+            id: currentGoalInstanceId // ID of the current GDAP instance being generated
             // baseModelParams (if we need to provide specific default params for the chosen model)
         } = goalInstance;
 
@@ -45,6 +55,11 @@ const ProgressionPathwayOrchestrator = {
                 const exGoalType = goalEx.goalType || overallGoalType;
                 const exAthleteLevel = goalEx.athleteLevel || athleteLevel;
 
+                const preferredDayAbbr = this._getPreferredDay(exIdx, targetExercises.length);
+                // Standardized dayId format for readiness lookup e.g. "wk0-mon"
+                const dayIdForReadiness = `wk${weekIdx}-${preferredDayAbbr}`;
+                const currentDayReadiness = dailyReadinessScores[dayIdForReadiness] !== undefined ? dailyReadinessScores[dayIdForReadiness] : 75; // Default to 75 if not found
+
                 // 1. Calculate Base Linear Progression for this exercise for the current week
                 const baseProg = this._calculateSimpleLinearTargetForWeek(
                     parseFloat(currentPerf), parseFloat(targetPerf), timeframeWeeks, currentWeekNumber, exGoalType, exAthleteLevel
@@ -60,12 +75,47 @@ const ProgressionPathwayOrchestrator = {
                     load: baseProg.load,
                     sets: baseProg.sets,
                     reps: baseProg.reps,
-                    dayPreference: this._getPreferredDay(exIdx, targetExercises.length), // e.g., mon, tue, wed
+                    dayPreference: preferredDayAbbr, // e.g., mon, tue, wed
                     detailsString: `${baseProg.sets}x${baseProg.reps} @ ${baseProg.load}kg (Linear Goal)`,
-                    isPrimary: true // Mark as primary
+                    loadType: 'weight', // Base progression is weight
+                    isPrimary: true, // Mark as primary
+                    adjustments: [] // To track how the plan was modified
                 };
 
-                // 2. If a periodization model is selected, use PeriodizationEngine to refine
+                // 2. (CONCEPTUAL) Performance-Based Adjustment from Previous Week
+                // For MVP, this section will be placeholder as workout cards don't store actuals yet.
+                // We'll assume plan was met or use planned values as proxy.
+                if (weekIdx > 0) {
+                    const prevWeekIdx = weekIdx - 1;
+                    // Find the card for THIS goalEx from the PREVIOUS week.
+                    // Card needs to be part of the CURRENT GDAP instance.
+                    const prevWeekCard = previousCardData.find(card =>
+                        card.weekIndex === prevWeekIdx &&
+                        card.exerciseId === exerciseId &&
+                        card.dataset?.sourceGoalId === currentGoalInstanceId && // Ensure it's from the same GDAP plan
+                        this._getDayAbbreviationFromDayId(card.dayId) === preferredDayAbbr // Ensure it's the same day slot
+                    );
+
+                    if (prevWeekCard) {
+                        // const plannedLoadPrev = parseFloat(prevWeekCard.plannedLoad);
+                        // const actualLoad = parseFloat(prevWeekCard.actualLoad); // Needs to exist on card data
+                        // const plannedRepsPrev = parseInt(prevWeekCard.plannedReps);
+                        // const actualReps = parseInt(prevWeekCard.actualReps); // Needs to exist
+                        // const plannedRpePrev = parseFloat(prevWeekCard.plannedRpe); // Needs to exist
+                        // const actualRpe = parseFloat(prevWeekCard.actualRpe);       // Needs to exist
+
+                        // Example placeholder logic:
+                        // if (actualRpe && plannedRpePrev && actualRpe < plannedRpePrev - 1) {
+                        //     finalExerciseTarget.load *= 1.025; // Increase load by 2.5%
+                        //     finalExerciseTarget.adjustments.push("Perf. Adj: +2.5% Load (Prev. Easy)");
+                        // } else if (actualRpe && plannedRpePrev && actualRpe > plannedRpePrev + 1) {
+                        //     finalExerciseTarget.load *= 0.975; // Decrease load
+                        //     finalExerciseTarget.adjustments.push("Perf. Adj: -2.5% Load (Prev. Hard)");
+                        // }
+                    }
+                }
+
+                // 3. If a periodization model is selected, use PeriodizationEngine to refine
                 if (periodizationModelName) {
                     try {
                         const modelDefaults = periodizationEngine.getModelDefaults(periodizationModelName);
@@ -146,6 +196,7 @@ const ProgressionPathwayOrchestrator = {
                                 finalExerciseTarget.reps = engineTargetEx.reps;
                                 finalExerciseTarget.detailsString = engineTargetEx.detailsString || `${engineTargetEx.sets}x${engineTargetEx.reps} @ ${engineTargetEx.loadValue}${engineTargetEx.loadType ==='%' ? '%' : (engineTargetEx.loadType ==='weight' ? 'kg' : engineTargetEx.loadType)}`;
                                 finalExerciseTarget.loadType = engineTargetEx.loadType; // Track if % or weight
+                                finalExerciseTarget.adjustments.push(`Model: ${periodizationModelName}`);
                                 console.log(`PPO: Week ${currentWeekNumber}, Ex ${exerciseName} modulated by ${periodizationModelName}: ${finalExerciseTarget.detailsString}`);
                             } else {
                                 console.warn(`PPO: Week ${currentWeekNumber}, Ex ${exerciseName} not found in ${periodizationModelName} engine output for day ${finalExerciseTarget.dayPreference}. Using linear.`);
@@ -156,6 +207,34 @@ const ProgressionPathwayOrchestrator = {
                         // Fallback to linear if error
                     }
                 }
+
+                // 4. Readiness-Based Adjustment (Applied last to the day's plan)
+                let readinessAdjustmentApplied = false;
+                if (currentDayReadiness < 50 && currentDayReadiness >= 30) { // Low readiness
+                    finalExerciseTarget.sets = Math.max(1, Math.round(finalExerciseTarget.sets * 0.8)); // Reduce sets by 20%
+                    if (finalExerciseTarget.loadType === 'weight') finalExerciseTarget.load = Math.round(finalExerciseTarget.load * 0.95); // Reduce load by 5%
+                    else if (finalExerciseTarget.loadType === 'rpe') finalExerciseTarget.load = Math.max(5, finalExerciseTarget.load -1); // Reduce RPE by 1
+                    else if (finalExerciseTarget.loadType === '%') finalExerciseTarget.load = Math.max(50, finalExerciseTarget.load -5); // Reduce % by 5
+                    finalExerciseTarget.adjustments.push("Readiness Mod: Low (-Vol/Int)");
+                    readinessAdjustmentApplied = true;
+                } else if (currentDayReadiness < 30) { // Very low readiness
+                    finalExerciseTarget.sets = Math.max(1, Math.round(finalExerciseTarget.sets * 0.6)); // Reduce sets by 40%
+                     if (finalExerciseTarget.loadType === 'weight') finalExerciseTarget.load = Math.round(finalExerciseTarget.load * 0.90); // Reduce load by 10%
+                     else if (finalExerciseTarget.loadType === 'rpe') finalExerciseTarget.load = Math.max(5, finalExerciseTarget.load - 2); // Reduce RPE by 2
+                     else if (finalExerciseTarget.loadType === '%') finalExerciseTarget.load = Math.max(40, finalExerciseTarget.load -10); // Reduce % by 10
+                    finalExerciseTarget.adjustments.push("Readiness Mod: Very Low (--Vol/Int)");
+                    readinessAdjustmentApplied = true;
+                }
+
+                // Update details string with adjustments
+                if (finalExerciseTarget.adjustments.length > 0) {
+                    // Reconstruct details string if modified by readiness, otherwise append notes
+                    if (readinessAdjustmentApplied || !finalExerciseTarget.detailsString.includes(finalExerciseTarget.adjustments.join(", "))) {
+                         finalExerciseTarget.detailsString = `${finalExerciseTarget.sets}x${finalExerciseTarget.reps} @ ${finalExerciseTarget.load}${finalExerciseTarget.loadType === '%' ? '%' : finalExerciseTarget.loadType === 'weight' ? 'kg' : (finalExerciseTarget.loadType === 'rpe' ? ' RPE' : '')}`;
+                    }
+                    finalExerciseTarget.detailsString += ` (${finalExerciseTarget.adjustments.join(", ")})`;
+                }
+                
                 exercisesForThisWeek.push(finalExerciseTarget);
                 
                 // Group primary exercises by their scheduled day for accessory suggestion
@@ -193,7 +272,7 @@ const ProgressionPathwayOrchestrator = {
                 suggestedAccessories: suggestedAccessoriesForThisWeek // Accessories suggested by PPO
             });
         }
-        console.log("PPO Calculated Full Goal-Driven Pathway (with accessory suggestions):", weeklyTargets);
+        console.log("PPO Calculated Full Goal-Driven Pathway (with adaptation logic):", weeklyTargets);
         return weeklyTargets;
     },
 
@@ -255,6 +334,25 @@ const ProgressionPathwayOrchestrator = {
         if (exerciseIndex === 1) return days[2]; // Wednesday
         if (exerciseIndex === 2) return days[4]; // Friday
         return days[exerciseIndex % days.length]; // Fallback for >3 exercises
+    },
+
+    /**
+     * Extracts day abbreviation from a day ID.
+     * @param {string} dayId - Format: "week-0-day-0" or similar pattern containing the day index.
+     * @returns {string|null} The day abbreviation (mon, tue, etc.) or null if not matching pattern.
+     */
+    _getDayAbbreviationFromDayId: function(dayId) {
+        if (typeof dayId === 'string' && dayId.includes('-')) {
+            const parts = dayId.split('-');
+            if (parts.length >= 4) {
+                const dayIndex = parseInt(parts[3], 10);
+                if (!isNaN(dayIndex) && dayIndex >= 0 && dayIndex <= 6) {
+                    const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+                    return days[dayIndex];
+                }
+            }
+        }
+        return null;
     },
 
     /**

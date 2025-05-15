@@ -15,7 +15,7 @@ struct AthleteCardView: View {
         HStack(spacing: 15) {
             Image(systemName: athlete.profileImageName)
                 .font(.system(size: 40))
-                .foregroundColor(.moltenOrange)
+                .foregroundColor(Color.moltenOrange)
                 .frame(width: 50, height: 50)
                 .background(Color.gunmetalGrey.opacity(0.5))
                 .clipShape(Circle())

@@ -606,24 +606,3 @@ export function getExerciseById(id) {
 
 // Make this function available globally too
 window.getExerciseById = getExerciseById;
-
-// At the end of the file, expose to window object
-// Create a global ExerciseLibrary API
-window.ExerciseLibrary = {
-    getExercises,
-    getExerciseById,
-    suggestAlternatives,
-    incrementExerciseFrequency,
-    toggleFavoritesFilter,
-    openExerciseModal,
-    closeExerciseModal,
-    populateExerciseListUI,
-    filterExerciseLibrary,
-    handleExerciseFormSubmit,
-    exportUserExercises,
-    handleExerciseImport,
-    setViewMode,
-    loadViewMode,
-    loadExerciseLibrary,
-    initializeLibrary
-};
