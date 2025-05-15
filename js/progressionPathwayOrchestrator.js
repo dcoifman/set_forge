@@ -468,4 +468,7 @@ if (typeof module !== 'undefined') {
 }
 
 // At the end of the file, expose to window object
-window.ProgressionPathwayOrchestrator = ProgressionPathwayOrchestrator; 
+window.ProgressionPathwayOrchestrator = ProgressionPathwayOrchestrator;
+
+// Also add proper default export for ES modules
+export default ProgressionPathwayOrchestrator; 
