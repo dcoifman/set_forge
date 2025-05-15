@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gdapForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             await handleGDAPFormSubmit(); // Make it async if PPO becomes async
-            gdapModal.style.display = 'none';
+            gdapModal.classList.remove('is-visible'); // Use the same class mechanism as elsewhere
         });
     }
 
@@ -1732,19 +1732,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- View Management --- 
     function showView(viewName) { // 'hub' or 'builder'
         console.log(`Switching to ${viewName} view`);
-        if (!hubContainer || !blockBuilderContainer || !backToHubBtn) {
-            console.error("View containers or button not found!");
-             return;
+        
+        // Get references inside the function to ensure they're current
+        const hubContainer = document.getElementById('block-builder-hub');
+        const blockBuilderContainer = document.querySelector('.block-builder-container');
+        const backToHubBtn = document.getElementById('back-to-hub-btn');
+        
+        if (!hubContainer || !blockBuilderContainer) {
+            console.error("View containers not found!");
+            return;
         }
 
         if (viewName === 'builder') {
             hubContainer.style.display = 'none';
             blockBuilderContainer.style.display = 'flex'; // Assuming flex layout for builder
-            backToHubBtn.style.display = 'inline'; // Show back button
+            if (backToHubBtn) backToHubBtn.style.display = 'inline'; // Show back button
         } else if (viewName === 'hub') {
             hubContainer.style.display = 'block'; // Or flex, depending on its CSS
             blockBuilderContainer.style.display = 'none';
-            backToHubBtn.style.display = 'none'; // Hide back button
+            if (backToHubBtn) backToHubBtn.style.display = 'none'; // Hide back button
         } else {
             console.warn(`Unknown view name: ${viewName}`);
         }
