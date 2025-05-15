@@ -1014,9 +1014,13 @@ function addEventListeners() {
     }
     
     // Use template button in preview modal
-    if (useTemplateBtn && currentTemplateId) {
+    if (useTemplateBtn) {
         useTemplateBtn.addEventListener('click', function() {
-            useTemplate(currentTemplateId);
+            if (currentTemplateId) {
+                useTemplate(currentTemplateId);
+            } else {
+                console.error("No template ID found when Use Template clicked");
+            }
         });
     }
     

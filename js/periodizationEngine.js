@@ -298,21 +298,10 @@ export function getModelDefaults(type) {
  * @returns {object} Parameter definitions keyed by parameter name.
  */
 export function getModelParameterDefinitions(type) {
-    console.log(`[Engine] Getting parameter definitions for type: ${type}`);
-     // Add common parameters needed for interference checks if not already present
-     const definitions = MODEL_PARAMETER_DEFINITIONS[type.toLowerCase()] || {};
-     // Example: Add stimulusType to weeklyStructure description globally (or per model)
-     if (definitions.weeklyStructure && definitions.weeklyStructure.description) {
-         if (!definitions.weeklyStructure.description.includes('stimulusType')) {
-            definitions.weeklyStructure.description += ' Add stimulusType: \"strength\"|\"endurance\".';
-         }
-         // Example: Add equipmentType to assistance description globally (or per model)
-          if (definitions.weeklyStructure.description.includes('assistanceExercises') && !definitions.weeklyStructure.description.includes('equipmentType')) {
-              definitions.weeklyStructure.description = definitions.weeklyStructure.description.replace('assistanceExercises:[{', 'assistanceExercises:[{equipmentType:\"flywheel\", inertiaSetting:\"medium\", ..., ');
-          }
-     }
-     // Add specific model definitions as before
-     return definitions;
+    if(MODEL_PARAMETER_DEFINITIONS[type]) {
+        return JSON.parse(JSON.stringify(MODEL_PARAMETER_DEFINITIONS[type]));
+    }
+    return null;
 }
 
 /**
