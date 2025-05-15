@@ -10,7 +10,7 @@ import { triggerSaveState } from '../state/storage.js';
 // Global state (Needs refactoring, likely passed in or managed centrally)
 // let draggedItem = null; 
 
-export function createWorkoutCard(exerciseName, details = '3x5 @ RPE 8') { 
+export function createWorkoutCard(exerciseName, details = '3x5 @ RPE 8', options = {}) { 
     console.log('[createWorkoutCard] Starting for:', exerciseName, 'with details:', details); // <<< Log Start
     const card = document.createElement('div');
     card.className = 'workout-card';
@@ -26,6 +26,17 @@ export function createWorkoutCard(exerciseName, details = '3x5 @ RPE 8') {
     card.dataset.loadValue = parsedDetails.loadValue;
     card.dataset.rest = parsedDetails.rest;
     card.dataset.vbtTarget = "20"; // Default VBT velocity loss target (%)
+    
+    // Store model-driven status and data if provided
+    if (options.modelDriven) {
+        card.dataset.modelDriven = 'true';
+    }
+    if (options.sourceModelId) {
+        card.dataset.sourceModelId = options.sourceModelId;
+    }
+    if (options.modelType) {
+        card.dataset.modelType = options.modelType;
+    }
 
     // ADDING data-load attribute - use calculation similar to save function
     let estimatedLoad = 300; // Base load
@@ -37,11 +48,40 @@ export function createWorkoutCard(exerciseName, details = '3x5 @ RPE 8') {
     
     if (parsedDetails.loadType === 'rpe' && loadVal > 7) estimatedLoad *= (1 + (loadVal - 7) * 0.15);
     if (parsedDetails.loadType === 'percent' && loadVal > 70) estimatedLoad *= (1 + (loadVal - 70) * 0.015);
-     if (parsedDetails.loadType === 'weight') estimatedLoad = Math.max(estimatedLoad, loadVal * sets * reps * 0.5); // Factor in absolute weight
+    if (parsedDetails.loadType === 'weight') estimatedLoad = Math.max(estimatedLoad, loadVal * sets * reps * 0.5); // Factor in absolute weight
      
     if (exerciseName.toLowerCase().includes('squat') || exerciseName.toLowerCase().includes('deadlift')) estimatedLoad *= 1.2;
     if (exerciseName.toLowerCase().includes('press')) estimatedLoad *= 0.8;
     card.dataset.load = Math.round(estimatedLoad);
+
+    // Determine appropriate icon based on model type if provided
+    let modelBadgeHTML = '';
+    if (options.modelDriven && options.modelType) {
+        const modelType = options.modelType.toLowerCase();
+        const modelIcons = {
+            'linear': '📈',
+            'wave': '〰️',
+            'undulating': '📊',
+            'triphasic': '🔄',
+            'default': '📋'
+        };
+        const modelIcon = modelIcons[modelType] || modelIcons.default;
+        const modelAbbr = {
+            'linear': 'LIN',
+            'wave': 'WAVE',
+            'undulating': 'DUP',
+            'triphasic': 'TRI',
+            'default': 'MOD'
+        };
+        const modelText = modelAbbr[modelType] || modelAbbr.default;
+        
+        modelBadgeHTML = `
+            <div class="card-model-badge model-type-${modelType}" title="${options.modelType} Periodization Model">
+                <span class="model-badge-icon">${modelIcon}</span>
+                <span class="model-badge-text">${modelText}</span>
+            </div>
+        `;
+    }
 
     // Card Inner Structure for Flipping
     const cardHtml = `
@@ -49,6 +89,7 @@ export function createWorkoutCard(exerciseName, details = '3x5 @ RPE 8') {
             <div class="card-face card-front">
                 <span class="exercise-name">${exerciseName}</span>
                 <span class="details">${details}</span> 
+                ${modelBadgeHTML}
                 <div class="card-actions">
                      <button class="card-action-btn edit-btn" title="Edit">&hellip;</button>
                      <button class="card-action-btn info-btn" title="More Info">&#x2139;</button>
@@ -60,6 +101,7 @@ export function createWorkoutCard(exerciseName, details = '3x5 @ RPE 8') {
                 <p><strong>Load:</strong><span class="detail-val" data-bind="load">${card.dataset.loadValue ? (card.dataset.loadType === 'rpe' ? 'RPE ' : '') + card.dataset.loadValue + (card.dataset.loadType === 'percent' ? '%' : card.dataset.loadType === 'weight' ? 'kg' : '') : 'N/A'}</span></p>
                 <p><strong>Rest:</strong><span class="detail-val" data-bind="rest">${card.dataset.rest || 'N/A'}</span></p>
                 <p><strong>Notes:</strong> <span class="detail-val" data-bind="notes">${card.dataset.notes || 'N/A'}</span></p>
+                ${options.modelDriven ? `<p><strong>Model:</strong> <span class="detail-val">${options.modelType || 'Custom'}</span></p>` : ''}
                 <hr style="border-color: rgba(255,255,255,0.1); margin: 5px 0;">
                 <div class="vbt-controls">
                      <label for="vbt-target-${card.id}">Target VLoss (%):</label>
@@ -73,6 +115,11 @@ export function createWorkoutCard(exerciseName, details = '3x5 @ RPE 8') {
     `;
     console.log('[createWorkoutCard] Generated HTML:', cardHtml); // <<< Log HTML
     card.innerHTML = cardHtml;
+    
+    // Add model type class directly to the card if specified
+    if (options.modelDriven && options.modelType) {
+        card.classList.add(`model-card-${options.modelType.toLowerCase()}`);
+    }
     
     // Add event listeners
     
@@ -166,7 +213,7 @@ export function createWorkoutCard(exerciseName, details = '3x5 @ RPE 8') {
     
     console.log('[createWorkoutCard] Returning card element:', card); // <<< Log Return
     return card;
-  }
+}
 
 export function deleteSelectedWorkoutCard() {
     const { selectedElement, selectedElements } = getSelectionState();

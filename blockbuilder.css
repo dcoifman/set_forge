@@ -2,6 +2,128 @@
 
 /* Inherit variables from style.css */
 
+/* GDAP Modal Styles */
+#gdapPrimaryExercisesContainer {
+    border: 1px solid #e0e0e0;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+}
+#gdapPrimaryExercisesContainer legend {
+    font-weight: bold;
+    padding: 0 5px;
+}
+.gdap-exercise-slot {
+    border: 1px dashed #ccc;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+}
+.gdap-exercise-slot h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #333;
+}
+.gdap-exercise-slot label {
+    display: block;
+    margin-top: 8px;
+    margin-bottom: 3px;
+    font-weight: normal;
+    color: #555;
+}
+.button-small {
+    padding: 6px 12px;
+    font-size: 0.9em;
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+/* GDAP Modal Styles */
+.modal {
+    position: fixed;
+    z-index: 1000; /* Ensure it's on top */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5); /* Dim background */
+    display: flex; /* Used to center the modal content */
+    align-items: center; /* Used to center the modal content */
+    justify-content: center; /* Used to center the modal content */
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: auto; /* For older browsers or if flex not fully supported by parent */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+    border-radius: 8px;
+    position: relative; /* For positioning the close button */
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    color: #333;
+    text-align: center;
+}
+
+.modal-content label {
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+.modal-content input[type="number"],
+.modal-content select {
+    width: calc(100% - 22px); /* Account for padding and border */
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Important */
+}
+
+.modal-content button[type="submit"] {
+    background-color: #4CAF50; /* Green */
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: block;
+    width: 100%;
+    margin-top: 15px;
+    font-size: 16px;
+}
+
+.modal-content button[type="submit"]:hover {
+    background-color: #45a049;
+}
+
+.close-button {
+    color: #aaa;
+    float: right; /* Keep this if you prefer float */
+    position: absolute; /* Alternative to float for precise positioning */
+    top: 10px;
+    right: 15px;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
 body {
     display: flex;
     flex-direction: column;

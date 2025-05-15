@@ -58,6 +58,348 @@ let currentLoadedVersionTimestamp = null; // Initialize the timestamp variable
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM fully loaded and parsed for blockbuilder.js");
+    
+    const gdapModal = document.getElementById('gdapModal');
+    const newGoalDrivenBlockBtn = document.getElementById('newGoalDrivenBlockBtn');
+    const gdapCloseBtn = document.getElementById('gdapCloseBtn');
+    const gdapForm = document.getElementById('gdapForm');
+    const gdapPrimaryExercisesContainer = document.getElementById('gdapPrimaryExercisesContainer');
+    const gdapAddExerciseBtn = document.getElementById('gdapAddExerciseBtn');
+    const gdapPeriodizationModelSelect = document.getElementById('gdapPeriodizationModel');
+    let exerciseSlotCount = 1;
+    const MAX_GDAP_EXERCISES = 3;
+
+    // --- GDAP Variables ---
+    let activeGoalInstance = null; // For Phase 1, store a single active goal.
+
+    // --- GDAP Modal Logic ---
+    if (newGoalDrivenBlockBtn) {
+        newGoalDrivenBlockBtn.addEventListener('click', () => {
+            resetGDAPForm(); // Reset form to initial state
+            populateExerciseDropdownForGDAP(document.getElementById('gdapTargetExercise1'));
+            populatePeriodizationModelDropdown();
+            gdapModal.style.display = 'flex';
+        });
+    }
+
+    if (gdapCloseBtn) {
+        gdapCloseBtn.addEventListener('click', () => {
+            gdapModal.style.display = 'none';
+        });
+    }
+
+    // Close modal if user clicks outside of it
+    window.addEventListener('click', (event) => {
+        if (event.target === gdapModal) {
+            gdapModal.style.display = 'none';
+        }
+    });
+
+    if (gdapAddExerciseBtn) {
+        gdapAddExerciseBtn.addEventListener('click', () => {
+            if (exerciseSlotCount < MAX_GDAP_EXERCISES) {
+                exerciseSlotCount++;
+                const newSlot = createGDAPExerciseSlot(exerciseSlotCount);
+                gdapPrimaryExercisesContainer.appendChild(newSlot);
+                populateExerciseDropdownForGDAP(newSlot.querySelector('.gdap-exercise-select'));
+                if (exerciseSlotCount === MAX_GDAP_EXERCISES) {
+                    gdapAddExerciseBtn.style.display = 'none';
+                }
+            }
+        });
+    }
+    
+    function createGDAPExerciseSlot(slotNumber) {
+        const slotDiv = document.createElement('div');
+        slotDiv.className = 'gdap-exercise-slot';
+        slotDiv.id = `gdapExerciseSlot${slotNumber}`;
+        slotDiv.innerHTML = `
+            <h4>Exercise ${slotNumber} <button type="button" class="button-small remove-gdap-exercise-btn" data-slot-id="${slotNumber}" style="float: right; display: ${slotNumber > 1 ? 'inline-block' : 'none'};">- Remove</button></h4>
+            <div>
+                <label for="gdapTargetExercise${slotNumber}">Exercise:</label>
+                <select id="gdapTargetExercise${slotNumber}" name="targetExercise${slotNumber}" class="gdap-exercise-select" required>
+                    </select>
+            </div>
+            <div>
+                <label for="gdapCurrentPerf${slotNumber}">Current Performance (e.g., Est. 1RM):</label>
+                <input type="number" id="gdapCurrentPerf${slotNumber}" name="currentPerf${slotNumber}" class="gdap-current-perf" step="0.1" required>
+            </div>
+            <div>
+                <label for="gdapTargetPerf${slotNumber}">Target Performance:</label>
+                <input type="number" id="gdapTargetPerf${slotNumber}" name="targetPerf${slotNumber}" class="gdap-target-perf" step="0.1" required>
+            </div>
+        `;
+        const removeBtn = slotDiv.querySelector('.remove-gdap-exercise-btn');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => {
+                slotDiv.remove();
+                exerciseSlotCount--; // Decrement before re-evaluating add button
+                 // Renumber remaining slots if needed (complex, skip for now or implement later)
+                if (exerciseSlotCount < MAX_GDAP_EXERCISES) {
+                    gdapAddExerciseBtn.style.display = 'inline-block';
+                }
+                // Re-label H4s
+                const slots = gdapPrimaryExercisesContainer.querySelectorAll('.gdap-exercise-slot');
+                slots.forEach((slot, index) => {
+                    slot.querySelector('h4').childNodes[0].nodeValue = `Exercise ${index + 1} `;
+                });
+
+            });
+        }
+        return slotDiv;
+    }
+
+    function resetGDAPForm() {
+        gdapForm.reset();
+        // Remove dynamically added exercise slots beyond the first one
+        const slots = gdapPrimaryExercisesContainer.querySelectorAll('.gdap-exercise-slot');
+        for (let i = slots.length - 1; i > 0; i--) {
+            slots[i].remove();
+        }
+        exerciseSlotCount = 1;
+        gdapAddExerciseBtn.style.display = 'inline-block'; // Show add button
+         const firstSlotRemoveBtn = document.querySelector('#gdapExerciseSlot1 .remove-gdap-exercise-btn');
+        if(firstSlotRemoveBtn) firstSlotRemoveBtn.style.display = 'none';
+    }
+
+    function populateExerciseDropdownForGDAP(selectElement) {
+        if (!selectElement) return;
+        if (typeof ExerciseLibrary !== 'undefined' && ExerciseLibrary.getExercises) {
+            const exercises = ExerciseLibrary.getExercises();
+            selectElement.innerHTML = '<option value="">Select an exercise...</option>';
+            exercises.sort((a, b) => a.name.localeCompare(b.name));
+            exercises.forEach(exercise => {
+                const option = document.createElement('option');
+                option.value = exercise.id;
+                option.textContent = exercise.name;
+                selectElement.appendChild(option);
+            });
+        } else {
+            console.warn('ExerciseLibrary not available for GDAP modal.');
+            selectElement.innerHTML = '<option value="" disabled>Exercise library not loaded</option>';
+        }
+    }
+
+    function populatePeriodizationModelDropdown() {
+        if (typeof PeriodizationEngine !== 'undefined' && PeriodizationEngine.getAvailableModelTypes) {
+            const modelTypes = PeriodizationEngine.getAvailableModelTypes();
+            gdapPeriodizationModelSelect.innerHTML = '<option value="">None (Simple Linear Progression)</option>';
+            modelTypes.forEach(type => {
+                // Capitalize first letter for display
+                const displayName = type.charAt(0).toUpperCase() + type.slice(1);
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = displayName;
+                gdapPeriodizationModelSelect.appendChild(option);
+            });
+        } else {
+            console.warn('PeriodizationEngine not available for GDAP modal.');
+            gdapPeriodizationModelSelect.innerHTML = '<option value="" disabled>Models not loaded</option>';
+        }
+    }
+
+    if (gdapForm) {
+        gdapForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            await handleGDAPFormSubmit(); // Make it async if PPO becomes async
+            gdapModal.style.display = 'none';
+        });
+    }
+
+    async function handleGDAPFormSubmit() {
+        const formData = new FormData(gdapForm);
+        // const goalData = Object.fromEntries(formData.entries()); // This won't work well for multiple exercises
+
+        const goalInstance = {
+            id: `gdap-${Date.now()}`,
+            overallGoalType: formData.get('goalType'),
+            timeframeWeeks: parseInt(formData.get('timeframe')),
+            athleteLevel: formData.get('athleteLevel'),
+            periodizationModelName: formData.get('periodizationModel') || null,
+            targetExercises: []
+        };
+
+        for (let i = 1; i <= exerciseSlotCount; i++) {
+            const exerciseId = formData.get(`targetExercise${i}`);
+            if (exerciseId) { // Only add if an exercise is selected
+                const selectEl = document.getElementById(`gdapTargetExercise${i}`);
+                goalInstance.targetExercises.push({
+                    exerciseId: exerciseId,
+                    exerciseName: selectEl.options[selectEl.selectedIndex].text,
+                    currentPerf: parseFloat(formData.get(`currentPerf${i}`)),
+                    targetPerf: parseFloat(formData.get(`targetPerf${i}`)),
+                    // goalType and athleteLevel could be exercise-specific if UI added,
+                    // for now, they inherit from overall.
+                });
+            }
+        }
+        
+        if (goalInstance.targetExercises.length === 0) {
+            alert("Please select at least one primary target exercise.");
+            return;
+        }
+
+        console.log('GDAP Goal Instance Created:', goalInstance);
+
+        if (typeof ProgressionPathwayOrchestrator === 'undefined' || 
+            typeof ProgressionPathwayOrchestrator.calculateGoalDrivenPathways !== 'function') {
+            console.error("ProgressionPathwayOrchestrator or its method is not loaded!");
+            alert("Error: Progression logic is missing. Cannot generate program.");
+            return;
+        }
+        // Ensure PeriodizationEngine and ExerciseLibrary are available (globally or via dependency injection)
+        if (typeof PeriodizationEngine === 'undefined' || typeof ExerciseLibrary === 'undefined') {
+            alert("Critical error: PeriodizationEngine or ExerciseLibrary not available to PPO.");
+            return;
+        }
+
+
+        // --- Main Pathway Calculation ---
+        const pathwaysData = ProgressionPathwayOrchestrator.calculateGoalDrivenPathways(
+            goalInstance,
+            PeriodizationEngine, // Pass the global/module
+            ExerciseLibrary    // Pass the global/module
+        );
+
+        if (!pathwaysData || pathwaysData.length === 0) {
+            alert("Could not generate pathways with the provided inputs.");
+            return;
+        }
+        
+        // --- Clear and Regenerate Calendar ---
+        if (window.BlockBuilder && typeof window.BlockBuilder.clearCalendar === 'function') {
+            window.BlockBuilder.clearCalendar();
+        } else if (typeof clearCalendar === 'function') {
+            clearCalendar();
+        } else {
+            console.warn('clearCalendar function not found.');
+            document.getElementById('calendar-grid').innerHTML = ''; // Basic fallback
+        }
+
+        if (window.BlockBuilder && window.BlockBuilder.CONFIG) {
+            window.BlockBuilder.CONFIG.totalWeeks = goalInstance.timeframeWeeks;
+            window.BlockBuilder.generateCalendarGrid();
+        } else if (typeof generateCalendarGrid === 'function') {
+             // Assuming generateCalendarGrid uses a global totalWeeks or takes it as an arg
+             window.totalWeeks = goalInstance.timeframeWeeks; // Ensure global is set if used
+             generateCalendarGrid(goalInstance.timeframeWeeks);
+        } else {
+            console.error('generateCalendarGrid function or BlockBuilder.CONFIG not found.');
+            alert("Error: Could not generate calendar grid.");
+            return;
+        }
+        
+        // --- (Optional Step) Apply Overall Periodization Model to Days ---
+        // If a periodization model was selected in GDAP, apply it to all relevant days.
+        // This marks the days with the model, so ForgeAssist or other tools know about it.
+        // The PPO has already used this model to *calculate* the primary exercise loads.
+        if (goalInstance.periodizationModelName && window.PeriodizationModelManagerInstance) {
+            const allDayIdsInBlock = [];
+            for (let w = 0; w < goalInstance.timeframeWeeks; w++) {
+                ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].forEach(dayAbbr => {
+                    allDayIdsInBlock.push(window.PeriodizationModelManagerInstance.generateDayId(w, dayAbbr));
+                });
+            }
+            // Get default params for the chosen model to apply broadly
+            const modelDefaults = PeriodizationEngine.getModelDefaults(goalInstance.periodizationModelName);
+            // We might want to customize these defaults slightly based on GDAP context, e.g. number of primary exercises
+            // For now, just apply with defaults. PPO handles primary exercises specifically.
+            window.PeriodizationModelManagerInstance.createAndApplyModel(
+                goalInstance.periodizationModelName,
+                modelDefaults || {}, // Ensure params object is passed
+                allDayIdsInBlock,
+                ExerciseLibrary.getExercises()
+            );
+            console.log(`GDAP: Applied ${goalInstance.periodizationModelName} model to all days in the block.`);
+        }
+
+
+        // --- Populate Block with Workout Cards ---
+        pathwaysData.forEach(weeklyTarget => { // pathwaysData is array of {week, exercises}
+            weeklyTarget.exercises.forEach(exTarget => {
+                // exTarget = { exerciseId, name, load, sets, reps, dayPreference, detailsString, loadType }
+                const weekNumber = weeklyTarget.week; // 1-indexed
+                const dayAbbreviation = exTarget.dayPreference; // 'mon', 'tue', etc.
+                
+                // Cell ID format: 'week-X-day-Y' (0-indexed week, 0-indexed day in typical calendar grids)
+                // For PMM and display: 'wkX-mon' (1-indexed week)
+                // Need to map dayAbbreviation to a numeric index if your grid uses that
+                const dayIndices = { mon: 0, tue: 1, wed: 2, thu: 3, fri: 4, sat: 5, sun: 6 };
+                const dayIndex = dayIndices[dayAbbreviation] !== undefined ? dayIndices[dayAbbreviation] : 0;
+
+                const cellId = `week-${weekNumber - 1}-day-${dayIndex}`;
+                const targetCell = document.getElementById(cellId);
+
+                if (targetCell) {
+                    const cardData = {
+                        exerciseId: exTarget.exerciseId,
+                        exerciseName: exTarget.exerciseName,
+                        // Adapt sets to what createWorkoutCard expects.
+                        // If exTarget.loadType is '%', the 'weight' field in sets might be that percentage.
+                        // Or, if PPO resolved it to kg, then it's actual weight.
+                        sets: [{ 
+                            sets: exTarget.sets, 
+                            reps: exTarget.reps, 
+                            weight: exTarget.load, // PPO should ensure this is the final load value (kg or %)
+                            rpe: exTarget.loadType === 'rpe' ? exTarget.load : '',
+                            notes: exTarget.loadType && exTarget.loadType !== 'weight' && exTarget.loadType !== 'rpe' ? exTarget.loadType.toUpperCase() : '' // Add % tag if load is %
+                        }],
+                        notes: exTarget.detailsString || `Goal: ${goalInstance.overallGoalType}`,
+                        isGoalDriven: true,
+                        goalInstanceId: goalInstance.id
+                    };
+                    
+                    let card;
+                     if (typeof window.createWorkoutCard === 'function') {
+                        card = window.createWorkoutCard(
+                            cardData.exerciseName,
+                            cardData.sets,
+                            cardData.notes,
+                            cardData.exerciseId,
+                            null, null, null, null, null, null, // other optional params
+                            `card-gdap-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`
+                        );
+                    } else {
+                        console.warn("Global createWorkoutCard not found. Using fallback for GDAP card.");
+                        card = document.createElement('div');
+                        card.className = 'workout-card';
+                        card.textContent = `${exTarget.exerciseName}: ${exTarget.detailsString}`;
+                        card.draggable = true;
+                        card.id = `gdap-card-${Date.now()}-${Math.random()}`;
+                        if (window.DragDrop && typeof window.DragDrop.makeDraggable === 'function') {
+                             window.DragDrop.makeDraggable(card);
+                        }
+                    }
+                    
+                    card.dataset.goalDriven = "true";
+                    card.dataset.sourceGoalId = goalInstance.id;
+                    card.dataset.exerciseId = exTarget.exerciseId;
+                    
+                    targetCell.appendChild(card);
+
+                } else {
+                    console.warn(`GDAP: Target cell ${cellId} (Wk${weekNumber}-${dayAbbreviation}) not found.`);
+                }
+            });
+        });
+        
+        // --- Final Steps ---
+        if (typeof saveStateToLocalStorage === 'function') {
+            saveStateToLocalStorage();
+        } else if (window.BlockBuilder && typeof window.BlockBuilder.saveState === 'function') {
+            window.BlockBuilder.saveState();
+        }
+        if (typeof updateAnalytics === 'function') {
+            updateAnalytics();
+        } else if (window.Analytics && typeof window.Analytics.update === 'function') {
+            window.Analytics.update();
+        }
+        if (typeof Toast !== 'undefined' && Toast.show) {
+            Toast.show('Goal-driven program generated with periodization!', 'success');
+        } else {
+            alert('Goal-driven program generated with periodization!');
+        }
+    }
 
     // --- DOM Element References ---
     const workCanvas = document.getElementById('work-canvas');

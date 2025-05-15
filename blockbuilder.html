@@ -856,6 +856,67 @@
     </div>
     <!-- End ForgeAssist Education Modal -->
 
+    <!-- Goal-Driven Autoprogramming (GDAP) Modal -->
+    <button id="newGoalDrivenBlockBtn" class="button">New Goal-Driven Block</button>
+
+    <div id="gdapModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close-button" id="gdapCloseBtn">&times;</span>
+            <h2>Create Goal-Driven Program</h2>
+            <form id="gdapForm">
+                <div>
+                    <label for="gdapGoalType">Overall Goal Focus:</label>
+                    <select id="gdapGoalType" name="goalType" required>
+                        <option value="Strength">Strength</option>
+                        <option value="Hypertrophy">Hypertrophy</option>
+                        <option value="Endurance">Muscular Endurance</option>
+                    </select>
+                </div>
+
+                <fieldset id="gdapPrimaryExercisesContainer">
+                    <legend>Primary Target Exercises (1-3)</legend>
+                    <div class="gdap-exercise-slot" id="gdapExerciseSlot1">
+                        <h4>Exercise 1</h4>
+                        <div>
+                            <label for="gdapTargetExercise1">Exercise:</label>
+                            <select id="gdapTargetExercise1" name="targetExercise1" class="gdap-exercise-select" required>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="gdapCurrentPerf1">Current Performance (e.g., Est. 1RM):</label>
+                            <input type="number" id="gdapCurrentPerf1" name="currentPerf1" class="gdap-current-perf" step="0.1" required>
+                        </div>
+                        <div>
+                            <label for="gdapTargetPerf1">Target Performance:</label>
+                            <input type="number" id="gdapTargetPerf1" name="targetPerf1" class="gdap-target-perf" step="0.1" required>
+                        </div>
+                    </div>
+                </fieldset>
+                <button type="button" id="gdapAddExerciseBtn" class="button-small">Add Another Primary Exercise</button>
+
+                <div>
+                    <label for="gdapPeriodizationModel">Periodization Model (Optional):</label>
+                    <select id="gdapPeriodizationModel" name="periodizationModel">
+                        <option value="">None (Simple Linear Progression)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="gdapTimeframe">Timeframe (Weeks):</label>
+                    <input type="number" id="gdapTimeframe" name="timeframe" min="1" max="52" step="1" required>
+                </div>
+                <div>
+                    <label for="gdapAthleteLevel">Athlete Experience Level:</label>
+                    <select id="gdapAthleteLevel" name="athleteLevel" required>
+                        <option value="Beginner">Beginner</option>
+                        <option value="Intermediate">Intermediate</option>
+                        <option value="Advanced">Advanced</option>
+                    </select>
+                </div>
+                <button type="submit" class="button">Generate Program</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <!-- Load core modules first -->
     <script type="module" src="js/forgeassist.js"></script>
@@ -869,6 +930,7 @@
     <script src="js/forgeassist_education.js"></script>
     <script src="js/forgeassist_chat.js" type="module"></script>
     <script src="js/templates.js" type="module"></script>
+    <script src="js/progressionPathwayOrchestrator.js"></script>
 </body>
 </html>
  
