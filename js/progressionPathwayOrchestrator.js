@@ -2,17 +2,18 @@
  * @file Manages the calculation of progression pathways for goal-driven autoprogramming.
  */
 
+import * as periodizationEngine from './periodizationEngine.js';
+import * as exerciseLibrary from './exercises/library.js';
+
 const ProgressionPathwayOrchestrator = {
     /**
      * Calculates goal-driven pathways for multiple exercises, potentially modulated by a periodization model.
      * @param {object} goalInstance - Contains all goal parameters including targetExercises, timeframe, model.
-     * @param {object} periodizationEngine - Instance of PeriodizationEngine.
-     * @param {object} exerciseLibrary - Instance of ExerciseLibrary.
      * @returns {Array<object>} An array of weekly targets: 
      * [{ week: number, exercises: [ { exerciseId, name, load, sets, reps, dayPreference, detailsString } , ... ],
      *    suggestedAccessories: [ { exerciseId, exerciseName, sets, reps, notes, dayPreference } , ... ] }, ...]
      */
-    calculateGoalDrivenPathways: function(goalInstance, periodizationEngine, exerciseLibrary) {
+    calculateGoalDrivenPathways: function(goalInstance) {
         const {
             targetExercises, // Array: [{ exerciseId, exerciseName, currentPerf, targetPerf, goalType, athleteLevel }]
             timeframeWeeks,
@@ -32,7 +33,6 @@ const ProgressionPathwayOrchestrator = {
             console.error("PPO: Valid ExerciseLibrary is required.");
             return weeklyTargets;
         }
-
 
         for (let weekIdx = 0; weekIdx < timeframeWeeks; weekIdx++) {
             const currentWeekNumber = weekIdx + 1;
@@ -463,6 +463,4 @@ const ProgressionPathwayOrchestrator = {
     }
 };
 
-if (typeof module !== 'undefined') {
-    module.exports = ProgressionPathwayOrchestrator;
-} 
+export default ProgressionPathwayOrchestrator; 

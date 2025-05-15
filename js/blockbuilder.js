@@ -48,6 +48,7 @@ import {
     getExercises // Added to access exercises directly
 } from './exercises/library.js'; // <-- Added Library import
 import ForgeAssist from './forgeassist.js';
+import ProgressionPathwayOrchestrator from './progressionPathwayOrchestrator.js';
 
 const hubContainer = document.getElementById('block-builder-hub');
 const blockBuilderContainer = document.querySelector('.block-builder-container');
@@ -349,25 +350,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         console.log('GDAP Goal Instance Created:', goalInstance);
 
-        if (typeof ProgressionPathwayOrchestrator === 'undefined' || 
-            typeof ProgressionPathwayOrchestrator.calculateGoalDrivenPathways !== 'function') {
-            console.error("ProgressionPathwayOrchestrator or its method is not loaded!");
-            alert("Error: Progression logic is missing. Cannot generate program.");
-            return;
-        }
-        // Ensure PeriodizationEngine and ExerciseLibrary are available (globally or via dependency injection)
-        if (typeof PeriodizationEngine === 'undefined' || typeof ExerciseLibrary === 'undefined') {
-            alert("Critical error: PeriodizationEngine or ExerciseLibrary not available to PPO.");
-            return;
-        }
-
-
         // --- Main Pathway Calculation ---
-        const pathwaysData = ProgressionPathwayOrchestrator.calculateGoalDrivenPathways(
-            goalInstance,
-            PeriodizationEngine, // Pass the global/module
-            ExerciseLibrary    // Pass the global/module
-        );
+        const pathwaysData = ProgressionPathwayOrchestrator.calculateGoalDrivenPathways(goalInstance);
 
         if (!pathwaysData || pathwaysData.length === 0) {
             alert("Could not generate pathways with the provided inputs.");
