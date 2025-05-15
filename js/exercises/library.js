@@ -608,7 +608,6 @@ export function getExerciseById(id) {
 window.getExerciseById = getExerciseById;
 
 // At the end of the file, expose to window object
-
 // Create a global ExerciseLibrary API
 window.ExerciseLibrary = {
     getExercises,
@@ -617,5 +616,14 @@ window.ExerciseLibrary = {
     incrementExerciseFrequency,
     toggleFavoritesFilter,
     openExerciseModal,
-    closeExerciseModal
+    closeExerciseModal,
+    populateExerciseListUI,
+    filterExerciseLibrary,
+    handleExerciseFormSubmit,
+    exportUserExercises,
+    handleExerciseImport,
+    setViewMode,
+    loadViewMode,
+    loadExerciseLibrary,
+    initializeLibrary
 };

@@ -8,6 +8,20 @@ import { showToast } from './ui/toast.js';
 
 console.log("Templates module loading...");
 
+// Global References
+let templatesModal;
+let templatePreviewModal;
+let templatesList;
+let templatesCloseBtn;
+let templatePreviewCloseBtn;
+let hubBrowseTemplatesBtn;
+let templatesSearch;
+let categoryButtons;
+let useTemplateBtn;
+let currentCategory = 'all';
+let currentSearchTerm = '';
+let currentTemplateId = null;
+
 // Template data - research-based training programs
 const trainingTemplates = [
     {
@@ -333,20 +347,6 @@ const trainingTemplates = [
         ]
     }
 ];
-
-// Add proper variable declarations at the module level
-let templatesModal;
-let templatePreviewModal;
-let templatesList;
-let templatesCloseBtn;
-let templatePreviewCloseBtn;
-let hubBrowseTemplatesBtn;
-let templatesSearch;
-let categoryButtons;
-let useTemplateBtn;
-let currentCategory = 'all';
-let currentSearchTerm = '';
-let currentTemplateId = null;
 
 // Initialize templates
 function initialize() {
