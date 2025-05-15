@@ -884,6 +884,17 @@ function setupPreviewUseButton() {
 
     // Add all event listeners
     function addEventListeners() {
+        // Ensure all DOM references are up to date
+        if (!templatesModal) templatesModal = document.getElementById('templates-modal');
+        if (!templatePreviewModal) templatePreviewModal = document.getElementById('template-preview-modal');
+        if (!templatesList) templatesList = document.getElementById('templates-list');
+        if (!templatesCloseBtn) templatesCloseBtn = document.getElementById('templates-close-btn');
+        if (!templatePreviewCloseBtn) templatePreviewCloseBtn = document.getElementById('template-preview-close-btn');
+        if (!hubBrowseTemplatesBtn) hubBrowseTemplatesBtn = document.getElementById('hub-browse-templates-btn') || document.getElementById('hub-browse-templates');
+        if (!templatesSearch) templatesSearch = document.getElementById('templates-search');
+        if (!categoryButtons || categoryButtons.length === 0) categoryButtons = document.querySelectorAll('.template-category-btn');
+        if (!useTemplateBtn) useTemplateBtn = document.getElementById('preview-use-template-btn');
+        
         console.log("Templates module: Adding event listeners");
         
         // Browse Templates button click

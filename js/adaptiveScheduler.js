@@ -1949,6 +1949,35 @@ const AdaptiveScheduler = (() => {
         return notes.join(' ');
     }
 
+    // --- Add proposeLoadChange utility ---
+    /**
+     * Propose a load change for a given week or day.
+     * @param {number} percentageChange - The percent change in load (positive or negative)
+     * @param {string} scope - 'week' or 'day'
+     * @param {object} params - { week, day, message }
+     * @returns {object} Proposal object
+     */
+    function proposeLoadChange(percentageChange, scope, params = {}) {
+        const { week, day, message } = params;
+        const type = percentageChange < 0
+            ? (scope === 'day' ? 'reduceSpecificDay' : 'reduceLoad')
+            : (scope === 'day' ? 'increaseLowDay' : 'increaseLoad');
+        const description = message || `${percentageChange > 0 ? 'Increase' : 'Reduce'} load by ${Math.abs(percentageChange)}% for ${scope === 'day' ? `${day}, ` : ''}Week ${week}`;
+        // Dummy impact and changes for now; real logic would simulate the effect
+        const changes = [{ change: percentageChange }];
+        const impact = { predictedACWR: 1.1, predictedMonotony: 1.5 };
+        return {
+            type,
+            description,
+            targetWeek: week,
+            targetDay: day,
+            percentageChange: percentageChange,
+            changes,
+            impact,
+            success: true
+        };
+    }
+
     // Public API
     return {
         init,

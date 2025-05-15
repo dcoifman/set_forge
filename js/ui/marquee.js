@@ -1,4 +1,4 @@
-import { handleSelection, getSelectedElements, clearSelection } from './selection.js';
+import { handleSelection } from './selection.js';
 
 let isMarqueeActive = false;
 let marqueeElement = null;
@@ -129,14 +129,11 @@ function handleMarqueeEnd(e) {
         card.classList.remove('selecting');
     });
     
-    // Dispatch event
+    // Dispatch event with Set of selected cards (to match blockbuilder.js expectation)
     const event = new CustomEvent('marquee-selection-complete', {
-        detail: { 
-            cards: selectedCards,
-            selected: getSelectedElements()
-        }
+        detail: { selectedElements: new Set(selectedCards) }
     });
-    workCanvasElement.dispatchEvent(event);
+    document.dispatchEvent(event);
 }
 
 /**
