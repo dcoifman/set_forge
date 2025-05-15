@@ -1828,3 +1828,15 @@ const MODEL_CALCULATORS = {
     block: _calculateBlockDay,
     dupauto: _calculateDupAutoDay // Lowercase key
 };
+
+// Expose the module to the global window object for modules that don't use imports
+// This helps prevent the PeriodizationEngine or ExerciseLibrary not available error
+window.PeriodizationEngine = {
+    getModelDefaults,
+    getModelParameterDefinitions,
+    getAvailableModelTypes,
+    calculateExercisesForDay,
+    getProjectionData,
+    simulateParameterChange,
+    simulateModelSwap
+};

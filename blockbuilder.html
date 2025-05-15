@@ -242,130 +242,159 @@
                 <button class="tab-link model-tab" data-tab="model-sim" style="display: none;">Simulation</button>
             </div>
             <!-- Add this div for focus messages -->
-            <div id="inspector-focus-message" class="inspector-focus-message" style="display: none; padding: 5px 10px; background-color: var(--accent-color-light); color: var(--text-color); margin: 5px 0; border-radius: 4px; font-size: 0.9em;"></div>
+            <div id="inspector-focus-message" style="display: none; padding: 8px 16px; background-color: rgba(255, 112, 59, 0.1); color: var(--accent-color); border-left: 4px solid var(--accent-color); margin: 8px; font-size: 0.9rem;"></div>
+            
             <div class="inspector-content">
-                <!-- Standard Tab Content -->
                 <div id="library" class="tab-content">
-                    <div class="library-controls">
-                        <div class="library-controls__search-wrapper">
-                            <div class="search-icon">🔍</div>
-                            <input type="search" id="inspector-search" class="inspector-search library-controls__search" placeholder="Search exercises...">
-                        </div>
-                        <div class="library-controls__row">
-                            <div class="library-controls__group filter-sort-controls">
-                                <div class="filter-label">Filter:</div>
-                                <select id="library-filter-category" class="library-select" title="Filter by Category">
-                                    <option value="all">All Categories</option>
-                                    <!-- Options added dynamically -->
+                    <!-- Library content -->
+                    <div class="inspector-controls">
+                        <div class="filter-controls">
+                            <div class="form-group">
+                                <label for="library-filter-category">Category</label>
+                                <select id="library-filter-category">
+                                    <option value="">All Categories</option>
+                                    <!-- Categories will be populated via JS -->
                                 </select>
-                                <select id="library-filter-equipment" class="library-select" title="Filter by Equipment">
-                                    <option value="all">All Equipment</option>
-                                     <!-- Options added dynamically -->
-                                </select>
-                                <div class="filter-divider"></div>
-                                <div class="filter-label">Sort:</div>
-                                <select id="library-sort" class="library-select" title="Sort Exercises">
-                                    <option value="frequency">Most Used</option>
-                                    <option value="nameAsc">Name (A-Z)</option>
-                                    <option value="nameDesc">Name (Z-A)</option>
-                                    <option value="category">Category</option>
-                                </select>
-                                <button id="library-toggle-favorites" class="library-toggle-btn" title="Show Favorites Only">⭐</button>
                             </div>
-                            <div class="library-controls__group view-add-controls">
-                                <div class="view-mode-buttons">
-                                    <span class="view-label">View:</span>
-                                    <button id="view-mode-standard" class="library-toggle-btn active" title="Standard View">☰</button>
-                                    <button id="view-mode-compact" class="library-toggle-btn" title="Compact View">📄</button>
-                                </div>
-                                <div class="add-import-export-buttons">
-                                   <input type="file" id="import-exercises-input" accept=".json" style="display: none;">
-                                   <label for="import-exercises-input" id="import-exercises-label" class="cta-button secondary-cta" title="Import User Exercises">Import</label>
-                                   <button id="export-exercises-btn" class="cta-button secondary-cta" title="Export User Exercises">Export</button>
-                                   <button id="add-exercise-btn" class="cta-button tertiary-cta">+ Add Exercise</button>
+                            <div class="form-group">
+                                <label for="library-filter-equipment">Equipment</label>
+                                <select id="library-filter-equipment">
+                                    <option value="">All Equipment</option>
+                                    <!-- Equipment types will be populated via JS -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="sort-controls">
+                            <div class="form-group">
+                                <label for="library-sort">Sort By</label>
+                                <select id="library-sort">
+                                    <option value="name">Name (A-Z)</option>
+                                    <option value="name-desc">Name (Z-A)</option>
+                                    <option value="category">Category</option>
+                                    <option value="frequency">Most Used</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="toggle-controls">
+                            <div class="form-group">
+                                <label>Show Only</label>
+                                <div class="button-group">
+                                    <button id="library-toggle-favorites" class="library-toggle-btn" title="Show Favorites">★</button>
+                                    <button id="library-toggle-recent" class="library-toggle-btn" title="Show Recent">⏱</button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="exercise-list-container view-standard"> <!-- Default view -->
+                    <div class="inspector-search-container">
+                        <input type="text" id="inspector-search" placeholder="Search exercises...">
+                    </div>
+                    <div class="exercise-list-container">
                         <ul class="exercise-list">
-                             <!-- Populated by JS -->
-                             <p>Loading library...</p>
+                            <!-- Exercises will be populated via JS -->
                         </ul>
                     </div>
                 </div>
+                
                 <div id="details" class="tab-content active">
-                    <!-- Content populated by JS based on selection -->
-                    <p>Select an item on the canvas to see details.</p>
+                    <!-- Details content will be populated dynamically based on selection -->
+                    <p>Select an item to see details.</p>
                 </div>
+                
                 <div id="assist" class="tab-content">
-                    <!-- Content populated by JS -->
-                    <h4>ForgeAssist™ Actions</h4>
-                    <p>Select an item on the calendar to view relevant actions and suggestions.</p>
-                    
-                    <div class="assist-action-cards">
-                        <!-- These cards will be populated dynamically by JS -->
+                    <!-- ForgeAssist content -->
+                    <div class="assist-header">
+                        <h3>ForgeAssist™</h3>
+                        <p class="assist-subtitle">AI-powered training assistance</p>
                     </div>
                     
-                    <div class="assist-chat">
-                        <h4>Ask ForgeAssist</h4>
-                        <div class="assist-chat-container">
-                            <textarea id="forge-assist-input" placeholder="Type a command or ask for help..."></textarea>
-                            <button id="forge-assist-send" class="primary-cta">
-                                <span class="btn-icon">→</span>
-                            </button>
+                    <div class="assist-action-list-container">
+                        <!-- Actions will be populated via JS -->
+                    </div>
+                    
+                    <!-- Add accessory suggestions container -->
+                    <div id="accessory-suggestions-container">
+                        <p>Select a day with GDAP exercises to see suggestions.</p>
+                    </div>
+                </div>
+                
+                <div id="adaptive" class="tab-content">
+                    <!-- Adaptive content -->
+                    <div class="adaptive-header">
+                        <h3>Adaptive Training</h3>
+                        <p class="adaptive-subtitle">Personalize your program</p>
+                    </div>
+                    <div class="adaptive-tabs">
+                        <button class="adaptive-tab active" data-tab="adaptive-exercise">Exercise</button>
+                        <button class="adaptive-tab" data-tab="adaptive-day">Day</button>
+                        <button class="adaptive-tab" data-tab="adaptive-phase">Phase</button>
+                    </div>
+                    <div id="adaptive-exercise" class="adaptive-tab-content active">
+                        <!-- Exercise-level adaptations -->
+                    </div>
+                    <div id="adaptive-day" class="adaptive-tab-content">
+                        <!-- Day-level adaptations -->
+                    </div>
+                    <div id="adaptive-phase" class="adaptive-tab-content">
+                        <!-- Phase-level adaptations -->
+                    </div>
+                </div>
+                
+                <div id="analytics" class="tab-content">
+                    <!-- Analytics content -->
+                    <div class="analytics-header">
+                        <h3>Analytics</h3>
+                        <p class="analytics-subtitle">Training load metrics</p>
+                    </div>
+                    <div class="analytics-chart-container">
+                        <canvas id="analytics-chart"></canvas>
+                    </div>
+                    <div class="analytics-metrics">
+                        <!-- Metrics will be populated via JS -->
+                    </div>
+                </div>
+                
+                <div id="settings" class="tab-content">
+                    <!-- Settings content -->
+                    <div class="settings-header">
+                        <h3>Block Settings</h3>
+                    </div>
+                    <div class="settings-form">
+                        <div class="form-group">
+                            <label for="block-title">Block Title</label>
+                            <input type="text" id="block-title" placeholder="My Training Block">
                         </div>
-                        <div class="assist-examples">
-                            <p><small>Example commands:</small></p>
-                            <div class="assist-example-chips">
-                                <button class="assist-example-chip" data-command="clear week 1">Clear week 1</button>
-                                <button class="assist-example-chip" data-command="shift week 2 forward 1 day">Shift week 2 forward</button>
-                                <button class="assist-example-chip" data-command="decrease intensity by 10%">Decrease intensity</button>
+                        <div class="form-group">
+                            <label for="block-weeks">Total Weeks</label>
+                            <input type="number" id="block-weeks" min="1" max="16" value="8">
+                        </div>
+                        <div class="form-group">
+                            <label for="block-description">Description</label>
+                            <textarea id="block-description" placeholder="Optional block description"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Phase Configuration</label>
+                            <div class="phase-config-controls">
+                                <button id="edit-phases-btn" class="secondary-cta">Edit Phases</button>
+                                <button id="reset-phases-btn" class="secondary-cta">Reset to Default</button>
                             </div>
                         </div>
+                        <div class="form-actions">
+                            <button id="save-block-settings" class="primary-cta">Save Settings</button>
+                        </div>
                     </div>
                 </div>
-                <div id="adaptive" class="tab-content">
-                    <!-- Content populated by JS -->
-                    <p>Select an exercise, day, or phase to see adaptive training options.</p>
+                
+                <!-- Model-specific tab contents -->
+                <div id="model-status" class="tab-content">
+                    <!-- Model status content will be populated dynamically -->
                 </div>
-                 <div id="analytics" class="tab-content">
-                    <h4>Block Analytics</h4>
-                    <p>Load Distribution, Volume Trends, etc.</p>
-                     <canvas id="load-chart" style="max-height: 200px; margin-bottom: 1rem;"></canvas>
-                     <canvas id="volume-chart" style="max-height: 200px;"></canvas>
-                     <p><small>Analytics features are under development.</small></p>
+                
+                <div id="model-config" class="tab-content">
+                    <!-- Model configuration content will be populated dynamically -->
                 </div>
-                <div id="settings" class="tab-content">
-                     <!-- Content moved from direct elements to here -->
-                     <h4>Block Settings</h4>
-                     <div class="form-group">
-                         <label for="block-name">Block Name</label>
-                         <input type="text" id="block-name" placeholder="e.g., Hypertrophy Phase 1">
-                     </div>
-                     <h5>Training History (Optional)</h5>
-                     <p><small>Provide recent RPEs to help ForgeAssist calibrate fatigue.</small></p>
-                     <div class="form-group">
-                         <label for="prev-planned-rpe">Avg Planned RPE (Last Block)</label>
-                         <input type="number" id="prev-planned-rpe" step="0.5" min="1" max="10" placeholder="e.g., 7.5">
-                     </div>
-                     <div class="form-group">
-                         <label for="prev-actual-rpe">Avg Actual RPE (Last Block)</label>
-                         <input type="number" id="prev-actual-rpe" step="0.5" min="1" max="10" placeholder="e.g., 8.0">
-                     </div>
-                     <hr>
-                     <button id="save-settings-btn" class="cta-button primary-cta">Save Settings</button>
-                     <button id="save-template-btn" class="cta-button secondary-cta" style="margin-top: 10px;">Save as Template</button>
-                </div>
-                <!-- Model-Specific Tab Content -->
-                <div id="model-status-content" class="tab-content">
-                    <!-- Populated by JS when model context is selected -->
-                </div>
-                 <div id="model-config-content" class="tab-content">
-                    <!-- Populated by JS when model context is selected -->
-                </div>
-                 <div id="model-sim-content" class="tab-content">
-                    <!-- Populated by JS when model context is selected -->
+                
+                <div id="model-sim" class="tab-content">
+                    <!-- Model simulation content will be populated dynamically -->
                 </div>
             </div>
         </aside>

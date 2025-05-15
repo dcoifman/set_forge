@@ -884,6 +884,15 @@ function setupPreviewUseButton() {
 
 // Add all event listeners
 function addEventListeners() {
+    // Make sure PeriodizationEngine and getExercises are available globally
+    if (!window.PeriodizationEngine) {
+        console.warn("PeriodizationEngine not available in global scope, some template features may not work correctly");
+    }
+    
+    if (typeof getExercises !== 'function' && typeof window.getExercises !== 'function') {
+        console.warn("getExercises function not available, some template features may not work correctly");
+    }
+
     // Ensure all DOM references are up to date and initialized
     if (typeof templatesModal === 'undefined' || !templatesModal) templatesModal = document.getElementById('templates-modal');
     if (typeof templatePreviewModal === 'undefined' || !templatePreviewModal) templatePreviewModal = document.getElementById('template-preview-modal');

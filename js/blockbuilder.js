@@ -307,8 +307,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function handleGDAPFormSubmit() {
         const formData = new FormData(gdapForm);
-        // const goalData = Object.fromEntries(formData.entries()); // This won't work well for multiple exercises
-
+        
+        // Create goal instance from form
         const goalInstance = {
             id: `gdap-${Date.now()}`,
             overallGoalType: formData.get('goalType'),
@@ -317,18 +317,27 @@ document.addEventListener('DOMContentLoaded', () => {
             periodizationModelName: formData.get('periodizationModel') || null,
             targetExercises: []
         };
-
+        
+        // Collect target exercises
         for (let i = 1; i <= exerciseSlotCount; i++) {
             const exerciseId = formData.get(`targetExercise${i}`);
-            if (exerciseId) { // Only add if an exercise is selected
+            if (exerciseId) {
                 const selectEl = document.getElementById(`gdapTargetExercise${i}`);
+                const exerciseName = selectEl.options[selectEl.selectedIndex].text;
+                const currentPerf = parseFloat(formData.get(`currentPerf${i}`));
+                const targetPerf = parseFloat(formData.get(`targetPerf${i}`));
+                
+                // Collect optional exercise-specific goal settings
+                const exGoalType = formData.get(`goalType${i}`) || goalInstance.overallGoalType;
+                const exAthleteLevel = formData.get(`athleteLevel${i}`) || goalInstance.athleteLevel;
+                
                 goalInstance.targetExercises.push({
                     exerciseId: exerciseId,
-                    exerciseName: selectEl.options[selectEl.selectedIndex].text,
-                    currentPerf: parseFloat(formData.get(`currentPerf${i}`)),
-                    targetPerf: parseFloat(formData.get(`targetPerf${i}`)),
-                    // goalType and athleteLevel could be exercise-specific if UI added,
-                    // for now, they inherit from overall.
+                    exerciseName: exerciseName,
+                    currentPerf: currentPerf,
+                    targetPerf: targetPerf,
+                    goalType: exGoalType,
+                    athleteLevel: exAthleteLevel
                 });
             }
         }
@@ -383,120 +392,261 @@ document.addEventListener('DOMContentLoaded', () => {
              window.totalWeeks = goalInstance.timeframeWeeks; // Ensure global is set if used
              generateCalendarGrid(goalInstance.timeframeWeeks);
         } else {
-            console.error('generateCalendarGrid function or BlockBuilder.CONFIG not found.');
             alert("Error: Could not generate calendar grid.");
             return;
         }
         
-        // --- (Optional Step) Apply Overall Periodization Model to Days ---
-        // If a periodization model was selected in GDAP, apply it to all relevant days.
-        // This marks the days with the model, so ForgeAssist or other tools know about it.
-        // The PPO has already used this model to *calculate* the primary exercise loads.
-        if (goalInstance.periodizationModelName && window.PeriodizationModelManagerInstance) {
+        // --- Apply Overall Periodization Model to Days ---
+        if (goalInstance.periodizationModelName && typeof PeriodizationModelManagerInstance !== 'undefined') {
+            // If a model is selected, apply it to all days in the block
             const allDayIdsInBlock = [];
             for (let w = 0; w < goalInstance.timeframeWeeks; w++) {
                 ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].forEach(dayAbbr => {
-                    allDayIdsInBlock.push(window.PeriodizationModelManagerInstance.generateDayId(w, dayAbbr));
+                    // Use the PMM's day ID generator to match its format
+                    allDayIdsInBlock.push(PeriodizationModelManagerInstance.generateDayId(w, dayAbbr));
                 });
             }
-            // Get default params for the chosen model to apply broadly
+            
+            // Get model defaults
             const modelDefaults = PeriodizationEngine.getModelDefaults(goalInstance.periodizationModelName);
-            // We might want to customize these defaults slightly based on GDAP context, e.g. number of primary exercises
-            // For now, just apply with defaults. PPO handles primary exercises specifically.
-            window.PeriodizationModelManagerInstance.createAndApplyModel(
+            
+            // Create and apply model to all days
+            PeriodizationModelManagerInstance.createAndApplyModel(
                 goalInstance.periodizationModelName,
-                modelDefaults || {}, // Ensure params object is passed
+                modelDefaults || {}, // Use defaults or empty object as fallback
                 allDayIdsInBlock,
-                ExerciseLibrary.getExercises()
+                ExerciseLibrary.getExercises() // Need library for models to work with
             );
-            console.log(`GDAP: Applied ${goalInstance.periodizationModelName} model to all days in the block.`);
         }
 
-
-        // --- Populate Block with Workout Cards ---
-        pathwaysData.forEach(weeklyTarget => { // pathwaysData is array of {week, exercises}
+        // --- Store accessory suggestions per day for the Inspector ---
+        const accessorySuggestionsByDayId = {}; // e.g., { "week-0-day-0": [suggestions] }
+        
+        // --- Populate Block with Primary Workout Cards ---
+        pathwaysData.forEach(weeklyTarget => {
+            // Weekly target contains exercises (primaries) and suggestedAccessories
+            
+            // Process primary exercises first
             weeklyTarget.exercises.forEach(exTarget => {
-                // exTarget = { exerciseId, name, load, sets, reps, dayPreference, detailsString, loadType }
-                const weekNumber = weeklyTarget.week; // 1-indexed
-                const dayAbbreviation = exTarget.dayPreference; // 'mon', 'tue', etc.
+                // Convert week number (1-based) and day preference (mon, tue, etc.) to grid cell ID
+                const weekNumber = weeklyTarget.week; // 1-based from PPO
+                const dayAbbreviation = exTarget.dayPreference; // mon, tue, etc.
                 
-                // Cell ID format: 'week-X-day-Y' (0-indexed week, 0-indexed day in typical calendar grids)
-                // For PMM and display: 'wkX-mon' (1-indexed week)
-                // Need to map dayAbbreviation to a numeric index if your grid uses that
+                // Map day abbreviation to day index (0-6)
                 const dayIndices = { mon: 0, tue: 1, wed: 2, thu: 3, fri: 4, sat: 5, sun: 6 };
                 const dayIndex = dayIndices[dayAbbreviation] !== undefined ? dayIndices[dayAbbreviation] : 0;
-
+                
+                // Calculate cell ID (week index is 0-based in grid, so subtract 1 from week number)
                 const cellId = `week-${weekNumber - 1}-day-${dayIndex}`;
                 const targetCell = document.getElementById(cellId);
-
+                
                 if (targetCell) {
+                    // Create card data object with exercise info and goal-driven flag
                     const cardData = {
                         exerciseId: exTarget.exerciseId,
                         exerciseName: exTarget.exerciseName,
-                        // Adapt sets to what createWorkoutCard expects.
-                        // If exTarget.loadType is '%', the 'weight' field in sets might be that percentage.
-                        // Or, if PPO resolved it to kg, then it's actual weight.
-                        sets: [{ 
-                            sets: exTarget.sets, 
-                            reps: exTarget.reps, 
-                            weight: exTarget.load, // PPO should ensure this is the final load value (kg or %)
+                        sets: [{
+                            sets: exTarget.sets,
+                            reps: exTarget.reps,
+                            weight: exTarget.load,
                             rpe: exTarget.loadType === 'rpe' ? exTarget.load : '',
-                            notes: exTarget.loadType && exTarget.loadType !== 'weight' && exTarget.loadType !== 'rpe' ? exTarget.loadType.toUpperCase() : '' // Add % tag if load is %
+                            notes: exTarget.loadType && exTarget.loadType !== 'weight' && exTarget.loadType !== 'rpe' ? exTarget.loadType.toUpperCase() : ''
                         }],
                         notes: exTarget.detailsString || `Goal: ${goalInstance.overallGoalType}`,
                         isGoalDriven: true,
                         goalInstanceId: goalInstance.id
                     };
                     
+                    // Create the workout card element with unique ID
                     let card;
-                     if (typeof window.createWorkoutCard === 'function') {
-                        card = window.createWorkoutCard(
+                    if (typeof createWorkoutCard === 'function') {
+                        // Use the proper createWorkoutCard function if available
+                        card = createWorkoutCard(
                             cardData.exerciseName,
                             cardData.sets,
                             cardData.notes,
                             cardData.exerciseId,
-                            null, null, null, null, null, null, // other optional params
+                            null, null, null, null, null, null, 
                             `card-gdap-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`
                         );
                     } else {
-                        console.warn("Global createWorkoutCard not found. Using fallback for GDAP card.");
+                        // Fallback to basic card creation
                         card = document.createElement('div');
                         card.className = 'workout-card';
                         card.textContent = `${exTarget.exerciseName}: ${exTarget.detailsString}`;
                         card.draggable = true;
-                        card.id = `gdap-card-${Date.now()}-${Math.random()}`;
+                        card.id = `gdap-card-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+                        // Make it draggable if DragDrop is available
                         if (window.DragDrop && typeof window.DragDrop.makeDraggable === 'function') {
-                             window.DragDrop.makeDraggable(card);
+                            window.DragDrop.makeDraggable(card);
                         }
                     }
                     
+                    // Add goal-driven markers to the card's dataset
                     card.dataset.goalDriven = "true";
                     card.dataset.sourceGoalId = goalInstance.id;
                     card.dataset.exerciseId = exTarget.exerciseId;
                     
+                    // Add the card to the target cell
                     targetCell.appendChild(card);
-
                 } else {
-                    console.warn(`GDAP: Target cell ${cellId} (Wk${weekNumber}-${dayAbbreviation}) not found.`);
+                    console.warn(`GDAP: Target cell ${cellId} not found for exercise ${exTarget.exerciseName}.`);
                 }
             });
+
+            // Process accessory suggestions
+            // Group by day for this week
+            const daySuggestionsByDayPref = {};
+            weeklyTarget.suggestedAccessories.forEach(accSugg => {
+                if (!daySuggestionsByDayPref[accSugg.dayPreference]) {
+                    daySuggestionsByDayPref[accSugg.dayPreference] = [];
+                }
+                daySuggestionsByDayPref[accSugg.dayPreference].push(accSugg);
+            });
+            
+            // Map day preference to cell ID and store
+            for (const [dayPref, suggestions] of Object.entries(daySuggestionsByDayPref)) {
+                const dayIndices = { mon: 0, tue: 1, wed: 2, thu: 3, fri: 4, sat: 5, sun: 6 };
+                const dayIndex = dayIndices[dayPref] !== undefined ? dayIndices[dayPref] : 0;
+                const cellId = `week-${weeklyTarget.week - 1}-day-${dayIndex}`;
+                
+                // Initialize array for this cell if needed
+                if (!accessorySuggestionsByDayId[cellId]) {
+                    accessorySuggestionsByDayId[cellId] = [];
+                }
+                
+                // Add all suggestions for this day
+                accessorySuggestionsByDayId[cellId].push(...suggestions);
+            }
         });
+
+        // Store accessory suggestions in a global data attribute for inspector access
+        const calendarGrid = document.getElementById('calendar-grid');
+        if (calendarGrid) {
+            calendarGrid.dataset.gdapAccessorySuggestions = JSON.stringify(accessorySuggestionsByDayId);
+            console.log("GDAP: Stored accessory suggestions for inspectors:", accessorySuggestionsByDayId);
+        }
         
-        // --- Final Steps ---
+        // --- Update State & Analytics ---
         if (typeof saveStateToLocalStorage === 'function') {
             saveStateToLocalStorage();
         } else if (window.BlockBuilder && typeof window.BlockBuilder.saveState === 'function') {
             window.BlockBuilder.saveState();
         }
+        
         if (typeof updateAnalytics === 'function') {
             updateAnalytics();
         } else if (window.Analytics && typeof window.Analytics.update === 'function') {
             window.Analytics.update();
         }
+        
+        // --- Show Success Message ---
         if (typeof Toast !== 'undefined' && Toast.show) {
-            Toast.show('Goal-driven program generated with periodization!', 'success');
+            Toast.show('Goal-driven program generated with accessory suggestions!', 'success');
         } else {
-            alert('Goal-driven program generated with periodization!');
+            alert('Goal-driven program generated with accessory suggestions!');
+        }
+        
+        // Add event listeners to day cells for the Inspector to display accessory suggestions
+        setupAccessorySuggestionListeners();
+    }
+    
+    // Function to set up event listeners for accessory suggestions
+    function setupAccessorySuggestionListeners() {
+        const dayCells = document.querySelectorAll('.day-cell');
+        
+        dayCells.forEach(cell => {
+            cell.addEventListener('click', function(event) {
+                // Only handle if not clicking on a card
+                if (!event.target.closest('.workout-card')) {
+                    updateAccessorySuggestionsInInspector(this.id);
+                }
+            });
+            
+            // Also handle case where a card is clicked
+            const cardsInCell = cell.querySelectorAll('.workout-card');
+            cardsInCell.forEach(card => {
+                card.addEventListener('click', function(event) {
+                    event.stopPropagation(); // Stop bubbling to cell
+                    updateAccessorySuggestionsInInspector(cell.id);
+                });
+            });
+        });
+    }
+    
+    // Function to update the inspector with accessory suggestions for a day cell
+    function updateAccessorySuggestionsInInspector(cellId) {
+        const suggestionContainer = document.getElementById('accessory-suggestions-container');
+        if (!suggestionContainer) return;
+        
+        // Clear existing content
+        suggestionContainer.innerHTML = '';
+        
+        // Get the calendar grid and check for suggestions
+        const calendarGrid = document.getElementById('calendar-grid');
+        if (!calendarGrid || !calendarGrid.dataset.gdapAccessorySuggestions) {
+            suggestionContainer.innerHTML = '<p>No accessory suggestions available.</p>';
+            return;
+        }
+        
+        try {
+            // Parse the stored suggestions
+            const allSuggestions = JSON.parse(calendarGrid.dataset.gdapAccessorySuggestions);
+            const suggestionsForCell = allSuggestions[cellId];
+            
+            if (!suggestionsForCell || suggestionsForCell.length === 0) {
+                suggestionContainer.innerHTML = '<p>No specific accessory suggestions for this day.</p>';
+                return;
+            }
+            
+            // Create the title
+            const title = document.createElement('h4');
+            title.textContent = 'Suggested Accessories:';
+            suggestionContainer.appendChild(title);
+            
+            // Create the list
+            const list = document.createElement('ul');
+            list.className = 'accessory-suggestion-list';
+            
+            // Add each suggestion as a list item
+            suggestionsForCell.forEach(suggestion => {
+                const item = document.createElement('li');
+                item.className = 'accessory-suggestion-item';
+                item.textContent = `${suggestion.exerciseName} (${suggestion.sets}x${suggestion.reps}) - ${suggestion.notes}`;
+                
+                // Make it draggable
+                item.draggable = true;
+                item.dataset.exerciseId = suggestion.exerciseId;
+                item.dataset.exerciseName = suggestion.exerciseName;
+                item.dataset.defaultSets = suggestion.sets;
+                item.dataset.defaultReps = suggestion.reps;
+                item.dataset.dragType = 'accessory-suggestion';
+                
+                // Add drag event handler
+                item.addEventListener('dragstart', function(event) {
+                    const data = {
+                        id: this.dataset.exerciseId,
+                        name: this.dataset.exerciseName,
+                        sets: this.dataset.defaultSets,
+                        reps: this.dataset.defaultReps,
+                        notes: `Accessory: ${this.dataset.exerciseName}`
+                    };
+                    
+                    event.dataTransfer.setData('application/json', JSON.stringify(data));
+                    event.dataTransfer.setData('text/plain', this.dataset.exerciseId);
+                    event.dataTransfer.effectAllowed = 'copy';
+                    
+                    console.log('Dragging accessory suggestion:', data);
+                });
+                
+                list.appendChild(item);
+            });
+            
+            suggestionContainer.appendChild(list);
+            
+        } catch (error) {
+            console.error('Error displaying accessory suggestions:', error);
+            suggestionContainer.innerHTML = '<p>Error loading accessory suggestions.</p>';
         }
     }
 

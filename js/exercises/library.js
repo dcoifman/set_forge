@@ -590,3 +590,19 @@ export function loadViewMode() {
 export function getExercises() {
     return exerciseLibraryData;
 }
+
+// Ensure this function is available in the global scope for modules that don't use imports
+// This helps prevent the PeriodizationEngine or ExerciseLibrary not available error
+window.getExercises = getExercises;
+
+/**
+ * Get a specific exercise by ID
+ * @param {string} id - The exercise ID to find
+ * @returns {Object|null} The exercise object or null if not found
+ */
+export function getExerciseById(id) {
+    return exerciseLibraryData.find(ex => ex.id === id) || null;
+}
+
+// Make this function available globally too
+window.getExerciseById = getExerciseById;
