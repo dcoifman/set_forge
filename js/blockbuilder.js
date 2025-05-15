@@ -44,7 +44,8 @@ import {
     exportUserExercises,
     handleExerciseImport,
     setViewMode, // Add view mode function
-    loadViewMode // Add view mode function
+    loadViewMode, // Add view mode function
+    getExercises // Added to access exercises directly
 } from './exercises/library.js'; // <-- Added Library import
 import ForgeAssist from './forgeassist.js';
 
@@ -78,9 +79,58 @@ document.addEventListener('DOMContentLoaded', () => {
     if (newGoalDrivenBlockBtn) {
         newGoalDrivenBlockBtn.addEventListener('click', () => {
             resetGDAPForm(); // Reset form to initial state
-            populateExerciseDropdownForGDAP(document.getElementById('gdapTargetExercise1'));
-            populatePeriodizationModelDropdown();
-            gdapModal.classList.add('is-visible');
+            
+            // Make sure we have the exercises loaded before showing the modal
+            const tryPopulateExercises = () => {
+                // First try using getExercises
+                if (typeof getExercises === 'function') {
+                    const exercises = getExercises();
+                    if (exercises && Array.isArray(exercises) && exercises.length > 0) {
+                        // We have the data from getExercises, populate and show modal
+                        console.log("GDAP: Using exercises from getExercises with", exercises.length, "exercises");
+                        populateExerciseDropdownForGDAP(document.getElementById('gdapTargetExercise1'));
+                        populatePeriodizationModelDropdown();
+                        gdapModal.classList.add('is-visible');
+                        return;
+                    }
+                }
+                
+                // Fallback to exerciseLibraryData
+                if (exerciseLibraryData && Array.isArray(exerciseLibraryData) && exerciseLibraryData.length > 0) {
+                    // We have the data, populate and show modal
+                    console.log("GDAP: Using loaded exercise library with", exerciseLibraryData.length, "exercises");
+                    populateExerciseDropdownForGDAP(document.getElementById('gdapTargetExercise1'));
+                    populatePeriodizationModelDropdown();
+                    gdapModal.classList.add('is-visible');
+                } else {
+                    // Try to load the library first
+                    console.log("GDAP: Exercise library not found, attempting to load");
+                    if (typeof loadExerciseLibrary === 'function') {
+                        loadExerciseLibrary().then(loadedData => {
+                            if (loadedData) {
+                                exerciseLibraryData = loadedData;  // Save it for future use
+                                console.log("GDAP: Successfully loaded exercise library with", loadedData.length, "exercises");
+                                populateExerciseDropdownForGDAP(document.getElementById('gdapTargetExercise1'));
+                                populatePeriodizationModelDropdown();
+                                gdapModal.classList.add('is-visible');
+                            }
+                        }).catch(err => {
+                            console.error("GDAP: Failed to load exercise library", err);
+                            // Show modal anyway
+                            populateExerciseDropdownForGDAP(document.getElementById('gdapTargetExercise1'));
+                            populatePeriodizationModelDropdown();
+                            gdapModal.classList.add('is-visible');
+                        });
+                    } else {
+                        // No way to load the library, just show modal with error
+                        populateExerciseDropdownForGDAP(document.getElementById('gdapTargetExercise1'));
+                        populatePeriodizationModelDropdown();
+                        gdapModal.classList.add('is-visible');
+                    }
+                }
+            };
+            
+            tryPopulateExercises();
         });
     }
 
@@ -174,9 +224,26 @@ document.addEventListener('DOMContentLoaded', () => {
     function populateExerciseDropdownForGDAP(selectElement) {
         if (!selectElement) return;
         
-        // Get exercises from the global exerciseLibraryData variable that's populated after loadExerciseLibrary()
-        if (window.exerciseLibraryData && Array.isArray(window.exerciseLibraryData) && window.exerciseLibraryData.length > 0) {
-            const exercises = window.exerciseLibraryData;
+        // Try to use the getExercises function first (most reliable)
+        if (typeof getExercises === 'function') {
+            const exercises = getExercises();
+            if (exercises && Array.isArray(exercises) && exercises.length > 0) {
+                selectElement.innerHTML = '<option value="">Select an exercise...</option>';
+                exercises.sort((a, b) => a.name.localeCompare(b.name));
+                exercises.forEach(exercise => {
+                    const option = document.createElement('option');
+                    option.value = exercise.id;
+                    option.textContent = exercise.name;
+                    selectElement.appendChild(option);
+                });
+                console.log('GDAP: Populated exercise dropdown using getExercises with', exercises.length, 'exercises');
+                return;
+            }
+        }
+        
+        // Fallback to direct data access
+        if (exerciseLibraryData && Array.isArray(exerciseLibraryData) && exerciseLibraryData.length > 0) {
+            const exercises = exerciseLibraryData;
             selectElement.innerHTML = '<option value="">Select an exercise...</option>';
             exercises.sort((a, b) => a.name.localeCompare(b.name));
             exercises.forEach(exercise => {
@@ -186,6 +253,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 selectElement.appendChild(option);
             });
             console.log('GDAP: Populated exercise dropdown with', exercises.length, 'exercises');
+        } 
+        // Final attempt - try loading the library directly
+        else if (typeof loadExerciseLibrary === 'function') {
+            console.log('GDAP: Exercise library not directly accessible, loading again...');
+            loadExerciseLibrary().then(exercises => {
+                if (exercises && Array.isArray(exercises)) {
+                    selectElement.innerHTML = '<option value="">Select an exercise...</option>';
+                    exercises.sort((a, b) => a.name.localeCompare(b.name));
+                    exercises.forEach(exercise => {
+                        const option = document.createElement('option');
+                        option.value = exercise.id;
+                        option.textContent = exercise.name;
+                        selectElement.appendChild(option);
+                    });
+                    console.log('GDAP: Populated exercise dropdown after loading, with', exercises.length, 'exercises');
+                }
+            }).catch(err => {
+                console.error('GDAP: Failed to load exercise library:', err);
+                selectElement.innerHTML = '<option value="" disabled>Failed to load library</option>';
+            });
         } else {
             console.warn('Exercise Library data not available for GDAP modal.');
             selectElement.innerHTML = '<option value="" disabled>Exercise library not loaded</option>';

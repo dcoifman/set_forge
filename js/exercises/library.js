@@ -577,9 +577,16 @@ export function loadViewMode() {
     exerciseListContainerElement.classList.add(`view-${savedMode}`);
 }
 
-
 // Dependencies:
 // - Browser Globals: fetch, localStorage, JSON, console, setTimeout, URL, Blob, FileReader, confirm, Date, Math
 // - DOM Access: document.getElementById, querySelector, createElement, etc.
 // - External Functions: showToast (needs import)
 // - Helper Functions: parseCsvString (needs import or definition)
+
+/**
+ * Get the current exercise library data. Used by other modules to access exercise data.
+ * @returns {Array} The current exercise library data
+ */
+export function getExercises() {
+    return exerciseLibraryData;
+}
