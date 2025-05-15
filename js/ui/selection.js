@@ -3,6 +3,10 @@ import ForgeAssist from '../forgeassist.js';
 // --- State ---
 let selectedElement = null;
 let selectedElements = new Set();
+let isMarqueeActive = false;
+let marqueeElement = null;
+let marqueeStartX = 0;
+let marqueeStartY = 0;
 
 // --- Selection Logic (Single & Multi) ---
 export function handleSelection(element, isShiftHeld) {
@@ -82,6 +86,120 @@ export function deleteSelectedElement(element) {
 // Function to get the current selection state
 export function getSelectionState() {
     return { selectedElement, selectedElements };
+}
+
+// --- Marquee Selection Logic ---
+export function initializeMarqueeSelection(workCanvasElement) {
+    if (!workCanvasElement) return;
+    
+    // Create the marquee element if it doesn't exist
+    if (!marqueeElement) {
+        marqueeElement = document.createElement('div');
+        marqueeElement.className = 'selection-marquee';
+        marqueeElement.style.display = 'none';
+        document.body.appendChild(marqueeElement);
+    }
+    
+    // Mouse down starts marquee if not on a card or interactive element
+    workCanvasElement.addEventListener('mousedown', (e) => {
+        // Skip if right click or on an interactive element
+        if (e.button !== 0 || 
+            e.target.closest('.workout-card') || 
+            e.target.closest('button') ||
+            e.target.closest('input') ||
+            e.target.closest('select')) {
+            return;
+        }
+        
+        isMarqueeActive = true;
+        marqueeStartX = e.clientX;
+        marqueeStartY = e.clientY;
+        
+        // Position and show marquee
+        updateMarqueePosition(e.clientX, e.clientY);
+        marqueeElement.style.display = 'block';
+        
+        // Prevent text selection during marquee
+        e.preventDefault();
+    });
+    
+    // Mouse move updates marquee size and position
+    document.addEventListener('mousemove', (e) => {
+        if (!isMarqueeActive) return;
+        
+        updateMarqueePosition(e.clientX, e.clientY);
+        
+        // Calculate marquee bounds
+        const marqueeRect = marqueeElement.getBoundingClientRect();
+        
+        // Get all workout cards and check intersection
+        const workoutCards = document.querySelectorAll('.workout-card');
+        
+        workoutCards.forEach(card => {
+            const cardRect = card.getBoundingClientRect();
+            
+            // Check if card intersects with marquee
+            if (rectsIntersect(marqueeRect, cardRect)) {
+                if (!selectedElements.has(card)) {
+                    card.classList.add('selected');
+                    selectedElements.add(card);
+                }
+            } else if (!e.shiftKey) {
+                // If not shift-selecting, remove cards that are not in the marquee
+                if (selectedElements.has(card)) {
+                    card.classList.remove('selected');
+                    selectedElements.delete(card);
+                }
+            }
+        });
+        
+        // Update selectedElement reference
+        selectedElement = selectedElements.size === 1 ? Array.from(selectedElements)[0] : null;
+    });
+    
+    // Mouse up ends marquee selection
+    document.addEventListener('mouseup', () => {
+        if (!isMarqueeActive) return;
+        
+        isMarqueeActive = false;
+        marqueeElement.style.display = 'none';
+        
+        // Trigger an event for handling the selection
+        const event = new CustomEvent('marquee-selection-complete', {
+            detail: { selectedElements }
+        });
+        document.dispatchEvent(event);
+    });
+}
+
+// Helper function to update marquee position and size
+function updateMarqueePosition(currentX, currentY) {
+    const left = Math.min(marqueeStartX, currentX);
+    const top = Math.min(marqueeStartY, currentY);
+    const width = Math.abs(currentX - marqueeStartX);
+    const height = Math.abs(currentY - marqueeStartY);
+    
+    marqueeElement.style.left = `${left}px`;
+    marqueeElement.style.top = `${top}px`;
+    marqueeElement.style.width = `${width}px`;
+    marqueeElement.style.height = `${height}px`;
+}
+
+// Helper function to check if two rectangles intersect
+function rectsIntersect(rect1, rect2) {
+    return !(
+        rect1.right < rect2.left ||
+        rect1.left > rect2.right ||
+        rect1.bottom < rect2.top ||
+        rect1.top > rect2.bottom
+    );
+}
+
+// Clear all selections
+export function clearSelections() {
+    selectedElements.forEach(el => el.classList.remove('selected'));
+    selectedElements.clear();
+    selectedElement = null;
 }
 
 // Dependencies:

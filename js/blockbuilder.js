@@ -12,6 +12,7 @@ import { triggerSaveState } from './state/storage.js';
 import PeriodizationModelManager from './periodizationModelManager.js'; // <<< UNCOMMENTED Import
 import { initializePhaseResizing } from './ui/phaseResize.js'; // <-- Added Phase Resize
 import { handleSelection, getSelectionState } from './ui/selection.js';
+import { initializeMarqueeSelection } from './ui/marquee.js';
 import {
     handleExerciseDragStart,
     handleExerciseDragEnd, // Need this one too
@@ -160,6 +161,13 @@ document.addEventListener('DOMContentLoaded', () => {
         initializeDragDrop(workCanvas);
     } else {
         console.warn("Drag and drop module not found.");
+    }
+    
+    // Initialize Marquee Selection
+    if (typeof initializeMarqueeSelection === 'function') {
+        initializeMarqueeSelection(workCanvas);
+    } else {
+        console.warn("Marquee selection module not found.");
     }
 
     // Initialize Periodization Model Manager
@@ -3540,6 +3548,197 @@ document.addEventListener('DOMContentLoaded', () => {
         
         showToast('Superset removed', 'success');
     }
+    
+    /**
+     * Generic function to break any exercise group (superset, circuit, complex)
+     * @param {HTMLElement} groupContainer - The group container to break
+     */
+    function breakExerciseGroup(groupContainer) {
+        // Check if this is a superset, circuit, or complex container
+        if (groupContainer.classList.contains('superset-container')) {
+            breakSuperset(groupContainer);
+        } else if (groupContainer.classList.contains('circuit-container')) {
+            // Handle circuit breaking
+            const parentCell = groupContainer.closest('.day-cell');
+            if (!parentCell) {
+                console.error('Parent day cell not found for circuit');
+                return;
+            }
+            
+            // Get all workout cards in the circuit
+            const exerciseCards = Array.from(groupContainer.querySelectorAll('.workout-card'));
+            
+            // Move cards back to day cell and remove circuit container
+            exerciseCards.forEach(card => {
+                card.classList.remove('in-superset');
+                parentCell.appendChild(card);
+            });
+            
+            groupContainer.remove();
+            
+            // Trigger updates
+            triggerSaveState();
+            triggerAnalyticsUpdate(workCanvas);
+            
+            showToast('Circuit removed', 'success');
+        } else if (groupContainer.classList.contains('complex-container')) {
+            // Handle complex breaking
+            const parentCell = groupContainer.closest('.day-cell');
+            if (!parentCell) {
+                console.error('Parent day cell not found for complex');
+                return;
+            }
+            
+            // Get all workout cards in the complex
+            const exerciseCards = Array.from(groupContainer.querySelectorAll('.workout-card'));
+            
+            // Move cards back to day cell and remove complex container
+            exerciseCards.forEach(card => {
+                card.classList.remove('in-superset');
+                parentCell.appendChild(card);
+            });
+            
+            groupContainer.remove();
+            
+            // Trigger updates
+            triggerSaveState();
+            triggerAnalyticsUpdate(workCanvas);
+            
+            showToast('Complex removed', 'success');
+        }
+    }
+    
+    /**
+     * Creates a circuit container and adds the selected exercise cards to it
+     * @param {Array} exerciseCards - Array of workout card DOM elements to group into a circuit
+     * @returns {HTMLElement} The circuit container element
+     */
+    function createCircuit(exerciseCards) {
+        if (!exerciseCards || exerciseCards.length < 3) {
+            console.error('At least 3 exercise cards are required to create a circuit');
+            showToast('Select at least 3 exercises to create a circuit', 'error');
+            return null;
+        }
+
+        // Create the circuit container
+        const circuitContainer = document.createElement('div');
+        circuitContainer.className = 'superset-container circuit-container';
+        circuitContainer.id = `circuit-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        
+        // Create the header with label and controls
+        const circuitHeader = document.createElement('div');
+        circuitHeader.className = 'superset-header';
+        
+        circuitHeader.innerHTML = `
+            <div class="group-label circuit-label">Circuit<span class="group-details-badge">${exerciseCards.length} exercises, 15s rest</span></div>
+            <div class="superset-controls">
+                <button class="superset-edit-btn" title="Edit Circuit">✏️</button>
+                <button class="superset-remove-btn" title="Break Circuit">❌</button>
+            </div>
+        `;
+        
+        circuitContainer.appendChild(circuitHeader);
+        
+        // Get the parent element (day cell) of the first card
+        const parentCell = exerciseCards[0].closest('.day-cell');
+        if (!parentCell) {
+            console.error('Parent day cell not found for circuit');
+            return null;
+        }
+        
+        // Process the exercise cards
+        exerciseCards.forEach(card => {
+            // Remove from current parent
+            if (card.parentNode) {
+                card.parentNode.removeChild(card);
+            }
+            
+            // Add to circuit container
+            card.classList.add('in-superset');
+            circuitContainer.appendChild(card);
+        });
+        
+        circuitContainer.querySelector('.superset-remove-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            breakExerciseGroup(circuitContainer);
+        });
+        
+        // Insert the circuit container into the day cell
+        parentCell.appendChild(circuitContainer);
+        
+        // Trigger updates
+        triggerSaveState();
+        triggerAnalyticsUpdate(workCanvas);
+        
+        showToast('Circuit created', 'success');
+        return circuitContainer;
+    }
+
+    /**
+     * Creates a complex container and adds the selected exercise cards to it
+     * @param {Array} exerciseCards - Array of workout card DOM elements to group into a complex
+     * @returns {HTMLElement} The complex container element
+     */
+    function createComplex(exerciseCards) {
+        if (!exerciseCards || exerciseCards.length < 2) {
+            console.error('At least 2 exercise cards are required to create a complex');
+            showToast('Select at least 2 exercises to create a complex', 'error');
+            return null;
+        }
+
+        // Create the complex container
+        const complexContainer = document.createElement('div');
+        complexContainer.className = 'superset-container complex-container';
+        complexContainer.id = `complex-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        
+        // Create the header with label and controls
+        const complexHeader = document.createElement('div');
+        complexHeader.className = 'superset-header';
+        
+        complexHeader.innerHTML = `
+            <div class="group-label complex-label">Complex<span class="group-details-badge">${exerciseCards.length} exercises, 0s transition</span></div>
+            <div class="superset-controls">
+                <button class="superset-edit-btn" title="Edit Complex">✏️</button>
+                <button class="superset-remove-btn" title="Break Complex">❌</button>
+            </div>
+        `;
+        
+        complexContainer.appendChild(complexHeader);
+        
+        // Get the parent element (day cell) of the first card
+        const parentCell = exerciseCards[0].closest('.day-cell');
+        if (!parentCell) {
+            console.error('Parent day cell not found for complex');
+            return null;
+        }
+        
+        // Process the exercise cards
+        exerciseCards.forEach(card => {
+            // Remove from current parent
+            if (card.parentNode) {
+                card.parentNode.removeChild(card);
+            }
+            
+            // Add to complex container
+            card.classList.add('in-superset');
+            complexContainer.appendChild(card);
+        });
+        
+        complexContainer.querySelector('.superset-remove-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            breakExerciseGroup(complexContainer);
+        });
+        
+        // Insert the complex container into the day cell
+        parentCell.appendChild(complexContainer);
+        
+        // Trigger updates
+        triggerSaveState();
+        triggerAnalyticsUpdate(workCanvas);
+        
+        showToast('Complex created', 'success');
+        return complexContainer;
+    }
 
     // Add context menu and multi-select toolbar elements
     let contextMenu = null;
@@ -3608,6 +3807,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="multi-select-action" id="create-superset-btn">
                     <span class="icon">⚡</span> Create Superset
                 </button>
+                <button class="multi-select-action" id="create-circuit-btn">
+                    <span class="icon">🔄</span> Create Circuit
+                </button>
+                <button class="multi-select-action" id="create-complex-btn">
+                    <span class="icon">🔗</span> Create Complex
+                </button>
                 <button class="multi-select-action" id="delete-selected-btn">
                     <span class="icon">🗑️</span> Delete Selected
                 </button>
@@ -3626,6 +3831,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             
+            document.getElementById('create-circuit-btn').addEventListener('click', () => {
+                const selectedCards = Array.from(selectedContext.elements);
+                if (selectedCards.length >= 3) {
+                    createCircuit(selectedCards);
+                    // Clear selection after creating circuit
+                    clearSelectionStyles();
+                    selectedContext = { type: 'none', elements: new Set(), modelId: null, dayId: null };
+                    updateMultiSelectToolbarVisibility();
+                } else {
+                    showToast('Select at least 3 exercises to create a circuit', 'warning');
+                }
+            });
+            
+            document.getElementById('create-complex-btn').addEventListener('click', () => {
+                const selectedCards = Array.from(selectedContext.elements);
+                if (selectedCards.length >= 2) {
+                    createComplex(selectedCards);
+                    // Clear selection after creating complex
+                    clearSelectionStyles();
+                    selectedContext = { type: 'none', elements: new Set(), modelId: null, dayId: null };
+                    updateMultiSelectToolbarVisibility();
+                }
+            });
+            
             document.getElementById('delete-selected-btn').addEventListener('click', () => {
                 const selectedCards = Array.from(selectedContext.elements);
                 selectedCards.forEach(card => {
@@ -3638,6 +3867,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 triggerSaveState();
                 triggerAnalyticsUpdate(workCanvas);
                 showToast(`Deleted ${selectedCards.length} exercises`, 'success');
+            });
+            
+            // Listen for marquee selection complete event
+            document.addEventListener('marquee-selection-complete', (e) => {
+                if (e.detail && e.detail.selectedElements && e.detail.selectedElements.size > 0) {
+                    selectedContext.type = 'exercise';
+                    selectedContext.elements = new Set(e.detail.selectedElements);
+                    updateMultiSelectToolbarVisibility();
+                    if (selectedContext.elements.size > 1) {
+                        openMultiSelectInspector();
+                    }
+                }
             });
         }
     }
@@ -4072,6 +4313,112 @@ document.addEventListener('DOMContentLoaded', () => {
     // Signal that the block builder is ready
     window.dispatchEvent(new CustomEvent('blockbuilderReady'));
 
+    // Listener for double-click to enable inline editing
+    workCanvas.addEventListener('dblclick', (e) => {
+        const card = e.target.closest('.workout-card');
+        const target = e.target;
+
+        if (card && (target.classList.contains('exercise-name') || target.classList.contains('card-reps') || target.classList.contains('card-intensity'))) {
+            makeEditable(target);
+        }
+    });
+
+    // Function to make an element editable
+    function makeEditable(element) {
+        // Prevent re-making editable if already in edit mode
+        if (element.querySelector('input')) return;
+
+        const originalText = element.textContent;
+        const inputType = (element.classList.contains('card-reps') || element.classList.contains('card-intensity')) ? 'text' : 'text'; // Could be number for reps/intensity if strict parsing is desired
+        const input = document.createElement('input');
+        input.type = inputType;
+        input.className = 'inline-edit-field';
+        input.value = originalText;
+        element.textContent = ''; // Clear original text
+        element.appendChild(input);
+        input.focus();
+        element.classList.add('inline-edit-active');
+
+        // Save on blur or Enter key
+        input.addEventListener('blur', () => saveInlineEdit(element, input, originalText));
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                input.blur(); // Trigger blur to save
+            } else if (e.key === 'Escape') {
+                // Revert and remove input
+                element.textContent = originalText;
+                element.classList.remove('inline-edit-active');
+            }
+        });
+    }
+
+    // Function to save the inline edit
+    function saveInlineEdit(element, input, originalText) {
+        const newValue = input.value.trim();
+        const card = element.closest('.workout-card');
+
+        if (newValue && newValue !== originalText) {
+            element.textContent = newValue;
+            // Update card data based on which field was edited
+            if (element.classList.contains('exercise-name')) {
+                card.querySelector('.exercise-name').textContent = newValue; // Update visual
+                // Potentially update card.dataset.exerciseName if used
+            } else if (element.classList.contains('card-reps')) {
+                // This needs to parse sets and reps, e.g., "3x10"
+                const parts = newValue.match(/(\d+)[xX×](\d+)/);
+                if (parts && parts.length === 3) {
+                    card.dataset.sets = parts[1];
+                    card.dataset.reps = parts[2];
+                } else {
+                    // Handle simple reps or invalid format
+                    card.dataset.reps = newValue;
+                    // card.dataset.sets might need clearing or special handling
+                }
+            } else if (element.classList.contains('card-intensity')) {
+                // This needs to parse load type and value, e.g., "RPE 8", "75%", "100kg"
+                const rpeMatch = newValue.match(/RPE\s*(\d+\.?\d*)/i);
+                const percentMatch = newValue.match(/(\d+\.?\d*)\s*%/);
+                const weightMatchKg = newValue.match(/(\d+\.?\d*)\s*kg/i);
+                const weightMatchLb = newValue.match(/(\d+\.?\d*)\s*lb/i);
+                // Basic weight match if no unit
+                const weightMatchNumeric = newValue.match(/^(\d+\.?\d*)$/);
+
+
+                if (rpeMatch) {
+                    card.dataset.loadType = 'rpe';
+                    card.dataset.loadValue = rpeMatch[1];
+                } else if (percentMatch) {
+                    card.dataset.loadType = 'percent';
+                    card.dataset.loadValue = percentMatch[1];
+                } else if (weightMatchKg) {
+                    card.dataset.loadType = 'weight'; // Or 'kg'
+                    card.dataset.loadValue = weightMatchKg[1];
+                } else if (weightMatchLb) {
+                    card.dataset.loadType = 'lb';
+                    card.dataset.loadValue = weightMatchLb[1];
+                } else if (weightMatchNumeric) { // Default to weight if just a number
+                    card.dataset.loadType = 'weight'; 
+                    card.dataset.loadValue = weightMatchNumeric[1];
+                } else {
+                    // Fallback for text or unparsed
+                    card.dataset.loadType = 'text';
+                    card.dataset.loadValue = newValue;
+                }
+            }
+
+            // Update estimated load and save state
+            card.dataset.load = calculateEstimatedLoad(card.dataset);
+            triggerSaveState();
+            triggerAnalyticsUpdate(workCanvas);
+            showToast('Exercise updated', 'success');
+        } else {
+            // No change or empty, revert to original
+            element.textContent = originalText;
+        }
+        element.classList.remove('inline-edit-active');
+    }
+
+    // <<< NEW: Central function to populate and show the modal >>>
 }); // End DOMContentLoaded 
 
 // Expose required functions for template integration

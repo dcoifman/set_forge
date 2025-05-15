@@ -12,11 +12,14 @@ import { triggerAnalyticsUpdate } from '../analytics/updates.js'; // Corrected i
 // State (Managed within this module)
 let draggedItem = null;
 let altKeyPressed = false;
+let multiAthleteToggle = null;
+let workCanvasElement = null;
+let exerciseListElement = null;
+let ghostPreview = null;
+let snappingGuideVertical = null;
+let snappingGuideHorizontal = null;
 
 // --- DOM References (Needs injection or querying in init) ---
-let multiAthleteToggle = null; 
-let workCanvasElement = null; // Needed for closest()
-let exerciseListElement = null; // Needed for closest()
 
 // --- Initialization ---
 // Call this function after DOM is loaded to get element references
@@ -48,7 +51,110 @@ export function initializeDragDrop(config) {
         attachDragDropListeners(slot);
     });
 
+    // Create ghost preview and snapping guides elements
+    createGhostPreviewElement();
+    createSnappingGuideElements();
+
     console.log("DragDrop module initialized and listeners attached.");
+}
+
+/**
+ * Creates the ghost preview element for drag operations
+ */
+function createGhostPreviewElement() {
+    ghostPreview = document.createElement('div');
+    ghostPreview.className = 'workout-card ghost-preview';
+    ghostPreview.style.display = 'none';
+    document.body.appendChild(ghostPreview);
+}
+
+/**
+ * Creates the snapping guide elements
+ */
+function createSnappingGuideElements() {
+    snappingGuideVertical = document.createElement('div');
+    snappingGuideVertical.className = 'snapping-guideline vertical';
+    snappingGuideVertical.style.display = 'none';
+    
+    snappingGuideHorizontal = document.createElement('div');
+    snappingGuideHorizontal.className = 'snapping-guideline horizontal';
+    snappingGuideHorizontal.style.display = 'none';
+    
+    document.body.appendChild(snappingGuideVertical);
+    document.body.appendChild(snappingGuideHorizontal);
+}
+
+/**
+ * Shows the ghost preview card at the target position
+ * @param {HTMLElement} targetSlot - The day cell target
+ * @param {Object} content - Content to display in preview
+ */
+function showGhostPreview(targetSlot, content) {
+    if (!ghostPreview || !targetSlot) return;
+    
+    const rect = targetSlot.getBoundingClientRect();
+    
+    // Position ghost preview
+    ghostPreview.style.left = rect.left + 'px';
+    ghostPreview.style.top = rect.top + 'px';
+    ghostPreview.style.width = rect.width + 'px';
+    ghostPreview.style.height = '60px'; // Standard card height
+    
+    // Add content if provided
+    if (content) {
+        ghostPreview.innerHTML = `
+            <div class="workout-title">${content.name || 'Exercise'}</div>
+            <div class="workout-details">${content.details || ''}</div>
+        `;
+    }
+    
+    // Show ghost preview
+    ghostPreview.style.display = 'block';
+}
+
+/**
+ * Hides the ghost preview card
+ */
+function hideGhostPreview() {
+    if (ghostPreview) {
+        ghostPreview.style.display = 'none';
+    }
+}
+
+/**
+ * Shows snapping guidelines for alignment
+ * @param {HTMLElement} targetSlot - The day cell target
+ */
+function showSnappingGuides(targetSlot) {
+    if (!snappingGuideVertical || !snappingGuideHorizontal || !targetSlot) return;
+    
+    const rect = targetSlot.getBoundingClientRect();
+    
+    // Vertical guide (centered in target)
+    snappingGuideVertical.style.left = (rect.left + rect.width / 2) + 'px';
+    snappingGuideVertical.style.top = '0px';
+    snappingGuideVertical.style.height = '100vh';
+    snappingGuideVertical.style.width = '1px';
+    snappingGuideVertical.style.display = 'block';
+    
+    // Horizontal guide (centered in target)
+    snappingGuideHorizontal.style.left = '0px';
+    snappingGuideHorizontal.style.top = (rect.top + rect.height / 2) + 'px';
+    snappingGuideHorizontal.style.width = '100vw';
+    snappingGuideHorizontal.style.height = '1px';
+    snappingGuideHorizontal.style.display = 'block';
+}
+
+/**
+ * Hides the snapping guides
+ */
+function hideSnappingGuides() {
+    if (snappingGuideVertical) {
+        snappingGuideVertical.style.display = 'none';
+    }
+    if (snappingGuideHorizontal) {
+        snappingGuideHorizontal.style.display = 'none';
+    }
 }
 
 // --- Drag and Drop Handlers ---
@@ -65,11 +171,29 @@ export function handleDragOver(e) {
     e.dataTransfer.dropEffect = draggedItem.classList.contains('exercise-item') ? 'copy' : 'move';
     e.currentTarget.classList.add('drag-over');
     updateMultiAthleteHover(altKeyPressed, e.currentTarget); // Pass target
+    
+    // Show ghost preview
+    if (draggedItem.classList.contains('exercise-item')) {
+        const exerciseName = draggedItem.querySelector('.exercise-list-name')?.textContent || 'Exercise';
+        showGhostPreview(e.currentTarget, { name: exerciseName });
+    } else if (draggedItem.classList.contains('workout-card')) {
+        showGhostPreview(e.currentTarget, { 
+            name: draggedItem.querySelector('.workout-title')?.textContent || 'Exercise',
+            details: draggedItem.querySelector('.workout-details')?.textContent || ''
+        });
+    }
+    
+    // Show snapping guides
+    showSnappingGuides(e.currentTarget);
 }
 
 export function handleDragLeave(e) {
     e.currentTarget.classList.remove('drag-over');
     e.currentTarget.classList.remove('multi-athlete-hover');
+    
+    // Hide ghost preview and snapping guides
+    hideGhostPreview();
+    hideSnappingGuides();
 }
 
 export function handleDrop(e) {
@@ -77,6 +201,10 @@ export function handleDrop(e) {
     const targetSlot = e.currentTarget;
     targetSlot.classList.remove('drag-over');
     targetSlot.classList.remove('multi-athlete-hover');
+    
+    // Hide ghost preview and snapping guides
+    hideGhostPreview();
+    hideSnappingGuides();
 
     if (!draggedItem) return;
     console.log('[handleDrop] Drop detected. Dragged item:', draggedItem);
@@ -167,6 +295,10 @@ export function handleExerciseDragEnd(e) {
    if (draggedItem && draggedItem.classList.contains('exercise-item')) {
        draggedItem.classList.remove('dragging');
        draggedItem = null; // Reset state
+       
+       // Clean up ghost preview and snapping guides
+       hideGhostPreview();
+       hideSnappingGuides();
    }
 }
 
@@ -187,6 +319,10 @@ export function handleCardDragEnd(e) {
    if (draggedItem && draggedItem.classList.contains('workout-card')) {
        draggedItem.classList.remove('dragging');
        draggedItem = null; // Reset state
+       
+       // Clean up ghost preview and snapping guides
+       hideGhostPreview();
+       hideSnappingGuides();
    }
 }
 
