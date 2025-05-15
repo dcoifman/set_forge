@@ -283,34 +283,16 @@ const MODEL_PARAMETER_DEFINITIONS = {
  * Returns the default parameter set for a given model type.
  * @param {string} type - The model type (e.g., "linear").
  * @returns {object|null} The default parameters or null if type is unknown.
- */
-export function getModelDefaults(type) {
-    if(MODEL_DEFAULTS[type]) {
-        return JSON.parse(JSON.stringify(MODEL_DEFAULTS[type])); // Return a deep copy to prevent mutation
-    }
-    return null;
-}
-
-/**
+ *
  * Returns metadata about parameters for a type (label, type, validation rules, description).
  * Used by Inspector Config Tab (Phase 7).
  * @param {string} type - The model type (e.g., "linear").
  * @returns {object} Parameter definitions keyed by parameter name.
- */
-export function getModelParameterDefinitions(type) {
-    if(MODEL_PARAMETER_DEFINITIONS[type]) {
-        return JSON.parse(JSON.stringify(MODEL_PARAMETER_DEFINITIONS[type]));
-    }
-    return null;
-}
-
-/**
+ *
  * Returns a list of available model type identifiers.
  * @returns {string[]} Array of model type strings.
  */
-export function getAvailableModelTypes() {
-    return Object.keys(MODEL_DEFAULTS);
-}
+// Function implementations moved to the bottom of the file
 
 
 // --- Core Calculation Logic ---
@@ -327,7 +309,7 @@ export function getAvailableModelTypes() {
  *                            sets: number|string, reps: number|string, loadType: string, 
  *                            loadValue: number|string, rest: string, ... }
  */
-export function calculateExercisesForDay(modelInstance, weekIndex, dayOfWeek) {
+function calculateExercisesForDay(modelInstance, weekIndex, dayOfWeek) {
     console.log(`[Engine] Calculating exercises for ${modelInstance.type} - Week ${weekIndex + 1} - Day ${dayOfWeek}`);
     const { type, params, scope } = modelInstance; // Include scope for stateful models
     let exercises = [];
@@ -448,7 +430,7 @@ export function calculateExercisesForDay(modelInstance, weekIndex, dayOfWeek) {
  *                          but potentially aggregated or focused on key metrics. 
  *                          Includes { week: weekIndex, day: dayOfWeek, ... }
  */
-export function getProjectionData(instanceId, startWeekIndex, numWeeksToProject) {
+function getProjectionData(instanceId, startWeekIndex, numWeeksToProject) {
     console.log(`[Engine] Projecting data for instance ${instanceId}, starting week ${startWeekIndex}, for ${numWeeksToProject} weeks.`);
     // Need access to the model instance - this might require passing it in or using the Manager
     // For now, assume we can get it (or refactor later)
@@ -500,7 +482,7 @@ export function getProjectionData(instanceId, startWeekIndex, numWeeksToProject)
  * @param {string} scope - The scope of the change ('day', 'week', 'all').
  * @returns {object} An object describing the simulated impact (e.g., { changes: [], summary: string }).
  */
-export function simulateParameterChange(instanceId, dayIdContext, newParams, scope) {
+function simulateParameterChange(instanceId, dayIdContext, newParams, scope) {
     console.log(`[Engine] Simulating parameter change for ${instanceId}`, { newParams, scope, dayIdContext });
     // TODO: Implement simulation logic
     // 1. Get current model instance.
@@ -524,7 +506,7 @@ export function simulateParameterChange(instanceId, dayIdContext, newParams, sco
  * @param {string} scope - The scope of the swap ('day', 'week').
  * @returns {object} An object describing the simulated impact.
  */
-export function simulateModelSwap(instanceId, dayIdContext, newModelType, scope) {
+function simulateModelSwap(instanceId, dayIdContext, newModelType, scope) {
      console.log(`[Engine] Simulating model swap for ${instanceId} to ${newModelType}`, { scope, dayIdContext });
     // TODO: Implement simulation logic
     // 1. Get current model instance.
@@ -1815,8 +1797,34 @@ const MODEL_CALCULATORS = {
     dupauto: _calculateDupAutoDay // Lowercase key
 };
 
-// Expose the module to the global window object for modules that don't use imports
-// This helps prevent the PeriodizationEngine or ExerciseLibrary not available error
+// Export named methods rather than default export
+export function getModelDefaults(type) {
+    if(MODEL_DEFAULTS[type]) {
+        return JSON.parse(JSON.stringify(MODEL_DEFAULTS[type])); // Return a deep copy to prevent mutation
+    }
+    return null;
+}
+
+export function getModelParameterDefinitions(type) {
+    if(MODEL_PARAMETER_DEFINITIONS[type]) {
+        return JSON.parse(JSON.stringify(MODEL_PARAMETER_DEFINITIONS[type]));
+    }
+    return null;
+}
+
+export function getAvailableModelTypes() {
+    return Object.keys(MODEL_DEFAULTS);
+}
+
+// Export all the public functions
+export {
+    calculateExercisesForDay,
+    getProjectionData,
+    simulateParameterChange,
+    simulateModelSwap
+};
+
+// Expose to global scope but do not use default export
 window.PeriodizationEngine = {
     getModelDefaults,
     getModelParameterDefinitions,

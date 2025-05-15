@@ -1,8 +1,16 @@
 import acwr from './acwr.js';
 import monotony from './monotony.js';
 import AdaptiveScheduler from './adaptiveScheduler.js';
-// Import the engine module as an object
-import * as PeriodizationEngine from './periodizationEngine.js'; 
+// Change from star import to named imports
+import { 
+  getModelDefaults, 
+  getModelParameterDefinitions, 
+  getAvailableModelTypes, 
+  calculateExercisesForDay, 
+  getProjectionData, 
+  simulateParameterChange, 
+  simulateModelSwap 
+} from './periodizationEngine.js';
 import vbtAdjust from './velocityAutoReg.js'; // Import VBT adjustment logic
 // Import necessary helpers/state functions
 import { getStructuredDetails } from './utils/helpers.js'; 
@@ -224,8 +232,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function populatePeriodizationModelDropdown() {
-        if (typeof PeriodizationEngine !== 'undefined' && PeriodizationEngine.getAvailableModelTypes) {
-            const modelTypes = PeriodizationEngine.getAvailableModelTypes();
+        if (typeof getAvailableModelTypes === 'function') {
+        const modelTypes = getAvailableModelTypes();
             gdapPeriodizationModelSelect.innerHTML = '<option value="">None (Simple Linear Progression)</option>';
             modelTypes.forEach(type => {
                 // Capitalize first letter for display
@@ -344,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             // Get model defaults
-            const modelDefaults = PeriodizationEngine.getModelDefaults(goalInstance.periodizationModelName);
+            const modelDefaults = getModelDefaults(goalInstance.periodizationModelName);
             
             // Create and apply model to all days
             PeriodizationModelManagerInstance.createAndApplyModel(
@@ -5197,7 +5205,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     allDayIdsInBlock.push(window.PeriodizationModelManagerInstance.generateDayId(w, dayAbbr));
                 });
             }
-            const modelDefaults = PeriodizationEngine.getModelDefaults(newGoalInstance.periodizationModelName);
+            const modelDefaults = getModelDefaults(newGoalInstance.periodizationModelName);
             window.PeriodizationModelManagerInstance.createAndApplyModel(
                 newGoalInstance.periodizationModelName, modelDefaults || {}, allDayIdsInBlock, ExerciseLibrary.getExercises()
             );
