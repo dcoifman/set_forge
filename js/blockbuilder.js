@@ -224,35 +224,47 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to initialize ForgeAssist and related systems
     function initializeForgeAssistSystem(libraryData) {
         console.log("[BlockBuilder] Initializing ForgeAssist...");
-        // Use the imported ForgeAssist directly
-        // Pass necessary functions and data
-        const analyticsInterface = { 
-            getACWR: () => typeof AnalyticsModule !== 'undefined' && AnalyticsModule.getACWR ? AnalyticsModule.getACWR(AnalyticsModule.getDailyLoads(workCanvas)) : null,
-            getMonotony: () => typeof AnalyticsModule !== 'undefined' && AnalyticsModule.getMonotony ? AnalyticsModule.getMonotony(AnalyticsModule.getDailyLoads(workCanvas)) : null,
-            getStrain: () => typeof AnalyticsModule !== 'undefined' && AnalyticsModule.getStrain ? AnalyticsModule.getStrain(AnalyticsModule.getDailyLoads(workCanvas)) : null,
-            getWeeklyLoad: (weekNum) => typeof AnalyticsModule !== 'undefined' && AnalyticsModule.getWeeklyLoad ? AnalyticsModule.getWeeklyLoad(AnalyticsModule.getDailyLoads(workCanvas), weekNum) : 0,
-            getTotalLoad: () => typeof AnalyticsModule !== 'undefined' && AnalyticsModule.getTotalLoad ? AnalyticsModule.getTotalLoad(AnalyticsModule.getDailyLoads(workCanvas)) : 0
-        };
-
-        if (typeof ForgeAssist.init === 'function') {
-            ForgeAssist.init({
-                workCanvas: workCanvas,
-                showToast: showToast,
-                triggerAnalyticsUpdate: triggerAnalyticsUpdate,
-                getTotalWeeks: getTotalWeeksHelper, // Pass helper function
-                getBlockState: getBlockStateHelper, // Pass helper function
-                exerciseLibrary: libraryData,
-                // Pass analytics functions directly or via interface
-                acwrFunction: analyticsInterface.getACWR,
-                monotonyFunction: analyticsInterface.getMonotony,
-                getCurrentBlockLoads: () => typeof AnalyticsModule !== 'undefined' ? AnalyticsModule.getDailyLoads(workCanvas) : [],
-                simulatedPastLoad: typeof blockData !== 'undefined' ? blockData.getSimulatedPastLoad() : [],
-                // Provide AdaptiveScheduler instance/functions if needed by ForgeAssist
-                adaptiveScheduler: AdaptiveScheduler // Pass the global object
-            });
-            console.log("[BlockBuilder] ForgeAssist initialized successfully.");
-        } else {
-            console.error("ForgeAssist.init is not a function!");
+        try {
+            // Use the imported ForgeAssist directly
+            // Pass necessary functions and data
+            const analyticsInterface = { 
+                getACWR: () => typeof AnalyticsModule !== 'undefined' && AnalyticsModule.getACWR ? AnalyticsModule.getACWR(AnalyticsModule.getDailyLoads(workCanvas)) : null,
+                getMonotony: () => typeof AnalyticsModule !== 'undefined' && AnalyticsModule.getMonotony ? AnalyticsModule.getMonotony(AnalyticsModule.getDailyLoads(workCanvas)) : null,
+                getStrain: () => typeof AnalyticsModule !== 'undefined' && AnalyticsModule.getStrain ? AnalyticsModule.getStrain(AnalyticsModule.getDailyLoads(workCanvas)) : null,
+                getWeeklyLoad: (weekNum) => typeof AnalyticsModule !== 'undefined' && AnalyticsModule.getWeeklyLoad ? AnalyticsModule.getWeeklyLoad(AnalyticsModule.getDailyLoads(workCanvas), weekNum) : 0,
+                getTotalLoad: () => typeof AnalyticsModule !== 'undefined' && AnalyticsModule.getTotalLoad ? AnalyticsModule.getTotalLoad(AnalyticsModule.getDailyLoads(workCanvas)) : 0
+            };
+    
+            // Define current block loads function
+            const getCurrentBlockLoads = () => {
+                return typeof AnalyticsModule !== 'undefined' ? AnalyticsModule.getDailyLoads(workCanvas) : [];
+            };
+    
+            if (typeof ForgeAssist.init === 'function') {
+                ForgeAssist.init({
+                    workCanvas: workCanvas,
+                    showToast: showToast,
+                    triggerAnalyticsUpdate: triggerAnalyticsUpdate,
+                    getTotalWeeks: getTotalWeeksHelper, // Pass helper function
+                    getBlockState: getBlockStateHelper, // Pass helper function
+                    exerciseLibrary: libraryData || [],
+                    // Pass analytics functions directly or via interface
+                    acwrFunction: analyticsInterface.getACWR,
+                    monotonyFunction: analyticsInterface.getMonotony,
+                    getCurrentBlockLoads: getCurrentBlockLoads,
+                    simulatedPastLoad: typeof blockData !== 'undefined' ? blockData.getSimulatedPastLoad() : [],
+                    // Provide AdaptiveScheduler instance/functions if needed by ForgeAssist
+                    adaptiveScheduler: AdaptiveScheduler // Pass the global object
+                });
+                console.log("[BlockBuilder] ForgeAssist initialized successfully.");
+            } else {
+                console.error("ForgeAssist.init is not a function!");
+            }
+        } catch (error) {
+            console.error("Failed to load exercise library:", error);
+            if (typeof showToast === 'function') {
+                showToast('Error initializing ForgeAssist. Some features may not work.', 'error');
+            }
         }
     }
 
@@ -3074,21 +3086,40 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Initialize ForgeAssist --- 
     console.log('[BlockBuilder] Initializing ForgeAssist...');
     try {
+        // Define analytics functions locally to avoid ReferenceError
+        const acwr = () => {
+            return typeof AnalyticsModule !== 'undefined' && AnalyticsModule.getACWR 
+                ? AnalyticsModule.getACWR(AnalyticsModule.getDailyLoads(workCanvas)) 
+                : null;
+        };
+        
+        const monotony = () => {
+            return typeof AnalyticsModule !== 'undefined' && AnalyticsModule.getMonotony 
+                ? AnalyticsModule.getMonotony(AnalyticsModule.getDailyLoads(workCanvas)) 
+                : null;
+        };
+        
+        const getCurrentBlockLoads = (canvas) => {
+            return typeof AnalyticsModule !== 'undefined' && AnalyticsModule.getDailyLoads 
+                ? AnalyticsModule.getDailyLoads(canvas) 
+                : [];
+        };
+        
         ForgeAssist.init({
             workCanvas: workCanvas,
-            showToast: showToast, // Assumes showToast is available in this scope
-            triggerAnalyticsUpdate: triggerAnalyticsUpdate, // Assumes triggerAnalyticsUpdate is available
+            showToast: showToast,
+            triggerAnalyticsUpdate: triggerAnalyticsUpdate,
             getTotalWeeks: getTotalWeeksHelper,
             getBlockState: getBlockStateHelper,
-            exerciseLibrary: exerciseLibraryData, // Assumes exerciseLibraryData holds the loaded library
+            exerciseLibrary: exerciseLibraryData || [], // Provide empty array fallback
             // Pass analytics functions
-            acwrFunction: acwr, 
+            acwrFunction: acwr,
             monotonyFunction: monotony,
             // Ensure getCurrentBlockLoads receives workCanvas when called by ForgeAssist/AdaptiveScheduler
-            getCurrentBlockLoads: () => getCurrentBlockLoads(workCanvas), // <<< MODIFIED HERE
+            getCurrentBlockLoads: () => getCurrentBlockLoads(workCanvas),
             simulatedPastLoad: window.simulatedPastLoad || [] // Get from global or default
         });
-         console.log('[BlockBuilder] ForgeAssist Initialized.');
+        console.log('[BlockBuilder] ForgeAssist Initialized.');
     } catch (error) {
         console.error('[BlockBuilder] Error initializing ForgeAssist:', error);
         showToast('ForgeAssist failed to initialize!', 'error');

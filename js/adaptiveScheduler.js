@@ -1997,6 +1997,133 @@ const AdaptiveScheduler = (() => {
         };
     }
 
+    /**
+     * Proposes optimizations for a training phase based on its name and duration.
+     * @param {string} phaseName - The name of the phase (e.g., 'Accumulation', 'Intensification')
+     * @param {number} startWeek - The starting week number of the phase
+     * @param {number} endWeek - The ending week number of the phase
+     * @returns {Array} Array of proposal objects for optimizing the phase
+     */
+    function proposePhaseOptimizations(phaseName, startWeek, endWeek) {
+        console.log(`[AdaptiveScheduler] Proposing optimizations for ${phaseName} phase (weeks ${startWeek}-${endWeek})`);
+        
+        const proposals = [];
+        const phaseDuration = endWeek - startWeek + 1;
+        
+        // Determine optimization strategy based on phase name and duration
+        if (phaseName.toLowerCase().includes('accumulation')) {
+            // Accumulation phase: Focus on increasing volume in a progressive manner
+            if (phaseDuration >= 3) {
+                // Create a volume wave with a deload at the end
+                proposals.push(proposeLoadChange(15, 'week', {
+                    week: startWeek + 1,
+                    message: `Increase volume in week ${startWeek + 1} to build training capacity`
+                }));
+                
+                if (phaseDuration >= 4) {
+                    proposals.push(proposeLoadChange(-25, 'week', {
+                        week: endWeek,
+                        message: `Reduce load in week ${endWeek} to create a strategic deload before the next phase`
+                    }));
+                }
+            } else {
+                // Short accumulation phase - focus on steady volume increase
+                proposals.push({
+                    type: 'message',
+                    message: `Consider extending ${phaseName} phase to at least 3-4 weeks for optimal adaptation.`
+                });
+            }
+        } 
+        else if (phaseName.toLowerCase().includes('intensification')) {
+            // Intensification phase: Focus on intensity management
+            if (phaseDuration >= 3) {
+                // Create a wave pattern for intensity
+                proposals.push({
+                    type: 'intensityWave',
+                    description: `Apply intensity wave pattern across ${phaseName} phase`,
+                    targetWeeks: Array.from({length: phaseDuration}, (_, i) => startWeek + i),
+                    pattern: [7.5, 8.5, 9.0, 7.0], // RPE pattern to apply across weeks
+                    success: true
+                });
+                
+                // Suggest volume reduction as intensity increases
+                proposals.push(proposeLoadChange(-10, 'week', {
+                    week: startWeek + Math.floor(phaseDuration / 2),
+                    message: `Reduce volume slightly in week ${startWeek + Math.floor(phaseDuration / 2)} as intensity increases`
+                }));
+            } else {
+                proposals.push({
+                    type: 'message',
+                    message: `Short intensification phases can increase injury risk. Consider extending to 3+ weeks for safer progression.`
+                });
+            }
+        }
+        else if (phaseName.toLowerCase().includes('peak')) {
+            // Peaking phase: Specific peaking protocols
+            proposals.push({
+                type: 'peakTaper',
+                description: `Apply peak and taper protocol for ${phaseName} phase`,
+                targetWeeks: Array.from({length: phaseDuration}, (_, i) => startWeek + i),
+                volumePattern: phaseDuration >= 3 ? [100, 85, 60] : [90, 70], // Percentage of baseline volume
+                intensityPattern: phaseDuration >= 3 ? [95, 100, 90] : [100, 90], // Percentage of max intensity
+                success: true
+            });
+            
+            // Add rest day in the final week
+            proposals.push(proposeRestDayInsertion(endWeek));
+        }
+        else if (phaseName.toLowerCase().includes('taper')) {
+            // Taper phase: Volume reduction with maintained intensity
+            proposals.push(proposeLoadChange(-30, 'week', {
+                week: startWeek,
+                message: `Reduce volume significantly in week ${startWeek} while maintaining intensity`
+            }));
+            
+            // If taper is multi-week, create a progressive taper
+            if (phaseDuration > 1) {
+                proposals.push(proposeLoadChange(-50, 'week', {
+                    week: endWeek,
+                    message: `Final taper week - reduce volume by 50% from baseline`
+                }));
+            }
+            
+            // Add strategic rest days
+            proposals.push(proposeRestDayInsertion(endWeek));
+        }
+        else {
+            // Generic phase optimization - create a simple wave pattern
+            if (phaseDuration >= 3) {
+                proposals.push({
+                    type: 'loadWave',
+                    description: `Create undulating load pattern for ${phaseName} phase`,
+                    targetWeeks: Array.from({length: phaseDuration}, (_, i) => startWeek + i),
+                    pattern: [90, 100, 85], // Percentage of baseline load
+                    success: true
+                });
+            } else {
+                // For short phases, suggest extension
+                proposals.push({
+                    type: 'message',
+                    message: `${phaseName} phase is quite short (${phaseDuration} weeks). Consider extending for better adaptations.`
+                });
+                
+                // Basic optimization
+                proposals.push(proposeLoadChange(5, 'week', {
+                    week: startWeek,
+                    message: `Slight load increase in week ${startWeek} for optimal training effect`
+                }));
+            }
+        }
+        
+        // Always add general advice
+        proposals.push({
+            type: 'message',
+            message: `For optimal ${phaseName} results, ensure exercise selection aligns with phase goals and manage recovery appropriately.`
+        });
+        
+        return proposals;
+    }
+
     // Public API
     return {
         init,
