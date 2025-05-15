@@ -507,10 +507,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!accessorySuggestionsByDayId[cellId]) {
                         accessorySuggestionsByDayId[cellId] = [];
                     }
+                    
+                    // Add all suggestions for this day
+                    accessorySuggestionsByDayId[cellId].push(...suggestions);
+                } else {
+                    console.warn(`Could not find day cell for accessory suggestions on ${dayCapitalized} of Week ${weekNumber}`);
                 }
-                
-                // Add all suggestions for this day
-                accessorySuggestionsByDayId[cellId].push(...suggestions);
             }
         });
 
