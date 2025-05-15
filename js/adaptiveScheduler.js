@@ -109,6 +109,22 @@ const AdaptiveScheduler = (() => {
                     } else if (typeof change.loadIndex === 'number' && change.loadIndex >= 0) { 
                         // Allow caller to provide direct index if known
                         loadIndex = change.loadIndex;
+                    } else if (change.details && change.details.dayId) {
+                        // Try to extract day and week info from dayId (format: wkX-day)
+                        const match = change.details.dayId.match(/wk(\d+)-(\w+)/i);
+                        if (match) {
+                            const extractedWeek = parseInt(match[1], 10);
+                            const extractedDay = match[2].toLowerCase();
+                            const dayIndex = dayNames.indexOf(extractedDay);
+                            
+                            if (extractedWeek >= 1 && dayIndex !== -1) {
+                                loadIndex = (extractedWeek - 1) * daysPerWeek + dayIndex;
+                            } else {
+                                console.warn(`[AdaptiveScheduler] Invalid extracted week/day for change:`, change);
+                            }
+                        } else {
+                            console.warn(`[AdaptiveScheduler] Cannot extract week/day from dayId:`, change.details.dayId);
+                        }
                     } else {
                          // Cannot determine index for this change, skip it
                          console.warn(`[AdaptiveScheduler] Cannot determine load index for simulation change:`, change);

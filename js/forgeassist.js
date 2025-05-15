@@ -201,18 +201,23 @@ const ForgeAssist = (() => {
         }
 
         // Initialize AdaptiveScheduler with enhanced analytics capabilities
-        try {
-            AdaptiveScheduler.init({ 
-                exerciseLibrary: dependencies.exerciseLibrary,
-                acwrFunction: deps.acwrFunction,
-                monotonyFunction: deps.monotonyFunction,
-                getCurrentBlockLoads: deps.getCurrentBlockLoads,
-                simulatedPastLoad: deps.simulatedPastLoad
-            });
-            console.log('[ForgeAssist] Initialized with enhanced analytics capabilities.');
-        } catch (error) {
-            console.error('[ForgeAssist] Error during initialization:', error);
-            // Try to continue anyway
+        if (AdaptiveScheduler && typeof AdaptiveScheduler.init === 'function') {
+            try {
+                AdaptiveScheduler.init({ 
+                    exerciseLibrary: dependencies.exerciseLibrary,
+                    acwrFunction: deps.acwrFunction,
+                    monotonyFunction: deps.monotonyFunction,
+                    getCurrentBlockLoads: deps.getCurrentBlockLoads,
+                    simulatedPastLoad: deps.simulatedPastLoad || [],
+                    showToast: dependencies.showToast
+                });
+                console.log('[ForgeAssist] AdaptiveScheduler initialized successfully with enhanced analytics capabilities');
+            } catch (error) {
+                console.error('[ForgeAssist] Error initializing AdaptiveScheduler:', error);
+                // Try to continue anyway
+            }
+        } else {
+            console.warn('[ForgeAssist] AdaptiveScheduler module or init function not available');
         }
 
         // Initialize BiomechanicalAnalyzer and RecoveryRecommender
@@ -2810,9 +2815,12 @@ function handleSuggestFocus(dayCell) {
     const week = parseInt(dayCell.dataset.week, 10);
     const day = dayCell.dataset.day.toLowerCase();
     
+    // Reference the top-level daysOfWeek constant to avoid scope issues
+    const localDaysOfWeek = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+    
     // Get all days in this week
     const daysInWeek = [];
-    for (const dayName of daysOfWeek) {
+    for (const dayName of localDaysOfWeek) {
         const dayCapitalized = dayName.charAt(0).toUpperCase() + dayName.slice(1);
         const dayCellElement = dependencies.workCanvas.querySelector(`.day-cell[data-week="${week}"][data-day="${dayCapitalized}"]`);
         if (dayCellElement) {
@@ -2861,17 +2869,17 @@ function handleSuggestFocus(dayCell) {
     
     // Muscles trained in the surrounding days (day before and day after)
     const surroundingMuscles = new Set();
-    const dayIndex = daysOfWeek.indexOf(day);
+    const dayIndex = localDaysOfWeek.indexOf(day);
     
     if (dayIndex > 0) {
-        const prevDay = daysInWeek.find(d => d.day === daysOfWeek[dayIndex - 1]);
+        const prevDay = daysInWeek.find(d => d.day === localDaysOfWeek[dayIndex - 1]);
         if (prevDay) {
             prevDay.primaryMuscles.forEach(muscle => surroundingMuscles.add(muscle));
         }
     }
     
-    if (dayIndex < daysOfWeek.length - 1) {
-        const nextDay = daysInWeek.find(d => d.day === daysOfWeek[dayIndex + 1]);
+    if (dayIndex < localDaysOfWeek.length - 1) {
+        const nextDay = daysInWeek.find(d => d.day === localDaysOfWeek[dayIndex + 1]);
         if (nextDay) {
             nextDay.primaryMuscles.forEach(muscle => surroundingMuscles.add(muscle));
         }
@@ -2943,7 +2951,7 @@ function handleSuggestFocus(dayCell) {
     // Check if a rest or active recovery day would be beneficial
     const surroundingWorkoutDays = otherDays.filter(d => 
         d.hasWorkout && !d.isPrimarilyPlaceholder && 
-        (daysOfWeek.indexOf(d.day) === dayIndex - 1 || daysOfWeek.indexOf(d.day) === dayIndex + 1)
+        (localDaysOfWeek.indexOf(d.day) === dayIndex - 1 || localDaysOfWeek.indexOf(d.day) === dayIndex + 1)
     );
     
     if (surroundingWorkoutDays.length === 2) {
@@ -2979,8 +2987,16 @@ function handleSuggestFocus(dayCell) {
 function handleGenerateWeek(weekNumber, modelType) {
     console.log(`[ForgeAssist] Generating week ${weekNumber} using ${modelType} model`);
     
-    if (!AdaptiveScheduler || typeof AdaptiveScheduler.generateWeek !== 'function') {
-        dependencies.showToast(`Week generation feature not available. Make sure AdaptiveScheduler is properly loaded.`, 'error');
+    // Make sure AdaptiveScheduler is loaded and properly integrated
+    if (!AdaptiveScheduler) {
+        console.error('[ForgeAssist] AdaptiveScheduler module not loaded');
+        dependencies.showToast(`Week generation feature not available. AdaptiveScheduler module not loaded.`, 'error');
+        return;
+    }
+    
+    if (typeof AdaptiveScheduler.generateWeek !== 'function') {
+        console.error('[ForgeAssist] AdaptiveScheduler.generateWeek function not found');
+        dependencies.showToast(`Week generation feature not available. AdaptiveScheduler needs to be updated.`, 'error');
         return;
     }
     
@@ -3061,11 +3077,27 @@ function handleGenerateWeek(weekNumber, modelType) {
         applyGeneratedWeek(weekData, weekNumber);
         
         dependencies.showToast(`Successfully generated week ${weekNumber} using ${modelType} model! Your new workouts are ready.`, 'success');
-        dependencies.triggerAnalyticsUpdate();
+        
+        // Update analytics if possible
+        if (dependencies.triggerAnalyticsUpdate) {
+            try {
+                dependencies.triggerAnalyticsUpdate();
+                console.log('[ForgeAssist] Analytics update triggered successfully');
+            } catch (error) {
+                console.error('[ForgeAssist] Error triggering analytics update:', error);
+            }
+        } else {
+            console.warn('[ForgeAssist] Analytics update function not available');
+        }
         
         // Save state if the function is available
         if (dependencies.triggerSaveState) {
-            dependencies.triggerSaveState();
+            try {
+                dependencies.triggerSaveState();
+                console.log('[ForgeAssist] State saved successfully');
+            } catch (error) {
+                console.error('[ForgeAssist] Error saving state:', error);
+            }
         }
     } catch (error) {
         console.error('[ForgeAssist] Error generating week:', error);
