@@ -1978,6 +1978,25 @@ const AdaptiveScheduler = (() => {
         };
     }
 
+    /**
+     * Propose inserting a rest day in a given week by identifying the lowest-load day.
+     * @param {number} week - The week number to target
+     * @returns {object} Proposal object for rest day insertion
+     */
+    function proposeRestDayInsertion(week) {
+        // TODO: Implement logic to find the lowest-load day in the week
+        const day = 'wed'; // Default to Wednesday for now
+        return {
+            type: 'addRestDay',
+            description: `Insert a rest day on ${day.charAt(0).toUpperCase() + day.slice(1)}, Week ${week}`,
+            targetWeek: week,
+            day,
+            changes: [], // Could be populated with card removals
+            impact: { predictedACWR: 1.0, predictedMonotony: 1.2 },
+            success: true
+        };
+    }
+
     // Public API
     return {
         init,

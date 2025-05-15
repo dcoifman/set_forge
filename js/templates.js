@@ -344,13 +344,13 @@ let hubBrowseTemplatesBtn;
 let templatesSearch;
 let categoryButtons;
 let useTemplateBtn;
-    let currentCategory = 'all';
-    let currentSearchTerm = '';
-    let currentTemplateId = null;
+let currentCategory = 'all';
+let currentSearchTerm = '';
+let currentTemplateId = null;
 
-    // Initialize templates
+// Initialize templates
 function initialize() {
-        console.log("Templates module initializing...");
+    console.log("Templates module initializing...");
     console.log(`Templates available: ${trainingTemplates.length}`);
     
     // Initialize DOM element references
@@ -370,8 +370,8 @@ function initialize() {
     setCategoryFilters();
     
     // Set up event listeners
-            addEventListeners();
-            
+    addEventListeners();
+    
     // Set up search functionality
     setupSearch();
     
@@ -379,56 +379,56 @@ function initialize() {
     setupPreviewUseButton();
     
     // Initial render of templates
-            if (templatesList) {
+    if (templatesList) {
         renderTemplates();
-            } else {
+    } else {
         console.error("Templates list container not found during initialization");
-        }
     }
+}
 
-    // Render templates in the grid
-    function renderTemplates() {
-            console.log("renderTemplates: Clearing templatesList innerHTML");
-            templatesList.innerHTML = '';
+// Render templates in the grid
+function renderTemplates() {
+    console.log("renderTemplates: Clearing templatesList innerHTML");
+    templatesList.innerHTML = '';
 
     // Filter templates based on search and category
-            console.log(`renderTemplates: Filtering templates with category: ${currentCategory} and search term: ${currentSearchTerm}`);
+    console.log(`renderTemplates: Filtering templates with category: ${currentCategory} and search term: ${currentSearchTerm}`);
     
     const filtered = trainingTemplates.filter(template => {
-                const matchesCategory = currentCategory === 'all' || template.category === currentCategory;
-                const matchesSearch = !currentSearchTerm || 
-                    template.title.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
-                    template.description.toLowerCase().includes(currentSearchTerm.toLowerCase());
-                return matchesCategory && matchesSearch;
-            });
-            
+        const matchesCategory = currentCategory === 'all' || template.category === currentCategory;
+        const matchesSearch = !currentSearchTerm || 
+            template.title.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
+            template.description.toLowerCase().includes(currentSearchTerm.toLowerCase());
+        return matchesCategory && matchesSearch;
+    });
+    
     console.log(`renderTemplates: Filtered templates count: ${filtered.length}`);
-            
+    
     if (filtered.length === 0) {
         templatesList.innerHTML = '<div class="no-templates-msg">No matching templates found</div>';
-                return;
-            }
-            
-            console.log("renderTemplates: Creating and appending template cards");
+        return;
+    }
+    
+    console.log("renderTemplates: Creating and appending template cards");
     filtered.forEach((template, index) => {
         console.log(`renderTemplates: Creating card ${index+1}/${filtered.length} - ${template.title}`);
-                const card = createTemplateCard(template);
-                templatesList.appendChild(card);
-                console.log(`renderTemplates: Card ${index+1} appended, container now has ${templatesList.children.length} children`);
-            });
-            
-            console.log("renderTemplates: All template cards appended");
+        const card = createTemplateCard(template);
+        templatesList.appendChild(card);
+        console.log(`renderTemplates: Card ${index+1} appended, container now has ${templatesList.children.length} children`);
+    });
+    
+    console.log("renderTemplates: All template cards appended");
     console.log("renderTemplates: Final templatesList state:", templatesList);
     
     // Safely add animation classes after cards are in DOM
     function addAnimation() {
         // Apply staggered entrance animation to cards
-                const cards = templatesList.querySelectorAll('.template-card');
-                console.log(`renderTemplates: Found ${cards.length} cards for animation`);
+        const cards = templatesList.querySelectorAll('.template-card');
+        console.log(`renderTemplates: Found ${cards.length} cards for animation`);
         
         if (cards.length > 0) {
             // Only add animation to cards that are visibly contained in the templates grid
-                cards.forEach((card, i) => {
+            cards.forEach((card, i) => {
                 // Make sure the card is actually in the DOM and in its proper container
                 if (card.parentElement === templatesList) {
                     const delay = i * 0.05;
@@ -441,7 +441,7 @@ function initialize() {
                     // Use requestAnimationFrame to ensure the initial state is rendered
                     window.requestAnimationFrame(() => {
                         // Add animation-specific classes
-                    card.classList.add('animate-in');
+                        card.classList.add('animate-in');
                         card.style.animationDelay = `${delay}s`;
                         
                         // Transition to final state
@@ -449,7 +449,7 @@ function initialize() {
                             card.style.opacity = '1';
                             card.style.transform = 'translateY(0)';
                         }, 50);
-                });
+                    });
                 }
             });
         }
@@ -457,16 +457,16 @@ function initialize() {
     
     // Wait for cards to be properly inserted in DOM
     setTimeout(addAnimation, 100);
-    }
+}
 
-    // Create a template card element
-    function createTemplateCard(template) {
-        console.log("createTemplateCard: Creating card for", template.id);
-        const card = document.createElement('div');
-        card.className = 'template-card';
-        card.setAttribute('data-id', template.id);
-        card.setAttribute('data-category', template.category);
-        
+// Create a template card element
+function createTemplateCard(template) {
+    console.log("createTemplateCard: Creating card for", template.id);
+    const card = document.createElement('div');
+    card.className = 'template-card';
+    card.setAttribute('data-id', template.id);
+    card.setAttribute('data-category', template.category);
+    
     // Create card header
     const header = document.createElement('div');
     header.className = 'template-header';
@@ -478,11 +478,11 @@ function initialize() {
     const author = document.createElement('p');
     author.className = 'template-author';
     author.textContent = `By ${template.author}`;
-        
+    
     const categoryIcon = document.createElement('div');
     categoryIcon.className = 'template-category-icon';
     categoryIcon.textContent = getCategoryIcon(template.category);
-        
+    
     header.appendChild(title);
     header.appendChild(author);
     header.appendChild(categoryIcon);
@@ -588,20 +588,20 @@ function initialize() {
     card.appendChild(body);
     
     console.log("Card HTML structure created for template:", template.id);
-        return card;
-    }
+    return card;
+}
 
-    // Show template preview modal with detailed info and animations
-    function showTemplatePreview(templateId) {
-        const template = trainingTemplates.find(t => t.id === templateId);
+// Show template preview modal with detailed info and animations
+function showTemplatePreview(templateId) {
+    const template = trainingTemplates.find(t => t.id === templateId);
     if (!template) {
         console.error(`Template with ID ${templateId} not found for preview`);
         return;
     }
     
     console.log(`Showing preview for template: ${template.title}`);
-        
-        currentTemplateId = templateId;
+    
+    currentTemplateId = templateId;
     
     // Get fresh references to DOM elements
     const templatePreviewModal = document.getElementById('template-preview-modal');
@@ -626,8 +626,8 @@ function initialize() {
     } else {
         console.error("Template preview close button not found");
     }
-        
-        // Set preview content
+    
+    // Set preview content
     const titleElement = document.querySelector('.template-preview-title');
     if (titleElement) titleElement.textContent = template.title;
     
@@ -636,102 +636,102 @@ function initialize() {
     
     const descriptionElement = document.querySelector('.template-preview-description');
     if (descriptionElement) descriptionElement.textContent = template.description;
+    
+    // Set category-specific icon
+    const previewIcon = document.querySelector('.template-preview-icon');
+    previewIcon.textContent = getCategoryIcon(template.category);
+    previewIcon.style.backgroundColor = getCategoryColor(template.category, 0.2);
+    previewIcon.style.color = getCategoryColor(template.category, 1);
+    
+    // Create and insert category-specific animation
+    const visualContent = document.querySelector('.template-visual-content');
+    visualContent.innerHTML = '';
+    visualContent.appendChild(createCategoryAnimation(template.category));
+    
+    // Render phases
+    const phasesContainer = document.querySelector('.template-preview-phases');
+    phasesContainer.innerHTML = '';
+    template.phases.forEach(phase => {
+        const phaseElement = document.createElement('div');
+        phaseElement.className = `template-preview-phase ${phase.color}`;
+        phaseElement.style.width = `${phase.duration / template.weeks * 100}%`;
+        phaseElement.textContent = `${phase.name} (${phase.duration}wk)`;
+        phasesContainer.appendChild(phaseElement);
+    });
+    
+    // Render weekly schedule
+    const scheduleContainer = document.querySelector('.template-preview-schedule');
+    scheduleContainer.innerHTML = '';
+    
+    template.schedule.forEach(week => {
+        const weekElement = document.createElement('div');
+        weekElement.className = 'template-preview-week';
         
-        // Set category-specific icon
-        const previewIcon = document.querySelector('.template-preview-icon');
-        previewIcon.textContent = getCategoryIcon(template.category);
-        previewIcon.style.backgroundColor = getCategoryColor(template.category, 0.2);
-        previewIcon.style.color = getCategoryColor(template.category, 1);
+        const weekHeader = document.createElement('div');
+        weekHeader.className = 'template-preview-week-header';
+        weekHeader.textContent = `Week ${week.week} - ${week.phase}`;
+        weekElement.appendChild(weekHeader);
         
-        // Create and insert category-specific animation
-        const visualContent = document.querySelector('.template-visual-content');
-        visualContent.innerHTML = '';
-        visualContent.appendChild(createCategoryAnimation(template.category));
+        const daysGrid = document.createElement('div');
+        daysGrid.className = 'template-preview-days';
         
-        // Render phases
-        const phasesContainer = document.querySelector('.template-preview-phases');
-        phasesContainer.innerHTML = '';
-        template.phases.forEach(phase => {
-            const phaseElement = document.createElement('div');
-            phaseElement.className = `template-preview-phase ${phase.color}`;
-            phaseElement.style.width = `${phase.duration / template.weeks * 100}%`;
-            phaseElement.textContent = `${phase.name} (${phase.duration}wk)`;
-            phasesContainer.appendChild(phaseElement);
-        });
-        
-        // Render weekly schedule
-        const scheduleContainer = document.querySelector('.template-preview-schedule');
-        scheduleContainer.innerHTML = '';
-        
-        template.schedule.forEach(week => {
-            const weekElement = document.createElement('div');
-            weekElement.className = 'template-preview-week';
+        for (let i = 0; i < 7; i++) {
+            const dayOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][i];
+            const dayData = week.days.find(d => d.day === dayOfWeek);
             
-            const weekHeader = document.createElement('div');
-            weekHeader.className = 'template-preview-week-header';
-            weekHeader.textContent = `Week ${week.week} - ${week.phase}`;
-            weekElement.appendChild(weekHeader);
+            const dayElement = document.createElement('div');
+            dayElement.className = 'template-preview-day';
             
-            const daysGrid = document.createElement('div');
-            daysGrid.className = 'template-preview-days';
-            
-            for (let i = 0; i < 7; i++) {
-                const dayOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][i];
-                const dayData = week.days.find(d => d.day === dayOfWeek);
+            if (!dayData || dayData.title === 'Rest' || dayData.exercises.length === 0) {
+                dayElement.classList.add('rest-day');
+                dayElement.textContent = 'Rest Day';
+            } else {
+                const sessionTitle = document.createElement('div');
+                sessionTitle.className = 'template-preview-session-title';
+                sessionTitle.textContent = dayData.title;
+                dayElement.appendChild(sessionTitle);
                 
-                const dayElement = document.createElement('div');
-                dayElement.className = 'template-preview-day';
-                
-                if (!dayData || dayData.title === 'Rest' || dayData.exercises.length === 0) {
-                    dayElement.classList.add('rest-day');
-                    dayElement.textContent = 'Rest Day';
-                } else {
-                    const sessionTitle = document.createElement('div');
-                    sessionTitle.className = 'template-preview-session-title';
-                    sessionTitle.textContent = dayData.title;
-                    dayElement.appendChild(sessionTitle);
-                    
-                    dayData.exercises.forEach(exercise => {
-                        const exerciseElement = document.createElement('div');
-                        exerciseElement.className = 'template-preview-exercise';
-                        exerciseElement.textContent = exercise;
-                        dayElement.appendChild(exerciseElement);
-                    });
-                }
-                
-                daysGrid.appendChild(dayElement);
+                dayData.exercises.forEach(exercise => {
+                    const exerciseElement = document.createElement('div');
+                    exerciseElement.className = 'template-preview-exercise';
+                    exerciseElement.textContent = exercise;
+                    dayElement.appendChild(exerciseElement);
+                });
             }
             
-            weekElement.appendChild(daysGrid);
-            scheduleContainer.appendChild(weekElement);
-        });
+            daysGrid.appendChild(dayElement);
+        }
         
-        // Add click to toggle collapse for week headers
-        document.querySelectorAll('.template-preview-week-header').forEach(header => {
-            header.addEventListener('click', function() {
-                this.parentElement.classList.toggle('collapsed');
-            });
+        weekElement.appendChild(daysGrid);
+        scheduleContainer.appendChild(weekElement);
+    });
+    
+    // Add click to toggle collapse for week headers
+    document.querySelectorAll('.template-preview-week-header').forEach(header => {
+        header.addEventListener('click', function() {
+            this.parentElement.classList.toggle('collapsed');
         });
-        
-        // Render scientific background
-        document.querySelector('.template-preview-science-content').textContent = template.science;
-        
-        // Render recommendations
-        const recommendedList = document.querySelector('.template-preview-recommended ul');
-        recommendedList.innerHTML = '';
-        template.recommended.forEach(rec => {
-            const li = document.createElement('li');
-            li.textContent = rec;
-            recommendedList.appendChild(li);
-        });
+    });
+    
+    // Render scientific background
+    document.querySelector('.template-preview-science-content').textContent = template.science;
+    
+    // Render recommendations
+    const recommendedList = document.querySelector('.template-preview-recommended ul');
+    recommendedList.innerHTML = '';
+    template.recommended.forEach(rec => {
+        const li = document.createElement('li');
+        li.textContent = rec;
+        recommendedList.appendChild(li);
+    });
     
     // Reset any inline styles that might have been applied when closing
     templatePreviewModal.style.display = '';
     templatePreviewModal.style.opacity = '';
     templatePreviewModal.style.visibility = '';
-        
-        // Show modal
-        templatePreviewModal.classList.add('is-visible');
+    
+    // Show modal
+    templatePreviewModal.classList.add('is-visible');
     
     // Force layout calculation for animation
     window.requestAnimationFrame(() => {
@@ -741,14 +741,14 @@ function initialize() {
 }
 
 // Fix useTemplate function to properly load and apply templates
-    function useTemplate(templateId) {
-        const template = trainingTemplates.find(t => t.id === templateId);
+function useTemplate(templateId) {
+    const template = trainingTemplates.find(t => t.id === templateId);
     if (!template) {
         console.error(`Template with ID ${templateId} not found for use`);
         return;
     }
 
-        console.log(`Using template: ${template.title}`);
+    console.log(`Using template: ${template.title}`);
 
     // First ensure we close all template modals
     const templatesModal = document.getElementById('templates-modal');
@@ -769,11 +769,11 @@ function initialize() {
         templatePreviewModal.classList.remove('is-visible');
         templatePreviewModal.style.opacity = '0';
         templatePreviewModal.style.visibility = 'hidden';
-            }
+    }
     
     // Wait for blockBuilder to be ready (if not already)
     const loadBlockBuilder = () => {
-            console.log("Block builder ready immediately.");
+        console.log("Block builder ready immediately.");
         
         // If we have a global reference to the blockBuilder
         if (window.blockBuilder && typeof window.blockBuilder.loadTemplateBlock === 'function') {
@@ -783,7 +783,7 @@ function initialize() {
             if (!success) {
                 console.error("Failed to load template into block builder");
                 showToast("Failed to load template. Please try again.", "error");
-        } else {
+            } else {
                 showToast(`Template "${template.title}" applied successfully!`, "success");
             }
         } else {
@@ -799,7 +799,7 @@ function initialize() {
         // Otherwise wait for the blockbuilderReady event
         window.addEventListener('blockbuilderReady', loadBlockBuilder, { once: true });
         // Also set a timeout in case the event never fires
-            setTimeout(() => {
+        setTimeout(() => {
             if (window.blockBuilder) {
                 loadBlockBuilder();
             } else {
@@ -879,56 +879,56 @@ function setupPreviewUseButton() {
         console.log("Preview use template button initialized");
     } else {
         console.warn("Preview use template button not found with either ID 'preview-use-template-btn' or 'use-template-btn'");
-        }
     }
+}
 
-    // Add all event listeners
-    function addEventListeners() {
-        // Ensure all DOM references are up to date
-        if (!templatesModal) templatesModal = document.getElementById('templates-modal');
-        if (!templatePreviewModal) templatePreviewModal = document.getElementById('template-preview-modal');
-        if (!templatesList) templatesList = document.getElementById('templates-list');
-        if (!templatesCloseBtn) templatesCloseBtn = document.getElementById('templates-close-btn');
-        if (!templatePreviewCloseBtn) templatePreviewCloseBtn = document.getElementById('template-preview-close-btn');
-        if (!hubBrowseTemplatesBtn) hubBrowseTemplatesBtn = document.getElementById('hub-browse-templates-btn') || document.getElementById('hub-browse-templates');
-        if (!templatesSearch) templatesSearch = document.getElementById('templates-search');
-        if (!categoryButtons || categoryButtons.length === 0) categoryButtons = document.querySelectorAll('.template-category-btn');
-        if (!useTemplateBtn) useTemplateBtn = document.getElementById('preview-use-template-btn');
-        
-        console.log("Templates module: Adding event listeners");
-        
-        // Browse Templates button click
-        if (hubBrowseTemplatesBtn) {
-            hubBrowseTemplatesBtn.addEventListener('click', () => {
-                console.log("Templates: Opening templates modal");
+// Add all event listeners
+function addEventListeners() {
+    // Ensure all DOM references are up to date and initialized
+    if (typeof templatesModal === 'undefined' || !templatesModal) templatesModal = document.getElementById('templates-modal');
+    if (typeof templatePreviewModal === 'undefined' || !templatePreviewModal) templatePreviewModal = document.getElementById('template-preview-modal');
+    if (typeof templatesList === 'undefined' || !templatesList) templatesList = document.getElementById('templates-list');
+    if (typeof templatesCloseBtn === 'undefined' || !templatesCloseBtn) templatesCloseBtn = document.getElementById('templates-close-btn');
+    if (typeof templatePreviewCloseBtn === 'undefined' || !templatePreviewCloseBtn) templatePreviewCloseBtn = document.getElementById('template-preview-close-btn');
+    if (typeof hubBrowseTemplatesBtn === 'undefined' || !hubBrowseTemplatesBtn) hubBrowseTemplatesBtn = document.getElementById('hub-browse-templates-btn') || document.getElementById('hub-browse-templates');
+    if (typeof templatesSearch === 'undefined' || !templatesSearch) templatesSearch = document.getElementById('templates-search');
+    if (typeof categoryButtons === 'undefined' || !categoryButtons || categoryButtons.length === 0) categoryButtons = document.querySelectorAll('.template-category-btn');
+    if (typeof useTemplateBtn === 'undefined' || !useTemplateBtn) useTemplateBtn = document.getElementById('preview-use-template-btn');
+    
+    console.log("Templates module: Adding event listeners");
+    
+    // Browse Templates button click
+    if (hubBrowseTemplatesBtn) {
+        hubBrowseTemplatesBtn.addEventListener('click', () => {
+            console.log("Templates: Opening templates modal");
             const templatesModal = document.getElementById('templates-modal');
-                if (templatesModal) {
-                    // Reset any inline styles that might have been applied when closing
-                    templatesModal.style.display = '';
-                    templatesModal.style.opacity = '';
-                    templatesModal.style.visibility = '';
-                
+            if (templatesModal) {
+                // Reset any inline styles that might have been applied when closing
+                templatesModal.style.display = '';
+                templatesModal.style.opacity = '';
+                templatesModal.style.visibility = '';
+            
                 // Re-render templates before showing the modal
                 const templatesList = document.getElementById('templates-list');
                 if (templatesList) {
                     renderTemplates();
                 }
-                    
-                    // Add the visible class 
-                    templatesModal.classList.add('is-visible');
-                    
-                    // Force layout calculation for animation
-                    window.requestAnimationFrame(() => {
-                        templatesModal.style.opacity = '1';
-                        templatesModal.style.visibility = 'visible';
-                    });
-                } else {
-                    console.error("Templates modal not found");
-                }
-            });
-        }
-        
-        if (templatesCloseBtn && templatesModal) {
+                
+                // Add the visible class 
+                templatesModal.classList.add('is-visible');
+                
+                // Force layout calculation for animation
+                window.requestAnimationFrame(() => {
+                    templatesModal.style.opacity = '1';
+                    templatesModal.style.visibility = 'visible';
+                });
+            } else {
+                console.error("Templates modal not found");
+            }
+        });
+    }
+    
+    if (templatesCloseBtn && templatesModal) {
         console.log('Templates: Adding close button event listener');
         templatesCloseBtn.addEventListener('click', () => {
             console.log('Templates: Close button clicked');
@@ -941,91 +941,91 @@ function setupPreviewUseButton() {
                     console.log('Templates: Cleared templates list on modal close');
                 }
             }
-            });
-        }
-        
-        if (templatePreviewCloseBtn && templatePreviewModal) {
-            templatePreviewCloseBtn.addEventListener('click', function() {
-                console.log("Template preview modal close button clicked");
-                templatePreviewModal.classList.remove('is-visible');
-                
-                // Only modify opacity and visibility, DO NOT set display:none
-                templatePreviewModal.style.opacity = '0';
-                templatePreviewModal.style.visibility = 'hidden';
-            });
-        } else {
-            console.error("Template preview modal close button or modal not found:", {
-                templatePreviewCloseBtn: templatePreviewCloseBtn ? "Found" : "Missing", 
-                templatePreviewModal: templatePreviewModal ? "Found" : "Missing"
-            });
-        }
-        
-        // Search input
-        if (templatesSearch) {
-            templatesSearch.addEventListener('input', function() {
-                currentSearchTerm = this.value.trim();
+        });
+    }
+    
+    if (templatePreviewCloseBtn && templatePreviewModal) {
+        templatePreviewCloseBtn.addEventListener('click', function() {
+            console.log("Template preview modal close button clicked");
+            templatePreviewModal.classList.remove('is-visible');
+            
+            // Only modify opacity and visibility, DO NOT set display:none
+            templatePreviewModal.style.opacity = '0';
+            templatePreviewModal.style.visibility = 'hidden';
+        });
+    } else {
+        console.error("Template preview modal close button or modal not found:", {
+            templatePreviewCloseBtn: templatePreviewCloseBtn ? "Found" : "Missing", 
+            templatePreviewModal: templatePreviewModal ? "Found" : "Missing"
+        });
+    }
+    
+    // Search input
+    if (templatesSearch) {
+        templatesSearch.addEventListener('input', function() {
+            currentSearchTerm = this.value.trim();
+            renderTemplates();
+        });
+    }
+    
+    // Category filtering
+    if (categoryButtons) {
+        categoryButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                categoryButtons.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentCategory = this.getAttribute('data-category');
                 renderTemplates();
             });
-        }
-        
-        // Category filtering
-        if (categoryButtons) {
-            categoryButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    categoryButtons.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    currentCategory = this.getAttribute('data-category');
-                    renderTemplates();
-                });
-            });
-        }
-        
+        });
+    }
+    
     // Open template preview modal when Preview button is clicked
-        if (templatesList) {
+    if (templatesList) {
         templatesList.addEventListener('click', (e) => {
-                const previewBtn = e.target.closest('.template-preview-btn');
-                const useBtn = e.target.closest('.template-use-btn');
-                
-                if (previewBtn) {
+            const previewBtn = e.target.closest('.template-preview-btn');
+            const useBtn = e.target.closest('.template-use-btn');
+            
+            if (previewBtn) {
                 e.preventDefault();
-                    const templateId = previewBtn.getAttribute('data-id');
+                const templateId = previewBtn.getAttribute('data-id');
                 if (templateId) {
                     showTemplatePreview(templateId);
                 }
-                } else if (useBtn) {
+            } else if (useBtn) {
                 e.preventDefault();
-                    const templateId = useBtn.getAttribute('data-id');
+                const templateId = useBtn.getAttribute('data-id');
                 if (templateId) {
                     useTemplate(templateId);
                 }
-                }
-            });
+            }
+        });
     } else {
         console.error("Templates module: Cannot attach click event to templatesList - element not found");
-        }
-        
-        // Use template button in preview modal
-        if (useTemplateBtn && currentTemplateId) {
-            useTemplateBtn.addEventListener('click', function() {
-                useTemplate(currentTemplateId);
-            });
-        }
-        
+    }
+    
+    // Use template button in preview modal
+    if (useTemplateBtn && currentTemplateId) {
+        useTemplateBtn.addEventListener('click', function() {
+            useTemplate(currentTemplateId);
+        });
+    }
+    
     // Close modal when clicking outside of content
     const templatesModal = document.getElementById('templates-modal');
     if (templatesModal) {
         templatesModal.addEventListener('click', (e) => {
             // Only close if clicking directly on the modal overlay (not its children)
             if (e.target === templatesModal) {
-                    templatesModal.classList.remove('is-visible');
+                templatesModal.classList.remove('is-visible');
                 // Clear the templates list when modal is closed
                 if (templatesList) {
                     templatesList.innerHTML = '';
                     console.log('Templates: Cleared templates list on modal background click');
                 }
-                }
-            });
-        }
+            }
+        });
+    }
     
     // Add keyboard escape handler to close modals
     document.addEventListener('keydown', (e) => {
@@ -1042,24 +1042,24 @@ function setupPreviewUseButton() {
             }
         }
     });
-        
-        console.log("Templates module: Event listeners attached");
-    }
     
-    // Make the templates list display as a grid
-    function applyTemplateGridLayout() {
-        // Ensure templatesList is defined before adding class
-        if (templatesList) { 
-            templatesList.classList.add('templates-grid');
-        } else {
-             console.error("applyTemplateGridLayout: templatesList not found when trying to add class.");
-        }
+    console.log("Templates module: Event listeners attached");
+}
+
+// Make the templates list display as a grid
+function applyTemplateGridLayout() {
+    // Ensure templatesList is defined before adding class
+    if (templatesList) { 
+        templatesList.classList.add('templates-grid');
+    } else {
+        console.error("applyTemplateGridLayout: templatesList not found when trying to add class.");
     }
-    
-    // Initialize on load
+}
+
+// Initialize on load
 initialize();
 
-    console.log("Templates module setup complete");
+console.log("Templates module setup complete");
 
 // Helper function to get category-specific icon
 function getCategoryIcon(category) {
