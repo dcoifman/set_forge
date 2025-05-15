@@ -46,6 +46,107 @@ const ForgeAssist = (() => {
     let HIGH_STRAIN_THRESHOLD = 5500; 
     // --- End Analytics Thresholds ---
 
+    /**
+     * Gets the analytics thresholds from user settings or uses defaults
+     * @returns {Object} Object containing threshold values
+     */
+    function getUserAnalyticsThresholds() {
+        let thresholds = {
+            highAcwr: HIGH_ACWR_THRESHOLD,
+            lowAcwr: LOW_ACWR_THRESHOLD,
+            highMonotony: HIGH_MONOTONY_THRESHOLD,
+            highStrain: HIGH_STRAIN_THRESHOLD
+        };
+        
+        try {
+            // Check if user has custom thresholds in localStorage
+            const userSettings = localStorage.getItem('setforgeUserSettings');
+            if (userSettings) {
+                const settings = JSON.parse(userSettings);
+                if (settings.analyticsThresholds) {
+                    // Apply user's custom thresholds if available
+                    if (typeof settings.analyticsThresholds.highAcwr === 'number') {
+                        thresholds.highAcwr = settings.analyticsThresholds.highAcwr;
+                    }
+                    if (typeof settings.analyticsThresholds.lowAcwr === 'number') {
+                        thresholds.lowAcwr = settings.analyticsThresholds.lowAcwr;
+                    }
+                    if (typeof settings.analyticsThresholds.highMonotony === 'number') {
+                        thresholds.highMonotony = settings.analyticsThresholds.highMonotony;
+                    }
+                    if (typeof settings.analyticsThresholds.highStrain === 'number') {
+                        thresholds.highStrain = settings.analyticsThresholds.highStrain;
+                    }
+                    
+                    console.log('[ForgeAssist] Using custom analytics thresholds:', thresholds);
+                }
+            }
+        } catch (error) {
+            console.error('[ForgeAssist] Error getting user thresholds:', error);
+            // Continue with defaults
+        }
+        
+        return thresholds;
+    }
+    
+    /**
+     * Updates analytics thresholds with user-provided values
+     * @param {Object} newThresholds - Object containing new threshold values
+     */
+    function updateAnalyticsThresholds(newThresholds) {
+        try {
+            // Get current settings or initialize
+            let userSettings = {};
+            const settingsStr = localStorage.getItem('setforgeUserSettings');
+            if (settingsStr) {
+                userSettings = JSON.parse(settingsStr);
+            }
+            
+            // Initialize analyticsThresholds if it doesn't exist
+            if (!userSettings.analyticsThresholds) {
+                userSettings.analyticsThresholds = {};
+            }
+            
+            // Update only provided thresholds
+            if (typeof newThresholds.highAcwr === 'number') {
+                userSettings.analyticsThresholds.highAcwr = newThresholds.highAcwr;
+                HIGH_ACWR_THRESHOLD = newThresholds.highAcwr;
+            }
+            if (typeof newThresholds.lowAcwr === 'number') {
+                userSettings.analyticsThresholds.lowAcwr = newThresholds.lowAcwr;
+                LOW_ACWR_THRESHOLD = newThresholds.lowAcwr;
+            }
+            if (typeof newThresholds.highMonotony === 'number') {
+                userSettings.analyticsThresholds.highMonotony = newThresholds.highMonotony;
+                HIGH_MONOTONY_THRESHOLD = newThresholds.highMonotony;
+            }
+            if (typeof newThresholds.highStrain === 'number') {
+                userSettings.analyticsThresholds.highStrain = newThresholds.highStrain;
+                HIGH_STRAIN_THRESHOLD = newThresholds.highStrain;
+            }
+            
+            // Save updated settings
+            localStorage.setItem('setforgeUserSettings', JSON.stringify(userSettings));
+            console.log('[ForgeAssist] Updated analytics thresholds:', userSettings.analyticsThresholds);
+            
+            // Show confirmation toast if available
+            if (typeof dependencies.showToast === 'function') {
+                dependencies.showToast('Analytics thresholds updated successfully', 'success');
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('[ForgeAssist] Error updating thresholds:', error);
+            
+            // Show error toast if available
+            if (typeof dependencies.showToast === 'function') {
+                dependencies.showToast('Error updating analytics thresholds', 'error');
+            }
+            
+            return false;
+        }
+    }
+
     // --- Scratch Pad - Phase 3 ---
     // [X] Create js/adaptiveScheduler.js module.
     // [X] Implement AdaptiveScheduler.calculateImpact(changes): Basic simulation.
@@ -304,39 +405,80 @@ const ForgeAssist = (() => {
                 });
             }
         } else if (element.classList.contains('day-cell')) {
-            const week = element.dataset.week;
-            const day = element.dataset.day;
-             actions.push({ 
-                id: 'handle_missed', 
-                label: `Handle Missed Session`, 
-                description: `Process a missed workout for ${day} Week ${week} with smart rescheduling or adjustments.`,
-                type: 'primary',
-                handler: () => handleMissedSession({ day: day.toLowerCase().substring(0,3), week: parseInt(week, 10) }) 
-            });
-             
-             actions.push({ 
-                id: 'clear_day_ctx', 
-                label: `Clear ${day} Wk ${week}`, 
-                description: 'Remove all exercises from this day while adjusting surrounding workload if needed.',
-                type: 'secondary',
-                handler: () => processCommand(`clear ${day.toLowerCase().substring(0,3)} wk ${week}`) 
-            });
-            
+            // It's a day cell
+            const week = parseInt(element.dataset.week, 10);
+            const day = element.dataset.day.toLowerCase();
+
+            // Get workout cards in this cell
+            const cards = Array.from(element.querySelectorAll('.workout-card'));
+            const hasWorkouts = cards.length > 0;
+            const isPlaceholderOnly = cards.length === 1 && cards[0].dataset.isPlaceholder === 'true';
+
+            // First - most common action
+            if (!hasWorkouts) {
+                actions.push({ 
+                    id: 'add_workout',
+                    label: 'Add Workout',
+                    description: 'Add exercises to this day.',
+                    type: 'primary',
+                    handler: () => {
+                        // Focus the exercise library
+                        element.dispatchEvent(new CustomEvent('forge-assist:focus-library', { bubbles: true }));
+                        dependencies.showToast('Opened Library. Drag exercises to the calendar day.', 'info');
+                    }
+                });
+            }
+
+            // --- Add Suggest Focus action (previously placeholder) ---
             actions.push({ 
-                id: 'convert_rest', 
-                label: `Convert to Rest Day`, 
-                description: 'Mark this as a recovery day and get suggestions for light activities.',
-                type: 'recovery',
-                handler: () => handleConvertToRestDay(element) 
+                id: 'suggest_focus', 
+                label: 'Suggest Training Focus', 
+                description: 'Analyze the training week and suggest an optimal focus for this day.',
+                type: 'coaching',
+                handler: () => handleSuggestFocus(element)
             });
-            
+
+            // Existing actions
             actions.push({ 
-                id: 'optimize_day', 
-                label: `Optimize Day Structure`, 
-                description: 'Reorder exercises and adjust sets/reps for better training stimulus.',
-                type: 'analytics',
-                handler: () => handleOptimizeDayStructure(element) 
+                id: 'missed_session', 
+                label: 'Handle Missed Session', 
+                description: 'Record that this session was missed and get options to adjust.',
+                type: hasWorkouts ? 'primary' : 'secondary',
+                handler: () => {
+                    handleMissedSession({ week, day });
+                    dependencies.showToast(`Handling missed ${day} of week ${week}`, 'info');
+                }
             });
+
+            // Existing actions
+            if (hasWorkouts && !isPlaceholderOnly) {
+                actions.push({ 
+                    id: 'clear_day', 
+                    label: 'Clear Day', 
+                    description: 'Remove all workouts from this day.',
+                    type: 'secondary',
+                    handler: () => {
+                        // Use our simulator to preview changes
+                        simulateAndConfirm(
+                            'clearDay', 
+                            { week, day },
+                            `Clearing all workouts from ${day}, week ${week}`,
+                            `Are you sure you want to clear all workouts from ${day}, week ${week}?`
+                        );
+                    }
+                });
+            }
+
+            // Only offer to convert to rest if there are actual workouts (not just placeholders)
+            if (hasWorkouts && !isPlaceholderOnly) {
+                actions.push({ 
+                    id: 'convert_to_rest', 
+                    label: 'Convert to Rest Day', 
+                    description: 'Replace all workouts with a programmed rest day.',
+                    type: 'secondary',
+                    handler: () => handleConvertToRestDay(element)
+                });
+            }
         } else if (element.classList.contains('phase-bar')) {
             const phaseName = element.dataset.phase || 'Phase';
             actions.push({ 
@@ -946,6 +1088,18 @@ const ForgeAssist = (() => {
         }
         // --- End Phase 3 Commands ---
 
+        // Add to the parseCommand function within the match rules section
+        match = command.match(/^fill week (\d+)(?: using)? (\w+)(?:[ -]?(\w+))?(?: principles| model)?$/);
+        if (match) {
+            const weekNumber = parseInt(match[1], 10);
+            let modelType = match[2].toLowerCase();
+            // Handle optional model subtype
+            if (match[3]) {
+                modelType = `${modelType}-${match[3].toLowerCase()}`;
+            }
+            return { action: 'generateWeek', params: { week: weekNumber, model: modelType } };
+        }
+
         console.warn('[ForgeAssist] Command not recognized:', command);
         dependencies.showToast(`Command not understood: "${text}"`, 'warning');
         return null;
@@ -1460,54 +1614,57 @@ const ForgeAssist = (() => {
 
 
     /**
-     * Entry point for executing actions based on parsed commands.
-     * Routes to simulation/confirmation or directly executes simple actions.
-     */
-     function routeExecution(action, params) {
-         console.log('[ForgeAssist] Routing Execution:', action, params);
+ * Entry point for executing actions based on parsed commands.
+ * Routes to simulation/confirmation or directly executes simple actions.
+ */
+ function routeExecution(action, params) {
+     console.log('[ForgeAssist] Routing Execution:', action, params);
 
-          // Actions requiring simulation and confirmation
-          const requiresConfirmation = ['clearWeek', 'clearDay', 'shiftWeek', 'shiftDay'];
+      // Actions requiring simulation and confirmation
+      const requiresConfirmation = ['clearWeek', 'clearDay', 'shiftWeek', 'shiftDay'];
 
-          if (requiresConfirmation.includes(action)) {
-                // TODO: Generate a more accurate change description based on the query
-                let changeDescription = [];
-                let confirmationMessage = `Confirm ${action}`;
+      if (requiresConfirmation.includes(action)) {
+            // TODO: Generate a more accurate change description based on the query
+            let changeDescription = [];
+            let confirmationMessage = `Confirm ${action}`;
 
-                if (action === 'clearWeek' || action === 'clearDay') {
-                     // Estimate based on finding elements - inaccurate but simple for P2
-                     const dayCapitalized = params.day ? params.day.charAt(0).toUpperCase() + params.day.slice(1) : null;
-                     let selector = action === 'clearWeek'
-                           ? `.day-cell[data-week="${params.week}"] .workout-card`
-                           : `.day-cell[data-week="${params.week}"][data-day="${dayCapitalized}"] .workout-card`;
+            if (action === 'clearWeek' || action === 'clearDay') {
+                 // Estimate based on finding elements - inaccurate but simple for P2
+                 const dayCapitalized = params.day ? params.day.charAt(0).toUpperCase() + params.day.slice(1) : null;
+                 let selector = action === 'clearWeek'
+                       ? `.day-cell[data-week="${params.week}"] .workout-card`
+                       : `.day-cell[data-week="${params.week}"][data-day="${dayCapitalized}"] .workout-card`;
 
-                     const cards = dependencies.workCanvas.querySelectorAll(selector);
-                     cards.forEach(card => {
-                          changeDescription.push({ type: 'remove', cardId: card.id, load: card.dataset.load });
-                     });
-                     confirmationMessage = `Clear ${cards.length} card(s) from ${action === 'clearWeek' ? `week ${params.week}` : `${dayCapitalized} Wk ${params.week}`}?`;
-                } else if (action === 'shiftWeek' || action === 'shiftDay') {
-                     // Similarly estimate changes for shift - complex to do accurately here without full logic duplication
-                     // Generate a more detailed description for highlighting/simulation
-                     const dayCapitalized = params.day ? params.day.charAt(0).toUpperCase() + params.day.slice(1) : null;
-                     let selector = action === 'shiftWeek'
-                           ? `.day-cell[data-week="${params.week}"] .workout-card`
-                           : `.day-cell[data-week="${params.week}"][data-day="${dayCapitalized}"] .workout-card`;
-                     const cards = dependencies.workCanvas.querySelectorAll(selector);
-                     cards.forEach(card => {
-                         // We don't know the exact target slot here without re-calculating,
-                         // so the description is limited for preview. Mark the original cards.
-                         changeDescription.push({ type: 'move', cardId: card.id, load: card.dataset.load });
-                     });
-                     confirmationMessage = `Shift cards in ${action === 'shiftWeek' ? `week ${params.week}` : `${dayCapitalized} Wk ${params.week}`}?`;
-                }
+                 const cards = dependencies.workCanvas.querySelectorAll(selector);
+                 cards.forEach(card => {
+                      changeDescription.push({ type: 'remove', cardId: card.id, load: card.dataset.load });
+                 });
+                 confirmationMessage = `Clear ${cards.length} card(s) from ${action === 'clearWeek' ? `week ${params.week}` : `${dayCapitalized} Wk ${params.week}`}?`;
+            } else if (action === 'shiftWeek' || action === 'shiftDay') {
+                 // Similarly estimate changes for shift - complex to do accurately here without full logic duplication
+                 // Generate a more detailed description for highlighting/simulation
+                 const dayCapitalized = params.day ? params.day.charAt(0).toUpperCase() + params.day.slice(1) : null;
+                 let selector = action === 'shiftWeek'
+                       ? `.day-cell[data-week="${params.week}"] .workout-card`
+                       : `.day-cell[data-week="${params.week}"][data-day="${dayCapitalized}"] .workout-card`;
+                 const cards = dependencies.workCanvas.querySelectorAll(selector);
+                 cards.forEach(card => {
+                     // We don't know the exact target slot here without re-calculating,
+                     // so the description is limited for preview. Mark the original cards.
+                     changeDescription.push({ type: 'move', cardId: card.id, load: card.dataset.load });
+                 });
+                 confirmationMessage = `Shift cards in ${action === 'shiftWeek' ? `week ${params.week}` : `${dayCapitalized} Wk ${params.week}`}?`;
+            }
 
-              simulateAndConfirm(action, params, changeDescription, confirmationMessage);
-          } else {
-              // Directly execute actions that don't modify state significantly or handle their own interaction
-              executeActionInternal(action, params, []);
-          }
-     }
+          simulateAndConfirm(action, params, changeDescription, confirmationMessage);
+      } else if (action === 'generateWeek') {
+          // Handle week generation by calling the appropriate function
+          handleGenerateWeek(params.week, params.model);
+      } else {
+          // Directly execute actions that don't modify state significantly or handle their own interaction
+          executeActionInternal(action, params, []);
+      }
+ }
 
      /**
       * Handles the workflow for a missed session.
@@ -1651,50 +1808,84 @@ const ForgeAssist = (() => {
     // --- Proactive Analytics Checks ---
 
     /**
-     * Monitors analytics thresholds and triggers adjustment proposals.
-     * This function is typically called by blockbuilder.js after analytics updates.
-     * @param {object} analyticsData - Object containing current analytics values.
-     * @param {number} analyticsData.acwrRatio - Current ACWR ratio.
-     * @param {string} analyticsData.acwrFlag - 'green', 'amber', or 'red' ACWR flag.
-     * @param {number} analyticsData.monotonyValue - Current Monotony value.
-     * @param {string} analyticsData.monotonyFlag - 'ok' or 'high' monotony flag.
-     * @param {number} analyticsData.strainValue - Current Strain value.
+     * Checks analytics data against thresholds and provides proactive suggestions.
+     * @param {object} analyticsData - Data from the analytics module (ACWR, monotony, etc.)
      */
     function checkAnalyticsThresholds(analyticsData) {
         console.log('[ForgeAssist] Checking analytics thresholds:', analyticsData);
-        let proposals = [];
-        const { acwrRatio, monotonyValue, strainValue } = analyticsData; // Ignore flags for now, use raw values
-
-        // Define thresholds (these could be configurable later)
-        // ---> THRESHOLD DEFINITIONS MOVED TO MODULE SCOPE <---
-        // const HIGH_ACWR_THRESHOLD = 1.5;
-        // const LOW_ACWR_THRESHOLD = 0.8; 
-        // const HIGH_MONOTONY_THRESHOLD = 2.0;
-        // const HIGH_STRAIN_THRESHOLD = 5500; 
-
-        if (isFinite(acwrRatio) && acwrRatio > HIGH_ACWR_THRESHOLD) {
-             console.log(`[ForgeAssist] High ACWR detected (${acwrRatio}). Triggering proposals.`);
-             proposals = proposals.concat(AdaptiveScheduler.proposeAdjustments('highACWR', { acwrRatio }));
-        } else if (isFinite(acwrRatio) && acwrRatio < LOW_ACWR_THRESHOLD) {
-            // Optional: Add proposals for low ACWR if desired
-             console.log(`[ForgeAssist] Low ACWR detected (${acwrRatio}). Triggering proposals.`);
-             proposals = proposals.concat(AdaptiveScheduler.proposeAdjustments('lowLoad', { acwrRatio })); // Use 'lowLoad' trigger
+        
+        // Skip if no analytics data available
+        if (!analyticsData) return;
+        
+        // Get user's custom thresholds or defaults
+        const thresholds = getUserAnalyticsThresholds();
+        
+        const proposals = [];
+        
+        // Check ACWR
+        if (analyticsData.acwr) {
+            const acwr = analyticsData.acwr.ratio;
+            if (acwr > thresholds.highAcwr) {
+                console.log(`[ForgeAssist] High ACWR detected: ${acwr.toFixed(2)} (threshold: ${thresholds.highAcwr})`);
+                
+                // Get proposals for high ACWR
+                const acwrProposals = AdaptiveScheduler.proposeAdjustments('highACWR', {
+                    acwr: acwr,
+                    chronic: analyticsData.acwr.chronic || 0,
+                    acute: analyticsData.acwr.acute || 0,
+                    currentLoads: analyticsData.dailyLoads || []
+                });
+                
+                proposals.push(...acwrProposals);
+            } else if (acwr < thresholds.lowAcwr) {
+                console.log(`[ForgeAssist] Low ACWR detected: ${acwr.toFixed(2)} (threshold: ${thresholds.lowAcwr})`);
+                
+                // Get proposals for low ACWR
+                const acwrProposals = AdaptiveScheduler.proposeAdjustments('lowACWR', {
+                    acwr: acwr,
+                    chronic: analyticsData.acwr.chronic || 0,
+                    acute: analyticsData.acwr.acute || 0,
+                    currentLoads: analyticsData.dailyLoads || []
+                });
+                
+                proposals.push(...acwrProposals);
+            }
         }
-
-        if (isFinite(monotonyValue) && monotonyValue > HIGH_MONOTONY_THRESHOLD) {
-            console.log(`[ForgeAssist] High Monotony detected (${monotonyValue}). Triggering proposals.`);
-            proposals = proposals.concat(AdaptiveScheduler.proposeAdjustments('highMonotony', { monotonyValue }));
+        
+        // Check Monotony
+        if (analyticsData.monotony) {
+            const monotony = analyticsData.monotony.value;
+            if (monotony > thresholds.highMonotony) {
+                console.log(`[ForgeAssist] High Monotony detected: ${monotony.toFixed(2)} (threshold: ${thresholds.highMonotony})`);
+                
+                // Get proposals for high monotony
+                const monotonyProposals = AdaptiveScheduler.proposeAdjustments('highMonotony', {
+                    monotony: monotony,
+                    currentLoads: analyticsData.dailyLoads || []
+                });
+                
+                proposals.push(...monotonyProposals);
+            }
         }
-
-        if (isFinite(strainValue) && strainValue > HIGH_STRAIN_THRESHOLD) {
-            console.log(`[ForgeAssist] High Strain detected (${strainValue}). Triggering proposals.`);
-             // Add a specific trigger for strain, or bundle with ACWR/Monotony?
-             // For now, let's re-use highACWR proposals which include rest/reduction
-             proposals = proposals.concat(AdaptiveScheduler.proposeAdjustments('highACWR', { reason: 'High Strain', strainValue }));
+        
+        // Check Strain
+        if (analyticsData.strain) {
+            const strain = analyticsData.strain.value;
+            if (strain > thresholds.highStrain) {
+                console.log(`[ForgeAssist] High Strain detected: ${strain.toFixed(0)} (threshold: ${thresholds.highStrain})`);
+                
+                // Get proposals for high strain
+                const strainProposals = AdaptiveScheduler.proposeAdjustments('highStrain', {
+                    strain: strain,
+                    currentLoads: analyticsData.dailyLoads || []
+                });
+                
+                proposals.push(...strainProposals);
+            }
         }
-
+        
+        // If we have proposals, display them to the user
         if (proposals.length > 0) {
-            // Display proposals to the user
             displayProposals(proposals);
         }
     }
@@ -2605,4 +2796,378 @@ function getRecommendedReps(exercise, difficulty) {
     };
     
     return defaultReps[difficulty] || 8;
+}
+
+/**
+ * Handles the Suggest Focus action on a day cell
+ * Analyzes the surrounding training context to suggest an appropriate focus
+ * @param {HTMLElement} dayCell - The day cell element
+ */
+function handleSuggestFocus(dayCell) {
+    console.log('[ForgeAssist.handleSuggestFocus] Called for day cell:', dayCell);
+    
+    // Get the week and day information
+    const week = parseInt(dayCell.dataset.week, 10);
+    const day = dayCell.dataset.day.toLowerCase();
+    
+    // Get all days in this week
+    const daysInWeek = [];
+    for (const dayName of daysOfWeek) {
+        const dayCapitalized = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+        const dayCellElement = dependencies.workCanvas.querySelector(`.day-cell[data-week="${week}"][data-day="${dayCapitalized}"]`);
+        if (dayCellElement) {
+            const cards = Array.from(dayCellElement.querySelectorAll('.workout-card'));
+            
+            // Extract focus information: workout type, primary muscles, etc.
+            let dayInfo = {
+                day: dayName,
+                hasWorkout: cards.length > 0,
+                isPrimarilyPlaceholder: cards.length === 1 && cards[0].dataset.isPlaceholder === 'true',
+                exerciseNames: [],
+                primaryMuscles: new Set(),
+                categories: new Set()
+            };
+            
+            // Extract exercise details
+            cards.forEach(card => {
+                const exerciseName = card.querySelector('.exercise-name')?.textContent;
+                if (exerciseName) {
+                    dayInfo.exerciseNames.push(exerciseName);
+                    
+                    // Find exercise in library to get metadata
+                    const exercise = dependencies.exerciseLibrary.find(ex => ex.name === exerciseName);
+                    if (exercise) {
+                        exercise.primaryMuscles?.forEach(muscle => dayInfo.primaryMuscles.add(muscle));
+                        if (exercise.category) dayInfo.categories.add(exercise.category);
+                    }
+                }
+            });
+            
+            daysInWeek.push(dayInfo);
+        }
+    }
+    
+    // Analyze context to determine a good focus
+    const selectedDayInfo = daysInWeek.find(d => d.day === day);
+    const otherDays = daysInWeek.filter(d => d.day !== day);
+    
+    // Collect all muscle groups trained this week
+    const allMusclesThisWeek = new Set();
+    const allCategoriesThisWeek = new Set();
+    daysInWeek.forEach(dayInfo => {
+        dayInfo.primaryMuscles.forEach(muscle => allMusclesThisWeek.add(muscle));
+        dayInfo.categories.forEach(cat => allCategoriesThisWeek.add(cat));
+    });
+    
+    // Muscles trained in the surrounding days (day before and day after)
+    const surroundingMuscles = new Set();
+    const dayIndex = daysOfWeek.indexOf(day);
+    
+    if (dayIndex > 0) {
+        const prevDay = daysInWeek.find(d => d.day === daysOfWeek[dayIndex - 1]);
+        if (prevDay) {
+            prevDay.primaryMuscles.forEach(muscle => surroundingMuscles.add(muscle));
+        }
+    }
+    
+    if (dayIndex < daysOfWeek.length - 1) {
+        const nextDay = daysInWeek.find(d => d.day === daysOfWeek[dayIndex + 1]);
+        if (nextDay) {
+            nextDay.primaryMuscles.forEach(muscle => surroundingMuscles.add(muscle));
+        }
+    }
+    
+    // Determine focus suggestions based on analysis
+    let suggestions = [];
+    
+    // Check if this day already has a clear focus
+    if (selectedDayInfo.hasWorkout && !selectedDayInfo.isPrimarilyPlaceholder) {
+        if (selectedDayInfo.categories.size === 1) {
+            // Already has a clear category focus
+            const category = Array.from(selectedDayInfo.categories)[0];
+            suggestions.push({
+                focus: `${category} (Current)`,
+                reasoning: "This matches your current workout focus."
+            });
+        } else if (selectedDayInfo.primaryMuscles.size <= 2) {
+            // Already has a clear muscle focus
+            const muscles = Array.from(selectedDayInfo.primaryMuscles).join(', ');
+            suggestions.push({
+                focus: `${muscles} (Current)`,
+                reasoning: "This matches your current workout focus."
+            });
+        }
+    }
+    
+    // Find untrained muscle groups
+    const untrainedMuscles = ['Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core']
+        .filter(muscle => !allMusclesThisWeek.has(muscle));
+        
+    if (untrainedMuscles.length > 0) {
+        suggestions.push({
+            focus: untrainedMuscles.join(' & '),
+            reasoning: "These muscle groups aren't trained elsewhere in your week."
+        });
+    }
+    
+    // Avoid muscles trained in surrounding days
+    const availableMuscles = ['Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core']
+        .filter(muscle => !surroundingMuscles.has(muscle));
+        
+    if (availableMuscles.length > 0) {
+        // Group in logical pairs
+        if (availableMuscles.includes('Chest') && availableMuscles.includes('Shoulders')) {
+            suggestions.push({
+                focus: 'Upper Body Push',
+                reasoning: "Good recovery from surrounding days and logical muscle pairing."
+            });
+        } else if (availableMuscles.includes('Back') && availableMuscles.includes('Arms')) {
+            suggestions.push({
+                focus: 'Upper Body Pull',
+                reasoning: "Good recovery from surrounding days and logical muscle pairing."
+            });
+        } else if (availableMuscles.includes('Legs') && availableMuscles.includes('Core')) {
+            suggestions.push({
+                focus: 'Lower Body & Core',
+                reasoning: "Good recovery from surrounding days and logical muscle pairing."
+            });
+        } else {
+            // Single muscle focus if no good pairs
+            suggestions.push({
+                focus: `${availableMuscles[0]} Focus`,
+                reasoning: "This muscle group has good recovery potential for this day."
+            });
+        }
+    }
+    
+    // Check if a rest or active recovery day would be beneficial
+    const surroundingWorkoutDays = otherDays.filter(d => 
+        d.hasWorkout && !d.isPrimarilyPlaceholder && 
+        (daysOfWeek.indexOf(d.day) === dayIndex - 1 || daysOfWeek.indexOf(d.day) === dayIndex + 1)
+    );
+    
+    if (surroundingWorkoutDays.length === 2) {
+        suggestions.push({
+            focus: 'Active Recovery',
+            reasoning: "This would provide a strategic recovery day between two training sessions."
+        });
+    }
+    
+    // If no specific suggestions were generated, provide a general one
+    if (suggestions.length === 0) {
+        suggestions.push({
+            focus: 'Full Body',
+            reasoning: "A balanced full-body workout fits well in your current program."
+        });
+    }
+    
+    // Display suggestions to the user
+    let message = `<strong>Suggested training focus for ${day}, week ${week}:</strong><br>`;
+    suggestions.forEach((suggestion, index) => {
+        message += `<br>${index + 1}. <strong>${suggestion.focus}</strong><br>`;
+        message += `<span class="small text-muted">${suggestion.reasoning}</span><br>`;
+    });
+    
+    dependencies.showToast(message, 'info', 8000);
+}
+
+/**
+ * Handles generating a full week of workouts using a specific model
+ * @param {number} weekNumber - The week number to generate
+ * @param {string} modelType - The type of model to use (e.g., 'linear', 'wave', 'undulating')
+ */
+function handleGenerateWeek(weekNumber, modelType) {
+    console.log(`[ForgeAssist] Generating week ${weekNumber} using ${modelType} model`);
+    
+    if (!AdaptiveScheduler || typeof AdaptiveScheduler.generateWeek !== 'function') {
+        dependencies.showToast(`Week generation feature not available. Make sure AdaptiveScheduler is properly loaded.`, 'error');
+        return;
+    }
+    
+    // Basic configuration for the week generation
+    const config = {
+        weekNumber: weekNumber,
+        model: modelType,
+        goal: 'strength', // Default goal
+        sessionsPerWeek: 3,    // Default session count
+        equipment: {
+            hasBarbell: true,
+            hasDumbbells: true,
+            hasCables: true
+        }
+    };
+    
+    // Enhance configuration based on modelType
+    if (modelType === 'hypertrophy' || modelType === 'bodybuilding') {
+        config.goal = 'hypertrophy';
+        config.sessionsPerWeek = 4;
+        config.parameters = {
+            loadTargets: [70],
+            repsPerSet: [8, 10, 12]
+        };
+    } else if (modelType === 'strength' || modelType === 'powerlifting') {
+        config.goal = 'strength';
+        config.parameters = {
+            loadTargets: [80],
+            repsPerSet: [5]
+        };
+    } else if (modelType === 'endurance' || modelType === 'conditioning') {
+        config.goal = 'endurance';
+        config.parameters = {
+            loadTargets: [60],
+            repsPerSet: [15]
+        };
+    } else if (modelType === 'wave') {
+        config.parameters = {
+            wavePatternDefinitions: {
+                'main': { patternTargets: [75, 80, 85], repsPerStep: [5, 3, 1] }
+            }
+        };
+    } else if (modelType === 'undulating') {
+        config.sessionsPerWeek = 3;
+        config.dailyTargets = [
+            { dayOfWeek: 'mon', focus: 'strength', targets: [85], reps: [5] },
+            { dayOfWeek: 'wed', focus: 'hypertrophy', targets: [75], reps: [10] },
+            { dayOfWeek: 'fri', focus: 'power', targets: [65], reps: [3] }
+        ];
+    }
+    
+    // Prompt user for additional configuration if needed
+    const modifyConfig = confirm(`Generate week ${weekNumber} using ${modelType} model?\n\nDefault configuration:\n- Sessions per week: ${config.sessionsPerWeek}\n- Goal: ${config.goal}\n\nClick OK to proceed or Cancel to modify.`);
+    
+    if (!modifyConfig) {
+        // Allow user to customize the configuration
+        const sessionCount = prompt(`How many sessions per week? (1-6)`, config.sessionsPerWeek);
+        if (sessionCount) {
+            config.sessionsPerWeek = Math.min(6, Math.max(1, parseInt(sessionCount, 10)));
+        }
+        
+        const goal = prompt(`What's your primary goal?\n(strength, hypertrophy, endurance)`, config.goal);
+        if (goal && ['strength', 'hypertrophy', 'endurance'].includes(goal.toLowerCase())) {
+            config.goal = goal.toLowerCase();
+        }
+    }
+    
+    try {
+        // Generate the week content
+        const weekData = AdaptiveScheduler.generateWeek(config);
+        
+        if (!weekData.success) {
+            dependencies.showToast(`Error generating week: ${weekData.message}`, 'error');
+            return;
+        }
+        
+        // Apply the generated data to the calendar grid
+        applyGeneratedWeek(weekData, weekNumber);
+        
+        dependencies.showToast(`Successfully generated week ${weekNumber} using ${modelType} model! Your new workouts are ready.`, 'success');
+        dependencies.triggerAnalyticsUpdate();
+        
+        // Save state if the function is available
+        if (dependencies.triggerSaveState) {
+            dependencies.triggerSaveState();
+        }
+    } catch (error) {
+        console.error('[ForgeAssist] Error generating week:', error);
+        dependencies.showToast(`Error generating week: ${error.message}`, 'error');
+    }
+}
+
+/**
+ * Applies the generated week data to the calendar grid
+ * @param {object} weekData - The generated week data from AdaptiveScheduler
+ * @param {number} weekNumber - The week number to apply the data to
+ */
+function applyGeneratedWeek(weekData, weekNumber) {
+    if (!weekData || !weekData.days) return;
+    
+    // Helper to create a workout card based on exercise data
+    const createWorkoutCardForExercise = (exercise, dayCell) => {
+        // Format rep scheme
+        let repText = exercise.reps;
+        if (Array.isArray(exercise.reps)) {
+            repText = exercise.reps.join('-');
+        }
+        
+        // Format details string
+        let detailsStr = `${exercise.sets}×${repText}`;
+        if (exercise.loadType && exercise.loadValue) {
+            detailsStr += ` @ ${exercise.loadType === 'percent' ? exercise.loadValue + '%' : exercise.loadType === 'rpe' ? 'RPE ' + exercise.loadValue : exercise.loadValue + 'kg'}`;
+        }
+        
+        // Call the blockbuilder's createWorkoutCard function if available
+        if (typeof window.createWorkoutCard === 'function') {
+            const card = window.createWorkoutCard(exercise.name, detailsStr);
+            card.dataset.modelDriven = 'true'; // Mark as model driven
+            dayCell.appendChild(card);
+            
+            // Add technique notes if available
+            if (exercise.notes) {
+                card.dataset.techniqueCue = exercise.notes;
+            }
+            
+            return card;
+        } else {
+            // Fallback if the global function isn't available
+            const card = document.createElement('div');
+            card.className = 'workout-card';
+            card.innerHTML = `
+                <div class="exercise-name">${exercise.name}</div>
+                <div class="details">${detailsStr}</div>
+            `;
+            card.dataset.modelDriven = 'true';
+            dayCell.appendChild(card);
+            
+            if (exercise.notes) {
+                card.dataset.techniqueCue = exercise.notes;
+            }
+            
+            return card;
+        }
+    };
+    
+    // Process each day in the generated week
+    for (const [dayKey, dayData] of Object.entries(weekData.days)) {
+        // Find the day cell in the calendar
+        const dayCapitalized = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
+        const dayCell = dependencies.workCanvas.querySelector(`.day-cell[data-week="${weekNumber}"][data-day="${dayCapitalized}"]`);
+        
+        if (!dayCell) {
+            console.warn(`[ForgeAssist] Could not find day cell for ${dayCapitalized}, week ${weekNumber}`);
+            continue;
+        }
+        
+        // Clear existing cards if any
+        const existingCards = dayCell.querySelectorAll('.workout-card');
+        if (existingCards.length > 0) {
+            if (!confirm(`Replace existing cards in ${dayCapitalized}, week ${weekNumber}?`)) {
+                console.log(`[ForgeAssist] User cancelled replacing existing cards for ${dayCapitalized}, week ${weekNumber}`);
+                continue;
+            }
+            existingCards.forEach(card => card.remove());
+        }
+        
+        // Add the focus as a header card if present
+        if (dayData.focus) {
+            const focusCard = document.createElement('div');
+            focusCard.className = 'workout-card focus-card';
+            focusCard.innerHTML = `
+                <div class="exercise-name">FOCUS: ${dayData.focus}</div>
+                <div class="details">${dayData.emphasis || ''}</div>
+            `;
+            focusCard.dataset.isPlaceholder = 'true';
+            focusCard.dataset.modelDriven = 'true';
+            dayCell.appendChild(focusCard);
+        }
+        
+        // Create workout cards for each exercise
+        if (dayData.exercises && dayData.exercises.length > 0) {
+            dayData.exercises.forEach(exercise => {
+                createWorkoutCardForExercise(exercise, dayCell);
+            });
+        }
+        
+        // Tag the day cell with the model information
+        dayCell.dataset.periodizationModelType = weekData.model;
+    }
 }

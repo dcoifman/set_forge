@@ -739,502 +739,1214 @@ const AdaptiveScheduler = (() => {
     }
 
     /**
-     * Proposes adjustments based on analytics triggers.
-     * @param {string} triggerEvent - The event triggering the proposal (e.g., 'highACWR', 'highMonotony').
-     * @param {object} context - Additional context data.
-     * @returns {Array<object>} - Array of adjustment proposals.
+     * Proposes adaptive adjustments based on trigger events and analytics data.
+     * (Phase 3: Enhanced decision-making for adjustments)
+     * @param {string} triggerEvent - The event that triggered the adjustments (e.g., 'highACWR', 'highMonotony').
+     * @param {Object} context - Context data for the adjustment proposals (e.g., { acwr, monotony, strain, weeklyLoads }).
+     * @returns {Array<Object>} - Array of proposed adjustments.
      */
     function proposeAdjustments(triggerEvent, context = {}) {
-        console.log(`[AdaptiveScheduler] Proposing adjustments for ${triggerEvent}`);
-        let proposals = [];
+        console.log('[AdaptiveScheduler] Proposing adjustments for:', triggerEvent, context);
         
-        const currentLoads = dependencies.getCurrentBlockLoads ? dependencies.getCurrentBlockLoads() : null;
-        if (!currentLoads || currentLoads.length === 0) {
-            console.warn('[AdaptiveScheduler] No loads available for proposals');
-            return [{ type: 'message', message: 'Add some sessions to receive adjustment proposals.' }];
+        const proposals = [];
+        
+        // Make sure we have enough context information
+        if (!context.weeklyLoads && !context.currentLoads) {
+            console.warn('[AdaptiveScheduler] Insufficient context for adjustment proposals.');
+            return [{ type: 'message', message: 'Insufficient data to propose specific adjustments.' }];
         }
         
-        // Determine the weeks in the plan
-        const daysPerWeek = 7;
-        const numWeeks = Math.ceil(currentLoads.length / daysPerWeek);
+        // Use provided loads or fetch them
+        const currentLoads = context.currentLoads || 
+                          (typeof dependencies.getCurrentBlockLoads === 'function' ? 
+                           dependencies.getCurrentBlockLoads() : []);
         
-        // Get current week (or target week if specified in context)
-        const targetWeek = context.week || Math.ceil(currentLoads.length / daysPerWeek);
+        // If we still don't have loads, we can't proceed
+        if (!currentLoads || currentLoads.length === 0) {
+            return [{ type: 'message', message: 'Unable to access current training loads for assessment.' }];
+        }
         
         switch (triggerEvent) {
-            case 'highACWR': {
-                // Proposal 1: Reduce load for the target week
-                const reductionProposal = proposeLoadChange(15, 'week', { week: targetWeek });
-                if (reductionProposal.success) {
-                    // Add description for the UI
-                    reductionProposal.description = `Reduce load by 15% in Week ${targetWeek} (Est. ACWR: ${reductionProposal.impact?.predictedACWR?.toFixed(2) || 'N/A'})`;
-                    reductionProposal.type = 'reduceLoad'; // Ensure type matches what ForgeAssist expects
-                    reductionProposal.targetWeek = targetWeek; // Ensure targetWeek is set
-                    reductionProposal.percentage = 15; // Ensure percentage is set
-                    proposals.push(reductionProposal);
-                } else {
-                    console.log('[AdaptiveScheduler] Could not generate week load reduction proposal.');
-                }
+            case 'highACWR':
+                // Identify the highest acute load days
+                proposals.push(...proposeHighACWRAdjustments(context, currentLoads));
+                break;
                 
-                // Proposal 2: Add a rest day in the target week
-                const restDayProposal = proposeRestDayInsertion(targetWeek);
-                if (restDayProposal.success) {
-                     // Add description for the UI
-                    const dayCap = restDayProposal.day.charAt(0).toUpperCase() + restDayProposal.day.slice(1);
-                    restDayProposal.description = `Insert rest day on ${dayCap}, Week ${targetWeek} (clears ${restDayProposal.currentLoad} load)`;
-                    restDayProposal.type = 'addRestDay'; // Ensure type matches
-                    restDayProposal.targetWeek = targetWeek; // Ensure targetWeek is set
-                    proposals.push(restDayProposal);
-                } else {
-                     console.log('[AdaptiveScheduler] Could not generate rest day insertion proposal.');
+            case 'lowACWR':
+                // Find opportunities to increase load
+                proposals.push(...proposeLowACWRAdjustments(context, currentLoads));
+                break;
+                
+            case 'highMonotony':
+                // Identify ways to add variability
+                proposals.push(...proposeHighMonotonyAdjustments(context, currentLoads));
+                break;
+                
+            case 'highStrain':
+                // Reduce overall training stress
+                proposals.push(...proposeHighStrainAdjustments(context, currentLoads));
+                break;
+                
+            case 'lowLoad':
+                // Suggest load increase for hypertrophy/strength goals
+                const targetWeek = identifyLowestLoadWeek(currentLoads);
+                if (targetWeek > 0) {
+                    const loadProposal = proposeLoadChange(15, 'week', { 
+                        week: targetWeek,
+                        message: `Increasing load in Week ${targetWeek} to maintain progressive overload`
+                    });
+                    if (loadProposal.success) proposals.push(loadProposal);
                 }
                 break;
-            }
-            case 'highMonotony': {
-                const weekStart = (targetWeek - 1) * daysPerWeek;
-                const weekLoads = currentLoads.slice(weekStart, weekStart + daysPerWeek);
-                const dayNames = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
                 
-                // Find highest and lowest non-zero load days
-                let maxLoadDayIndex = -1;
-                let maxLoad = -1;
-                let minLoadDayIndex = -1;
-                let minLoad = Infinity;
-
-                for(let i=0; i<weekLoads.length; i++) {
-                    const load = weekLoads[i];
-                    if (load > maxLoad) {
-                        maxLoad = load;
-                        maxLoadDayIndex = i;
-                    }
-                    if (load > 0 && load < minLoad) { 
-                        minLoad = load;
-                        minLoadDayIndex = i;
-                    }
+            case 'deloadNeeded':
+                // Extensive exhaustion indicators detected
+                const deloadWeek = identifyOptimalDeloadWeek(currentLoads, context);
+                if (deloadWeek > 0) {
+                    const deloadProposal = proposeLoadChange(-40, 'week', { 
+                        week: deloadWeek,
+                        message: `Strategic deload in Week ${deloadWeek} to enhance recovery and supercompensation`
+                    });
+                    if (deloadProposal.success) proposals.push(deloadProposal);
+                    
+                    // Also suggest a rest day insertion
+                    const restDayProposal = proposeRestDayInsertion(deloadWeek);
+                    if (restDayProposal.success) proposals.push(restDayProposal);
                 }
+                break;
                 
-                // Proposal 1: Swap highest and lowest load days (if different and valid)
-                if (maxLoadDayIndex !== -1 && minLoadDayIndex !== -1 && maxLoadDayIndex !== minLoadDayIndex) {
-                    const highDayName = dayNames[maxLoadDayIndex];
-                    const lowDayName = dayNames[minLoadDayIndex];
-                    const highDayCap = highDayName.charAt(0).toUpperCase() + highDayName.slice(1);
-                    const lowDayCap = lowDayName.charAt(0).toUpperCase() + lowDayName.slice(1);
+            case 'injuryRisk':
+                // When injury risk is detected (perhaps through RPE/difficulty feedback)
+                const riskWeek = context.riskWeek || identifyHighestLoadWeek(currentLoads);
+                if (riskWeek > 0) {
+                    // Significant reduction + technique focus
+                    const loadProposal = proposeLoadChange(-25, 'week', { 
+                        week: riskWeek,
+                        message: `Risk reduction: Reducing load in Week ${riskWeek} while maintaining technical quality`
+                    });
+                    if (loadProposal.success) proposals.push(loadProposal);
                     
-                    // Estimate impact (crude: assumes loads are swapped)
-                    // A better simulation would get actual card data and swap them
-                    const estimatedImpact = calculateImpact([], {}); // Placeholder impact
-                    
+                    // Also suggest accessory work for injury prevention
                     proposals.push({
-                        type: 'swapDays', // New proposal type
-                        targetWeek: targetWeek,
-                        day1: highDayName, // Day with higher load
-                        day2: lowDayName,  // Day with lower load
-                        reason: 'Improve load variation to reduce monotony',
-                        description: `Swap ${highDayCap} (high load) and ${lowDayCap} (low load) in Week ${targetWeek} to improve variation?`,
-                        impact: estimatedImpact, // Include estimated impact
-                        success: true // Assume possible for now
+                        type: 'message',
+                        message: 'Consider adding targeted prehab/rehab exercises for affected muscle groups'
                     });
                 }
-                
-                // Proposal 2: Reduce load on the heaviest day (keep this option)
-                if (maxLoadDayIndex >= 0 && maxLoad > 0) {
-                    const targetDay = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'][maxLoadDayIndex];
-                    const dayReductionProposal = proposeLoadChange(20, 'day', { week: targetWeek, day: targetDay });
-                    
-                    if (dayReductionProposal.success) {
-                         const dayCap = targetDay.charAt(0).toUpperCase() + targetDay.slice(1);
-                         dayReductionProposal.description = `Reduce load by 20% on heaviest day (${dayCap}, Wk ${targetWeek}) (Est. Monotony: ${dayReductionProposal.impact?.predictedMonotony?.toFixed(2) || 'N/A'})`;
-                         dayReductionProposal.type = 'reduceSpecificDay'; // Ensure type matches
-                         dayReductionProposal.targetWeek = targetWeek; // Ensure targetWeek is set
-                         dayReductionProposal.targetDay = targetDay; // Ensure targetDay is set
-                         dayReductionProposal.percentage = 20; // Ensure percentage is set
-                         proposals.push(dayReductionProposal);
-                    } else {
-                        console.log('[AdaptiveScheduler] Could not generate specific day load reduction proposal.');
-                    }
-                }
-
-                // Proposal 3: Increase load on the *lowest* non-zero load day (keep this option)
-                if (minLoadDayIndex >= 0) {
-                    const targetLowDay = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'][minLoadDayIndex];
-                    // Increase by 15%? Let's use a slightly smaller percentage for increasing low days
-                    const dayIncreaseProposal = proposeLoadChange(15, 'day', { week: targetWeek, day: targetLowDay }); 
-
-                    if (dayIncreaseProposal.success) {
-                        const dayLowCap = targetLowDay.charAt(0).toUpperCase() + targetLowDay.slice(1);
-                        dayIncreaseProposal.description = `Increase load by 15% on lowest day (${dayLowCap}, Wk ${targetWeek}) (Est. Monotony: ${dayIncreaseProposal.impact?.predictedMonotony?.toFixed(2) || 'N/A'})`;
-                        dayIncreaseProposal.type = 'increaseLowDay'; // Specific type
-                        dayIncreaseProposal.targetWeek = targetWeek; 
-                        dayIncreaseProposal.targetDay = targetLowDay;
-                        dayIncreaseProposal.percentage = 15; 
-                        proposals.push(dayIncreaseProposal);
-                    } else {
-                         console.log('[AdaptiveScheduler] Could not generate specific low day load increase proposal.');
-                    }
-                }
-                break;
-            }
-            case 'lowLoad':
-                // Proposal: Increase load gradually
-                const increaseProposal = proposeLoadChange(10, 'week', { week: targetWeek });
-                if (increaseProposal.success) {
-                    increaseProposal.description = `Increase load by 10% in Week ${targetWeek} (Est. ACWR: ${increaseProposal.impact?.predictedACWR?.toFixed(2) || 'N/A'})`;
-                    increaseProposal.type = 'increaseLoad'; // Ensure type matches ForgeAssist
-                    increaseProposal.targetWeek = targetWeek; // Ensure targetWeek is set
-                    increaseProposal.percentage = 10; // Set positive percentage
-                    proposals.push(increaseProposal);
-                } else {
-                    console.log('[AdaptiveScheduler] Could not generate week load increase proposal.');
-                }
                 break;
                 
+            // Handle other trigger events as needed
+            
             default:
-                proposals.push({
-                    type: 'message',
-                    message: `No specific proposals for trigger: ${triggerEvent}`
+                console.warn(`[AdaptiveScheduler] Unknown trigger event: ${triggerEvent}`);
+                proposals.push({ 
+                    type: 'message', 
+                    message: `No specific adjustments available for ${triggerEvent}.` 
                 });
         }
         
-        // Filter out any unsuccessful proposals just in case
-        return proposals.filter(p => p.type === 'message' || p.success !== false);
-    }
-
-    /**
-     * Generates a specific load change proposal (increase or decrease).
-     * @param {number} percentageChange - The percentage change to apply (+ for increase, - for decrease).
-     * @param {string} scope - Scope of change ('week', 'day').
-     * @param {object} params - Additional parameters (week, day).
-     * @returns {object} The load change proposal details.
-     */
-    function proposeLoadChange(percentageChange, scope, params = {}) {
-        const changeType = percentageChange > 0 ? 'increase' : 'reduction';
-        console.log(`[AdaptiveScheduler] Proposing ${Math.abs(percentageChange)}% load ${changeType} in ${scope}`);
-
-        if (!dependencies.getCurrentBlockLoads) {
-            return { success: false, message: 'Load data not available' };
-        }
-
-        const currentLoads = dependencies.getCurrentBlockLoads();
-        const daysPerWeek = 7;
-
-        // Default to current week if not specified
-        const targetWeek = params.week || Math.ceil(currentLoads.length / daysPerWeek);
-
-        let proposal = {
-            type: `load${changeType.charAt(0).toUpperCase() + changeType.slice(1)}`, // e.g., 'loadIncrease'
-            percentageChange: percentageChange,
-            scope,
-            changes: [] // Detailed breakdown of changes per day
-        };
-
-        const weekStartIndex = (targetWeek - 1) * daysPerWeek;
-        const dayNames = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-
-        if (scope === 'week') {
-            // Generate changes for the entire week
-            for (let i = 0; i < daysPerWeek; i++) {
-                const dayIndex = weekStartIndex + i;
-                if (dayIndex < currentLoads.length) {
-                    const currentLoad = currentLoads[dayIndex];
-                    // Only apply change if current load is not zero, unless increasing
-                    if (currentLoad > 0 || percentageChange > 0) { 
-                        const proposedLoad = Math.max(0, Math.round(currentLoad * (1 + percentageChange / 100)));
-                        const loadDiff = proposedLoad - currentLoad;
-
-                        if (loadDiff !== 0) {
-                            proposal.changes.push({
-                                day: dayNames[i],
-                                week: targetWeek,
-                                currentLoad,
-                                proposedLoad: proposedLoad,
-                                change: loadDiff // Positive for increase, negative for decrease
-                            });
-                        }
-                    }
-                }
-            }
-        } else if (scope === 'day' && params.day) {
-            // Find the specific day
-            const dayIndex = dayNames.indexOf(params.day.toLowerCase());
-            if (dayIndex >= 0) {
-                const loadIndex = weekStartIndex + dayIndex;
-                if (loadIndex < currentLoads.length) {
-                    const currentLoad = currentLoads[loadIndex];
-                     if (currentLoad > 0 || percentageChange > 0) {
-                        const proposedLoad = Math.max(0, Math.round(currentLoad * (1 + percentageChange / 100)));
-                        const loadDiff = proposedLoad - currentLoad;
-
-                        if (loadDiff !== 0) {
-                            proposal.changes.push({
-                                day: params.day,
-                                week: targetWeek,
-                                currentLoad,
-                                proposedLoad: proposedLoad,
-                                change: loadDiff
-                            });
-                        }
-                    }
-                }
-            }
-        }
-
-        // Calculate the impact of these changes
-        const changeDescs = proposal.changes.map(change => ({
-            type: 'modify', // Generic modification type for impact calculation
-            day: change.day,
-            week: change.week,
-            loadChange: change.change 
-        }));
-
-        if (changeDescs.length > 0) {
-            proposal.impact = calculateImpact(changeDescs, {});
-            proposal.success = true;
-        } else {
-            proposal.success = false;
-            proposal.message = `No significant load ${changeType} possible`;
-        }
-
-        return proposal;
-    }
-
-    /**
-     * Generates a proposal for inserting a rest day.
-     * @param {number} week - The week to modify.
-     * @returns {object} The rest day insertion proposal.
-     */
-    function proposeRestDayInsertion(week) {
-        console.log(`[AdaptiveScheduler] Proposing rest day insertion in week ${week}`);
-        
-        if (!dependencies.getCurrentBlockLoads) {
-            return { success: false, message: 'Load data not available' };
-        }
-        
-        const currentLoads = dependencies.getCurrentBlockLoads();
-        const daysPerWeek = 7;
-        
-        if (!week) {
-            week = Math.ceil(currentLoads.length / daysPerWeek); // Default to current week
-        }
-        
-        const weekStartIndex = (week - 1) * daysPerWeek;
-        const weekLoads = currentLoads.slice(weekStartIndex, weekStartIndex + daysPerWeek);
-        
-        // Find the day with the lowest load to make it a rest day
-        // (preferring days that aren't already rest days)
-        let lowestLoadIndex = -1;
-        let lowestLoadValue = Infinity;
-        
-        for (let i = 0; i < weekLoads.length; i++) {
-            const load = weekLoads[i];
-            if (load > 0 && load < lowestLoadValue) {
-                lowestLoadValue = load;
-                lowestLoadIndex = i;
-            }
-        }
-        
-        // If we couldn't find a non-rest day, pick the day with lowest load
-        if (lowestLoadIndex === -1) {
-            lowestLoadIndex = weekLoads.indexOf(Math.min(...weekLoads));
-        }
-        
-        const dayName = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'][lowestLoadIndex];
-        
-        const proposal = {
-            type: 'restDayInsertion',
-            week,
-            day: dayName,
-            currentLoad: weekLoads[lowestLoadIndex],
-            success: true,
-            changes: [{
-                day: dayName,
-                week,
-                currentLoad: weekLoads[lowestLoadIndex],
-                proposedLoad: 0,
-                change: weekLoads[lowestLoadIndex]
-            }]
-        };
-        
-        // Calculate impact
-        const changeDes = [{
-            type: 'modify',
-            day: dayName,
-            week,
-            loadChange: -weekLoads[lowestLoadIndex]
-        }];
-        
-        proposal.impact = calculateImpact(changeDes, {});
-        
-        return proposal;
-    }
-
-    /**
-     * Analyzes load progression within a phase and proposes optimizations.
-     * @param {string} phaseName - Name of the phase (for context).
-     * @param {number} startWeek - The starting week number (1-indexed).
-     * @param {number} endWeek - The ending week number (1-indexed).
-     * @returns {Array<object>} - Array of adjustment proposals.
-     */
-    function proposePhaseOptimizations(phaseName, startWeek, endWeek) {
-        console.log(`[AdaptiveScheduler] Proposing optimizations for phase "${phaseName}" (Weeks ${startWeek}-${endWeek})`);
-        let proposals = [];
-
-        if (!dependencies.getCurrentBlockLoads) {
-            console.warn('[AdaptiveScheduler] Load data not available for phase optimization.');
-            return [{ type: 'message', message: 'Load data unavailable.' }];
-        }
-        if (startWeek >= endWeek) {
-             console.warn('[AdaptiveScheduler] Invalid week range for phase optimization.');
-             return [{ type: 'message', message: 'Phase requires at least two weeks.' }];
-        }
-
-        const currentLoads = dependencies.getCurrentBlockLoads();
-        const daysPerWeek = 7;
-        const phaseWeeks = []; // Array to hold weekly total loads for the phase
-
-        // Calculate total load for each week in the phase
-        for (let week = startWeek; week <= endWeek; week++) {
-            const weekStartIndex = (week - 1) * daysPerWeek;
-            // Ensure we don't read past the end of available load data
-            if (weekStartIndex >= currentLoads.length) break; 
-            
-            const weekEndIndex = Math.min(weekStartIndex + daysPerWeek, currentLoads.length);
-            const weekDailyLoads = currentLoads.slice(weekStartIndex, weekEndIndex);
-            const weeklyTotalLoad = weekDailyLoads.reduce((sum, load) => sum + (load || 0), 0);
-            phaseWeeks.push({ weekNum: week, totalLoad: weeklyTotalLoad });
-        }
-
-        if (phaseWeeks.length < 2) {
-            console.log('[AdaptiveScheduler] Not enough data within the phase to analyze progression.');
-            return [{ type: 'message', message: 'Not enough data in phase for optimization.' }];
-        }
-
-        // Analyze week-to-week changes
-        const weeklyChanges = [];
-        for (let i = 1; i < phaseWeeks.length; i++) {
-            const change = phaseWeeks[i].totalLoad - phaseWeeks[i - 1].totalLoad;
-            weeklyChanges.push({ weekNum: phaseWeeks[i].weekNum, change: change });
-        }
-
-        if (weeklyChanges.length === 0) {
-             console.log('[AdaptiveScheduler] No weekly changes to analyze.');
-             return [{ type: 'message', message: 'No load changes within phase.' }];
-        }
-
-        const averageChange = weeklyChanges.reduce((sum, wc) => sum + wc.change, 0) / weeklyChanges.length;
-        const stdDevChange = Math.sqrt(weeklyChanges.reduce((sum, wc) => sum + Math.pow(wc.change - averageChange, 2), 0) / weeklyChanges.length);
-
-        // Identify significant deviations (e.g., > 1 standard deviation from the average change)
-        const SIGNIFICANCE_THRESHOLD = 1.0; 
-        
-        weeklyChanges.forEach(wc => {
-            const deviation = Math.abs(wc.change - averageChange);
-            
-            if (deviation > SIGNIFICANCE_THRESHOLD * stdDevChange) {
-                 const targetWeek = wc.weekNum; 
-                 
-                 if (wc.change > averageChange) { // Unusually large INCREASE in this week
-                    // Propose reducing load SLIGHTLY in the *following* week to smooth out
-                     if (targetWeek < endWeek) {
-                         const nextWeek = targetWeek + 1;
-                         const reductionPercentage = 5; // Small reduction
-                         const reductionProposal = proposeLoadChange(-reductionPercentage, 'week', { week: nextWeek });
-                         if (reductionProposal.success && reductionProposal.changes.length > 0) {
-                             reductionProposal.description = `Smooth progression: Reduce load slightly (-${reductionPercentage}%) in Week ${nextWeek} after large jump in Week ${targetWeek}?`;
-                             reductionProposal.type = 'reduceLoad'; // For ForgeAssist handler
-                             reductionProposal.targetWeek = nextWeek;
-                             reductionProposal.percentage = reductionPercentage; // Store absolute value
-                              // Check for duplicates before adding
-                             if (!proposals.some(p => p.targetWeek === nextWeek && p.type === 'reduceLoad')) {
-                                proposals.push(reductionProposal);
-                             }
-                         }
-                    }
-                 } else { // Unusually large DECREASE or smaller-than-average increase
-                     // Propose increasing load SLIGHTLY in the *following* week
-                     if (targetWeek < endWeek) {
-                        const nextWeek = targetWeek + 1;
-                        const increasePercentage = 5; // Small increase
-                        const increaseProposal = proposeLoadChange(increasePercentage, 'week', { week: nextWeek });
-                        if (increaseProposal.success && increaseProposal.changes.length > 0) {
-                             increaseProposal.description = `Smooth progression: Increase load slightly (+${increasePercentage}%) in Week ${nextWeek} after drop/leveling in Week ${targetWeek}?`;
-                             increaseProposal.type = 'increaseLoad'; // For ForgeAssist handler
-                             increaseProposal.targetWeek = nextWeek;
-                             increaseProposal.percentage = increasePercentage;
-                             // Check for duplicates before adding
-                             if (!proposals.some(p => p.targetWeek === nextWeek && p.type === 'increaseLoad')) {
-                                proposals.push(increaseProposal);
-                             }
-                         }
-                     }
-                 }
-            }
-        });
-
+        // If no specific proposals were generated, provide a general suggestion
         if (proposals.length === 0) {
-            console.log(`[AdaptiveScheduler] Load progression in phase "${phaseName}" appears relatively smooth.`);
-            return [{ type: 'message', message: `Load progression in ${phaseName} looks stable.` }];
+            proposals.push({ 
+                type: 'message', 
+                message: 'Consider reviewing your training plan for better load management.' 
+            });
         }
-
-        console.log(`[AdaptiveScheduler] Generated ${proposals.length} phase optimization proposals.`);
+        
         return proposals;
     }
+    
+    /**
+     * Proposes adjustments specifically for high ACWR situations
+     * @param {Object} context - Analytics context including ACWR value
+     * @param {Array} currentLoads - Current load array
+     * @returns {Array} Adjustment proposals
+     */
+    function proposeHighACWRAdjustments(context, currentLoads) {
+        const proposals = [];
+        const acwr = context.acwr || 0;
+        
+        // Calculate acute window (latest 7 days)
+        const acuteWindow = currentLoads.slice(-7);
+        if (acuteWindow.length < 7) {
+            return [{ type: 'message', message: 'Insufficient data to analyze acute loads.' }];
+        }
+        
+        // Find the highest load day in the acute window
+        const highestLoad = Math.max(...acuteWindow);
+        const highestLoadIndex = acuteWindow.indexOf(highestLoad);
+        
+        // Map to week/day
+        const daysPerWeek = 7;
+        const absoluteIndex = currentLoads.length - 7 + highestLoadIndex;
+        const targetWeek = Math.floor(absoluteIndex / daysPerWeek) + 1;
+        const targetDay = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'][absoluteIndex % daysPerWeek];
+        
+        // Calculate the reduction needed to bring ACWR to safer levels
+        // Simple heuristic: Aim to bring ACWR to 1.3 (still developmental but safer)
+        const currentAcuteAvg = acuteWindow.reduce((sum, load) => sum + load, 0) / 7;
+        const safeAcuteAvg = context.chronic * 1.3; // Target ACWR of 1.3
+        const reductionNeeded = Math.max(0, Math.round(((currentAcuteAvg - safeAcuteAvg) / currentAcuteAvg) * 100));
+        
+        // Only propose reduction if significant
+        if (reductionNeeded >= 10) {
+            // Propose reduction for the highest load day
+            const specificDayReduction = proposeLoadChange(-reductionNeeded, 'day', {
+                week: targetWeek,
+                day: targetDay,
+                message: `Reduce load on ${targetDay}, Week ${targetWeek} by ${reductionNeeded}% to lower ACWR from ${acwr.toFixed(2)} to a safer level`
+            });
+            
+            if (specificDayReduction.success) {
+                proposals.push(specificDayReduction);
+            }
+        } else {
+            // If the highest day isn't disproportionately high, reduce the week
+            const mostRecentWeekIndex = Math.floor((currentLoads.length - 1) / daysPerWeek);
+            const weekReduction = proposeLoadChange(-15, 'week', {
+                week: mostRecentWeekIndex + 1,
+                message: `Reduce overall load in Week ${mostRecentWeekIndex + 1} by 15% to lower ACWR from ${acwr.toFixed(2)}`
+            });
+            
+            if (weekReduction.success) {
+                proposals.push(weekReduction);
+            }
+        }
+        
+        // Always offer a rest day insertion option as well
+        const restProposal = proposeRestDayInsertion(targetWeek);
+        if (restProposal.success) {
+            proposals.push(restProposal);
+        }
+        
+        return proposals;
+    }
+    
+    /**
+     * Proposes adjustments specifically for low ACWR situations (undertraining)
+     * @param {Object} context - Analytics context including ACWR value
+     * @param {Array} currentLoads - Current load array
+     * @returns {Array} Adjustment proposals
+     */
+    function proposeLowACWRAdjustments(context, currentLoads) {
+        const proposals = [];
+        const acwr = context.acwr || 0;
+        
+        // Calculate acute window (latest 7 days)
+        const acuteWindow = currentLoads.slice(-7);
+        if (acuteWindow.length < 7) {
+            return [{ type: 'message', message: 'Insufficient data to analyze acute loads.' }];
+        }
+        
+        // Find the lowest load days that aren't zero (rest days)
+        const nonZeroLoads = acuteWindow.filter(load => load > 0);
+        if (nonZeroLoads.length === 0) {
+            // All zeros - suggest adding training days
+            const daysPerWeek = 7;
+            const absoluteIndex = currentLoads.length - 7;
+            const targetWeek = Math.floor(absoluteIndex / daysPerWeek) + 1;
+            
+            proposals.push({
+                type: 'message',
+                message: `ACWR is very low (${acwr.toFixed(2)}). Consider adding training sessions to Week ${targetWeek}.`
+            });
+            return proposals;
+        }
+        
+        const lowestLoad = Math.min(...nonZeroLoads);
+        const lowestLoadIndex = acuteWindow.indexOf(lowestLoad);
+        
+        // Map to week/day
+        const daysPerWeek = 7;
+        const absoluteIndex = currentLoads.length - 7 + lowestLoadIndex;
+        const targetWeek = Math.floor(absoluteIndex / daysPerWeek) + 1;
+        const targetDay = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'][absoluteIndex % daysPerWeek];
+        
+        // Calculate the increase needed to bring ACWR to more optimal levels
+        // Simple heuristic: Aim to bring ACWR to 1.0 (balanced training)
+        const currentAcuteAvg = acuteWindow.reduce((sum, load) => sum + load, 0) / 7;
+        const optimalAcuteAvg = context.chronic; // Target ACWR of 1.0
+        const increaseNeeded = Math.max(0, Math.round(((optimalAcuteAvg - currentAcuteAvg) / currentAcuteAvg) * 100));
+        
+        // Only propose increase if significant
+        if (increaseNeeded >= 10) {
+            // Propose increase for the lowest load training day
+            const specificDayIncrease = proposeLoadChange(increaseNeeded, 'day', {
+                week: targetWeek,
+                day: targetDay,
+                message: `Increase load on ${targetDay}, Week ${targetWeek} by ${increaseNeeded}% to raise ACWR from ${acwr.toFixed(2)} to a more optimal level`
+            });
+            
+            if (specificDayIncrease.success) {
+                proposals.push(specificDayIncrease);
+            }
+            
+            // Also suggest overall week increase
+            const weekIncrease = proposeLoadChange(Math.min(increaseNeeded, 20), 'week', {
+                week: targetWeek,
+                message: `Increase overall load in Week ${targetWeek} to optimize training stimulus and ACWR`
+            });
+            
+            if (weekIncrease.success) {
+                proposals.push(weekIncrease);
+            }
+        } else {
+            // If we don't need a major increase, suggest a more general approach
+                proposals.push({
+                    type: 'message',
+                message: `Your ACWR is ${acwr.toFixed(2)}, indicating room for increased training load. Consider adding volume to workouts.`
+            });
+        }
+        
+        return proposals;
+    }
+    
+    /**
+     * Proposes adjustments specifically for high monotony situations
+     * @param {Object} context - Analytics context including monotony value
+     * @param {Array} currentLoads - Current load array
+     * @returns {Array} Adjustment proposals
+     */
+    function proposeHighMonotonyAdjustments(context, currentLoads) {
+        const proposals = [];
+        const monotony = context.monotony || 0;
+        
+        // Calculate week window (latest 7 days)
+        const weekWindow = currentLoads.slice(-7);
+        if (weekWindow.length < 7) {
+            return [{ type: 'message', message: 'Insufficient data to analyze weekly loads.' }];
+        }
+        
+        // Analyze the pattern - are loads too similar?
+        const avgLoad = weekWindow.reduce((sum, load) => sum + load, 0) / 7;
+        const deviation = Math.sqrt(weekWindow.reduce((sum, load) => sum + Math.pow(load - avgLoad, 2), 0) / 7);
+        
+        // Calculate coefficient of variation (normal is ~30-40% for training)
+        const cv = (deviation / avgLoad) * 100;
+        
+        // Find highest and lowest load days
+        const highestLoad = Math.max(...weekWindow);
+        const lowestNonZeroLoad = Math.min(...weekWindow.filter(load => load > 0)) || 0;
+        
+        const highestLoadIndex = weekWindow.indexOf(highestLoad);
+        const lowestLoadIndex = weekWindow.indexOf(lowestNonZeroLoad);
+        
+        // Map to week/day
+        const daysPerWeek = 7;
+        const absHighIndex = currentLoads.length - 7 + highestLoadIndex;
+        const absLowIndex = currentLoads.length - 7 + lowestLoadIndex;
+        
+        const highWeek = Math.floor(absHighIndex / daysPerWeek) + 1;
+        const highDay = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'][absHighIndex % daysPerWeek];
+        
+        const lowWeek = Math.floor(absLowIndex / daysPerWeek) + 1;
+        const lowDay = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'][absLowIndex % daysPerWeek];
+        
+        // If CV is very low, loads are too similar
+        if (cv < 30) {
+            // Create more variation by adjusting highest and lowest days
+            const highDayReduction = proposeLoadChange(-20, 'day', {
+                week: highWeek,
+                day: highDay,
+                message: `Reduce load on ${highDay}, Week ${highWeek} by 20% to increase training variability and lower monotony from ${monotony.toFixed(2)}`
+            });
+            
+            if (highDayReduction.success) {
+                proposals.push(highDayReduction);
+            }
+            
+            const lowDayIncrease = proposeLoadChange(25, 'day', {
+                week: lowWeek,
+                day: lowDay,
+                message: `Increase load on ${lowDay}, Week ${lowWeek} by 25% to create more daily variation and reduce monotony`
+            });
+            
+            if (lowDayIncrease.success && lowDay !== highDay) { // Avoid conflicting proposals
+                proposals.push(lowDayIncrease);
+            }
+            
+            // Also suggest rest day if appropriate
+            const restProposal = proposeRestDayInsertion(highWeek); // Target the week with the highest load
+            if (restProposal.success) {
+                proposals.push(restProposal);
+            }
+        } else {
+            // If the issue isn't load similarity, suggest redistributing load
+            proposals.push({
+                type: 'message',
+                message: `Training monotony is high (${monotony.toFixed(2)}). Consider alternating heavy and light training days to create better undulation.`
+            });
+        }
+        
+        return proposals;
+    }
+    
+    /**
+     * Proposes adjustments specifically for high strain situations
+     * @param {Object} context - Analytics context including strain value
+     * @param {Array} currentLoads - Current load array
+     * @returns {Array} Adjustment proposals
+     */
+    function proposeHighStrainAdjustments(context, currentLoads) {
+        const proposals = [];
+        const strain = context.strain || 0;
+        
+        // For high strain, we mainly want overall training load reduction
+        // Find most recent completed week
+        const daysPerWeek = 7;
+        const recentWeekIndex = Math.floor((currentLoads.length - 1) / daysPerWeek);
+        const targetWeek = recentWeekIndex + 1;
+        
+        // Significant overall reduction
+        const weekReduction = proposeLoadChange(-30, 'week', {
+                                week: targetWeek,
+            message: `Reduce overall load in Week ${targetWeek} by 30% to lower training strain from ${Math.round(strain)} and prevent overtraining`
+        });
+        
+        if (weekReduction.success) {
+            proposals.push(weekReduction);
+        }
+        
+        // Rest day suggestion is critical for high strain
+        const restProposal = proposeRestDayInsertion(targetWeek);
+        if (restProposal.success) {
+            proposals.push(restProposal);
+        }
+        
+        // Additional recovery suggestions
+        proposals.push({
+            type: 'message',
+            message: 'High training strain detected. Consider enhancing recovery with dedicated recovery sessions, better sleep hygiene, and nutrition support.'
+        });
+        
+        return proposals;
+    }
+    
+    /**
+     * Identifies the week with the lowest training load
+     * @param {Array} loads - Array of daily loads
+     * @returns {number} Week number (1-based)
+     */
+    function identifyLowestLoadWeek(loads) {
+        if (!loads || loads.length === 0) return 0;
+        
+        const daysPerWeek = 7;
+        const weekCount = Math.ceil(loads.length / daysPerWeek);
+        
+        // Calculate total load for each week
+        const weeklyLoads = [];
+        for (let week = 0; week < weekCount; week++) {
+            const startIdx = week * daysPerWeek;
+            const endIdx = Math.min(startIdx + daysPerWeek, loads.length);
+            const weekLoads = loads.slice(startIdx, endIdx);
+            const totalLoad = weekLoads.reduce((sum, load) => sum + (load || 0), 0);
+            weeklyLoads.push({ week: week + 1, load: totalLoad });
+        }
+        
+        // Filter out weeks with zero load (incomplete data)
+        const validWeeks = weeklyLoads.filter(w => w.load > 0);
+        if (validWeeks.length === 0) return 0;
+        
+        // Find the lowest load week
+        validWeeks.sort((a, b) => a.load - b.load);
+        return validWeeks[0].week;
+    }
+    
+    /**
+     * Identifies the week with the highest training load
+     * @param {Array} loads - Array of daily loads
+     * @returns {number} Week number (1-based)
+     */
+    function identifyHighestLoadWeek(loads) {
+        if (!loads || loads.length === 0) return 0;
+        
+        const daysPerWeek = 7;
+        const weekCount = Math.ceil(loads.length / daysPerWeek);
+        
+        // Calculate total load for each week
+        const weeklyLoads = [];
+        for (let week = 0; week < weekCount; week++) {
+            const startIdx = week * daysPerWeek;
+            const endIdx = Math.min(startIdx + daysPerWeek, loads.length);
+            const weekLoads = loads.slice(startIdx, endIdx);
+            const totalLoad = weekLoads.reduce((sum, load) => sum + (load || 0), 0);
+            weeklyLoads.push({ week: week + 1, load: totalLoad });
+        }
+        
+        // Find the highest load week
+        weeklyLoads.sort((a, b) => b.load - a.load);
+        return weeklyLoads[0].week;
+    }
+    
+    /**
+     * Identifies the optimal week for a deload based on loading patterns
+     * @param {Array} loads - Array of daily loads
+     * @param {Object} context - Additional context
+     * @returns {number} Week number (1-based)
+     */
+    function identifyOptimalDeloadWeek(loads, context) {
+        // First check if there's a specific week suggested in context
+        if (context.suggestedDeloadWeek) {
+            return context.suggestedDeloadWeek;
+        }
+        
+        // Default to the week after the current highest load week
+        const highestWeek = identifyHighestLoadWeek(loads);
+        return Math.min(highestWeek + 1, Math.ceil(loads.length / 7));
+    }
 
     /**
-     * Suggests potential progressions for a given exercise based on its current details.
+     * Suggests potential progressions for a given exercise based on its current details and performance history.
+     * Enhanced to provide more specific, personalized progression recommendations based on training history.
      * @param {string} exerciseId - The ID of the exercise.
      * @param {object} currentDetails - Object containing current set/rep/load details.
-     * @param {number} currentDetails.sets
-     * @param {string | number} currentDetails.reps 
-     * @param {string} currentDetails.loadType 
-     * @param {string | number} currentDetails.loadValue
-     * @returns {Array<string>} - Array of suggestion strings.
+     * @param {number} currentDetails.sets - Current number of sets
+     * @param {string|number} currentDetails.reps - Current rep scheme (may be a range like "8-12")
+     * @param {string} currentDetails.loadType - Type of loading (e.g., 'rpe', 'percent', 'weight')
+     * @param {string|number} currentDetails.loadValue - Current load value
+     * @param {object} currentDetails.performance - Optional performance tracking data
+     * @returns {Array<string>} - Array of progression suggestions with detailed explanations.
      */
     function proposeExerciseProgression(exerciseId, currentDetails = {}) {
         console.log(`[AdaptiveScheduler] Proposing progression for ${exerciseId}`, currentDetails);
+        
+        // Array to hold progression suggestion strings
         const suggestions = [];
+        
+        // Retrieve the exercise from the library
         const exercise = dependencies.exerciseLibrary.find(ex => ex.id === exerciseId);
-
-        // Basic validation
         if (!exercise) {
             console.warn('[AdaptiveScheduler] Exercise not found for progression proposal.');
-            return ['Could not find exercise in library.'];
-        }
-
-        const sets = parseInt(currentDetails.sets, 10) || 0;
-        // Try to parse the first number from reps string (e.g., '5' from '5', '8' from '8-12')
-        const reps = parseInt(String(currentDetails.reps).split('-')[0].trim(), 10) || 0; 
-        const loadType = currentDetails.loadType;
-        const loadValue = parseFloat(currentDetails.loadValue) || 0;
-
-        // Simple Progression Logic Examples:
-        if (reps > 0 && reps < 6) {
-            suggestions.push(`Increase Reps: Try ${reps + 1} reps next time.`);
+            return ["Cannot find exercise in library. Please verify the exercise exists."];
         }
         
-        if (sets > 0 && sets < 4) {
-             suggestions.push(`Increase Volume: Add a set (perform ${sets + 1} sets total).`);
+        // Parse current exercise parameters
+        const sets = parseInt(currentDetails.sets, 10) || 0;
+        
+        // Parse reps (handle ranges like "8-12")
+        let minReps = 0;
+        let maxReps = 0;
+        if (typeof currentDetails.reps === 'string' && currentDetails.reps.includes('-')) {
+            const [min, max] = currentDetails.reps.split('-').map(r => parseInt(r.trim(), 10));
+            minReps = min || 0;
+            maxReps = max || 0;
+        } else {
+            minReps = parseInt(currentDetails.reps, 10) || 0;
+            maxReps = minReps;
         }
-
-        if (reps >= 5) { // Only suggest load increase if reps are moderate/high
-            if (loadType === 'rpe' && loadValue > 0 && loadValue < 10) {
-                suggestions.push(`Increase Intensity (RPE): Aim for RPE ${loadValue + 0.5}.`);
-            } else if (loadType === 'percent' && loadValue > 0 && loadValue < 100) {
-                suggestions.push(`Increase Intensity (%): Try ${loadValue + 2.5}%.`);
-            } else if (loadType === 'weight' && loadValue > 0) {
-                 // Suggest small weight increment (e.g., 1-2.5kg)
-                 const increment = loadValue > 50 ? 2.5 : (loadValue > 20 ? 1 : 0.5); 
-                 suggestions.push(`Increase Intensity (Weight): Try ${loadValue + increment}kg.`);
+        
+        const loadType = currentDetails.loadType || '';
+        const loadValue = parseFloat(currentDetails.loadValue) || 0;
+        
+        // Get performance history from storage
+        let performanceHistory = {};
+        try {
+            const historyStr = localStorage.getItem('setforgePerformanceHistory');
+            if (historyStr) {
+                const allHistory = JSON.parse(historyStr);
+                performanceHistory = allHistory[exerciseId] || {};
+            }
+        } catch (error) {
+            console.error('[AdaptiveScheduler] Error reading performance history:', error);
+        }
+        
+        // Get last session performance from current details or history
+        const lastPerformance = currentDetails.performance || performanceHistory.lastSession || {};
+        const completedReps = lastPerformance.completedReps || maxReps; // Assume completed if no data
+        const perceivedExertion = lastPerformance.perceivedExertion || 0;
+        
+        // Get user's goal if available (from currentDetails)
+        const goal = currentDetails.goal?.toLowerCase() || '';
+        
+        // Attempt to determine training goal from current parameters if not explicitly provided
+        let trainingGoal = goal;
+        if (!trainingGoal) {
+            if (maxReps <= 5) {
+                trainingGoal = 'strength';
+            } else if (maxReps <= 12) {
+                trainingGoal = 'hypertrophy';
+            } else {
+                trainingGoal = 'endurance';
             }
         }
-
-        // TODO: Add suggestions for harder variations based on exercise properties/tags?
-        // Example: if (exercise.tags?.includes('bodyweight-squat')) suggestions.push('Try Pistol Squats?');
-
-        if (suggestions.length === 0) {
-            suggestions.push('Exercise seems well-progressed, consider advanced techniques or variations.');
+        
+        // Determine if exercise is compound or isolation
+        const isCompound = ['Squat', 'Bench', 'Deadlift', 'Press', 'Pull', 'Clean', 'Snatch', 'Jerk'].some(
+            category => exercise.category?.includes(category) || exercise.name?.includes(category)
+        );
+        
+        // --- PROGRESSION ASSESSMENT LOGIC ---
+        
+        // Assess readiness for progression based on performance data
+        let readyForIntensityIncrease = false;
+        let readyForVolumeIncrease = false;
+        
+        // RPE-based progression logic
+        if (loadType === 'rpe') {
+            // If RPE is below target, can increase intensity
+            if (perceivedExertion > 0 && perceivedExertion < loadValue - 0.5) {
+                readyForIntensityIncrease = true;
+                suggestions.push(`Increase weight by 2.5-5% while maintaining RPE ${loadValue}. Your last session's RPE of ${perceivedExertion} indicates room for intensity progression.`);
+            } 
+            // If completing all reps at target RPE, can increase volume
+            else if (completedReps >= maxReps && perceivedExertion <= loadValue) {
+                readyForVolumeIncrease = true;
+                if (sets < 5) {
+                    suggestions.push(`Add 1 set (from ${sets} to ${sets+1}) while maintaining current weight and RPE ${loadValue}.`);
+                } else {
+                    suggestions.push(`Increase rep target by 1-2 reps per set while maintaining current weight and RPE ${loadValue}.`);
+                }
+            }
+            // If RPE is higher than target but still completing reps
+            else if (perceivedExertion > loadValue && completedReps >= minReps) {
+                suggestions.push(`Maintain current weight for another 1-2 sessions to allow adaptation. Focus on technique quality and controlled eccentrics.`);
+            }
+            // If struggling with current parameters
+            else if (completedReps < minReps) {
+                suggestions.push(`Reduce weight by 5-7.5% to achieve target reps with proper form. Rebuild with smaller increments.`);
+            }
+        } 
+        // Percentage-based progression logic
+        else if (loadType === 'percent') {
+            // For percentage-based training, suggest increments based on training phase
+            if (completedReps >= maxReps) {
+                readyForIntensityIncrease = true;
+                const incrementValue = isCompound ? 2.5 : 5;
+                suggestions.push(`Increase percentage from ${loadValue}% to ${loadValue + incrementValue}% while maintaining ${currentDetails.reps} reps.`);
+            } 
+            else if (completedReps >= minReps) {
+                suggestions.push(`Maintain current percentage (${loadValue}%) for another session while aiming to increase reps from ${completedReps} to ${maxReps}.`);
+            }
+            else {
+                suggestions.push(`Reduce percentage to ${loadValue - 5}% to allow proper execution of the prescribed ${currentDetails.reps} reps.`);
+            }
         }
+        // Weight-based progression (most common)
+        else {
+            // For weight-based training, propose weight increases based on exercise type and current load
+            if (completedReps >= maxReps) {
+                readyForIntensityIncrease = true;
+                
+                // Calculate appropriate weight increment based on current load and exercise type
+                let incrementKg;
+                if (loadValue < 20) {
+                    incrementKg = 1;
+                } else if (loadValue < 60) {
+                    incrementKg = isCompound ? 2.5 : 1.25;
+                } else if (loadValue < 100) {
+                    incrementKg = isCompound ? 5 : 2.5;
+                } else {
+                    incrementKg = isCompound ? 5 : 2.5;
+                }
+                
+                suggestions.push(`Increase weight from ${loadValue} to ${loadValue + incrementKg}kg while maintaining ${currentDetails.reps} reps.`);
+            }
+            else if (completedReps >= minReps) {
+                // If hitting minimum reps but not maximum, suggest working up to max reps
+                suggestions.push(`Maintain current weight (${loadValue}kg) while focusing on increasing reps from ${completedReps} to ${maxReps} with good form.`);
+                
+                // Technique-focused suggestion
+                if (exercise.techniqueCues && exercise.techniqueCues.length > 0) {
+                    const randomCue = exercise.techniqueCues[Math.floor(Math.random() * exercise.techniqueCues.length)];
+                    suggestions.push(`Technique focus: ${randomCue}`);
+                }
+            }
+            else {
+                // If struggling with prescribed reps, suggest weight reduction
+                suggestions.push(`Reduce weight by 5-10% (to approximately ${Math.round(loadValue * 0.925)}kg) to properly achieve the prescribed rep range.`);
+            }
+        }
+        
+        // --- GOAL-SPECIFIC PROGRESSION SUGGESTIONS ---
+        
+        // Add goal-specific suggestions based on identified training goal
+        if (trainingGoal === 'strength' && readyForIntensityIncrease) {
+            suggestions.push(`For strength development, consider adding short rest-pause sets after your main working sets (10-20 sec rest, then 2-3 more reps).`);
+            
+            if (isCompound && sets >= 3) {
+                suggestions.push(`Try adding a back-off set at 90% of your working weight for 1-2 more reps than your working sets.`);
+            }
+        }
+        else if (trainingGoal === 'hypertrophy' && readyForVolumeIncrease) {
+            suggestions.push(`For hypertrophy, consider implementing a double progression model: once you reach ${maxReps} reps for all sets, increase weight by 2.5-5% and start at ${minReps} reps again.`);
+            
+            if (sets < 4) {
+                suggestions.push(`Add a drop set to your last set: after completion, reduce weight by 20% and perform as many reps as possible.`);
+            }
+        }
+        else if (trainingGoal === 'endurance') {
+            suggestions.push(`For endurance improvement, consider implementing density training: complete the same volume in less total time by gradually reducing rest periods.`);
+        }
+        
+        // --- EXERCISE-SPECIFIC SUGGESTIONS ---
+        
+        // Special progression suggestions for specific exercise types
+        if (exercise.category === 'Squat' || exercise.name.includes('Squat')) {
+            suggestions.push(`Squat progression: Consider adding pause squats (2-3 sec at bottom) on your second working set to improve position strength and control.`);
+        }
+        else if (exercise.category === 'Bench' || exercise.name.includes('Bench Press')) {
+            suggestions.push(`Bench press progression: Consider adding a variation with different grip width or adding a 1-second pause at the bottom position.`);
+        }
+        else if (exercise.category === 'Deadlift' || exercise.name.includes('Deadlift')) {
+            suggestions.push(`Deadlift progression: Consider adding deficit deadlifts (standing on 1-2 inch platform) every other week to improve starting strength.`);
+        }
+        
+        // --- ADVANCED PROGRESSION METHODS ---
+        
+        // If the trainee is advanced (high load values), suggest more sophisticated methods
+        if ((loadType === 'weight' && isCompound && loadValue > 100) || 
+            (loadType === 'percent' && loadValue > 80) || 
+            (loadType === 'rpe' && loadValue > 8)) {
+            
+            // Randomly select one advanced method to suggest (to avoid overwhelming)
+            const advancedMethods = [
+                `Consider implementing wave loading: perform the exercise with ascending loads across 3 weeks (e.g., 80%, 85%, 90% of 1RM), then reduce and repeat.`,
+                `Try incorporating cluster sets: break your working sets into smaller clusters with 15-30 seconds rest between mini-sets for improved quality.`,
+                `Implement a contrast method: follow your heaviest set with an explosive variation using 50-60% of that weight for power development.`
+            ];
+            
+            suggestions.push(advancedMethods[Math.floor(Math.random() * advancedMethods.length)]);
+        }
+        
+        // Ensure we return at least one suggestion
+        if (suggestions.length === 0) {
+            suggestions.push(`Continue with current parameters (${sets} sets of ${currentDetails.reps}) and focus on quality execution. Record RPE to help guide future progression.`);
+        }
+        
+        return suggestions;
+    }
 
-        return suggestions.slice(0, 3); // Limit suggestions shown
+    /**
+     * Generates a week of workouts based on the specified model and configuration
+     * @param {Object} config - Configuration object for the week generation
+     * @param {number} config.weekNumber - The week number to generate (1-based)
+     * @param {string} config.model - The model to use (e.g., 'linear', 'wave', 'undulating')
+     * @param {string} config.goal - Training goal (e.g., 'strength', 'hypertrophy', 'endurance')
+     * @param {number} config.sessionsPerWeek - Number of sessions per week (default: 3)
+     * @param {Array<string>} config.targetDays - Specific days to target (e.g., ['mon', 'wed', 'fri'])
+     * @param {Object} config.equipment - Available equipment constraints
+     * @param {Object} config.parameters - Model-specific parameters
+     * @returns {Object} Generated week data with exercises, sets, reps for each day
+     */
+    function generateWeek(config) {
+        console.log('[AdaptiveScheduler] Generating week using model:', config);
+        
+        // Default configuration
+        const weekNumber = config.weekNumber || 1;
+        const modelType = config.model?.toLowerCase() || 'linear';
+        const goal = config.goal?.toLowerCase() || 'strength';
+        const sessionsPerWeek = config.sessionsPerWeek || 3;
+        const targetDays = config.targetDays || [];
+        const equipment = config.equipment || { hasBarbell: true, hasDumbbells: true, hasCables: true };
+        const parameters = config.parameters || {};
+        
+        // Validate exercise library
+        if (!dependencies.exerciseLibrary || dependencies.exerciseLibrary.length === 0) {
+            console.error('[AdaptiveScheduler] Exercise library not available for week generation.');
+            return { 
+                success: false, 
+                message: 'Exercise library not available',
+                days: {}
+            };
+        }
+        
+        // Initialize return object
+        const weekData = {
+            success: true,
+            weekNumber: weekNumber,
+            model: modelType,
+            goal: goal,
+            days: {}
+        };
+        
+        // Determine days of the week to generate workouts for
+        let workoutDays = ['mon', 'wed', 'fri']; // Default 3-day split
+        if (targetDays.length > 0) {
+            workoutDays = targetDays;
+        } else if (sessionsPerWeek === 2) {
+            workoutDays = ['mon', 'thu'];
+        } else if (sessionsPerWeek === 4) {
+            workoutDays = ['mon', 'tue', 'thu', 'fri'];
+        } else if (sessionsPerWeek === 5) {
+            workoutDays = ['mon', 'tue', 'wed', 'thu', 'fri'];
+        } else if (sessionsPerWeek === 6) {
+            workoutDays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+        }
+        
+        // Determine training split based on goal and sessions per week
+        let trainingSplit;
+        if (sessionsPerWeek <= 3) {
+            if (goal === 'strength') {
+                trainingSplit = [
+                    { focus: 'Full Body', emphasis: 'Lower Body' },
+                    { focus: 'Full Body', emphasis: 'Upper Body' },
+                    { focus: 'Full Body', emphasis: 'Mixed' }
+                ].slice(0, sessionsPerWeek);
+            } else if (goal === 'hypertrophy') {
+                trainingSplit = [
+                    { focus: 'Push', emphasis: 'Chest/Shoulders/Triceps' },
+                    { focus: 'Pull', emphasis: 'Back/Biceps' },
+                    { focus: 'Legs', emphasis: 'Quads/Hamstrings/Glutes' }
+                ].slice(0, sessionsPerWeek);
+            } else {
+                trainingSplit = [
+                    { focus: 'Full Body', emphasis: 'Power' },
+                    { focus: 'Full Body', emphasis: 'Endurance' },
+                    { focus: 'Full Body', emphasis: 'Mobility' }
+                ].slice(0, sessionsPerWeek);
+            }
+        } else if (sessionsPerWeek === 4) {
+            trainingSplit = [
+                { focus: 'Upper Body', emphasis: 'Strength' },
+                { focus: 'Lower Body', emphasis: 'Strength' },
+                { focus: 'Upper Body', emphasis: 'Hypertrophy' },
+                { focus: 'Lower Body', emphasis: 'Hypertrophy' }
+            ];
+        } else {
+            // 5-6 day body part split
+            trainingSplit = [
+                { focus: 'Chest', emphasis: 'Primary' },
+                { focus: 'Back', emphasis: 'Primary' },
+                { focus: 'Legs', emphasis: 'Primary' },
+                { focus: 'Shoulders', emphasis: 'Primary' },
+                { focus: 'Arms', emphasis: 'Primary' },
+                { focus: 'Core/Conditioning', emphasis: 'Primary' }
+            ].slice(0, sessionsPerWeek);
+        }
+        
+        // Calculate model-specific parameters for this week
+        const modelParams = calculateModelParameters(modelType, weekNumber, goal, parameters);
+        
+        // Generate each day's workout
+        workoutDays.forEach((day, index) => {
+            // Get the training focus for this day
+            const dayFocus = trainingSplit[index % trainingSplit.length];
+            
+            // Select exercises for this day based on the focus
+            const exercises = selectExercisesForDay(dayFocus, goal, equipment, modelParams);
+            
+            // Calculate sets/reps/intensity based on the model for each exercise
+            const workoutExercises = exercises.map(exercise => {
+                const { sets, reps, intensity } = calculateExerciseParameters(
+                    exercise, 
+                    modelType, 
+                    goal, 
+                    weekNumber, 
+                    dayFocus, 
+                    modelParams
+                );
+                
+                return {
+                    id: exercise.id,
+                    name: exercise.name,
+                    sets: sets,
+                    reps: reps,
+                    loadType: intensity.type,
+                    loadValue: intensity.value,
+                    category: exercise.category,
+                    primaryMuscles: exercise.primaryMuscles,
+                    notes: generateExerciseNotes(exercise, dayFocus, goal)
+                };
+            });
+            
+            // Add to weekData
+            weekData.days[day] = {
+                focus: dayFocus.focus,
+                emphasis: dayFocus.emphasis,
+                exercises: workoutExercises
+            };
+        });
+        
+        return weekData;
+    }
+    
+    /**
+     * Calculates model-specific parameters for the given week
+     * @param {string} modelType - The model type (linear, wave, etc.)
+     * @param {number} weekNumber - The week number
+     * @param {string} goal - Training goal
+     * @param {Object} baseParams - Base parameters provided by the user
+     * @returns {Object} Calculated model parameters
+     */
+    function calculateModelParameters(modelType, weekNumber, goal, baseParams = {}) {
+        const params = { ...baseParams };
+        
+        // Default base parameters if not provided
+        if (!params.baseIntensity) {
+            // Set default base intensity based on goal
+            if (goal === 'strength') {
+                params.baseIntensity = 80; // Higher intensity for strength
+            } else if (goal === 'hypertrophy') {
+                params.baseIntensity = 70; // Moderate intensity for hypertrophy
+            } else {
+                params.baseIntensity = 60; // Lower intensity for endurance
+            }
+        }
+        
+        if (!params.baseVolume) {
+            // Set default base volume (expressed as sets) based on goal
+            if (goal === 'strength') {
+                params.baseVolume = 3; // Lower volume for strength
+            } else if (goal === 'hypertrophy') {
+                params.baseVolume = 4; // Higher volume for hypertrophy
+            } else {
+                params.baseVolume = 3; // Moderate volume for endurance
+            }
+        }
+        
+        // Calculate model-specific parameters
+        if (modelType === 'linear') {
+            // Linear progression model
+            params.currentIntensity = params.baseIntensity + ((weekNumber - 1) * 2.5);
+            params.currentVolume = params.baseVolume;
+            
+            // Volume might decrease slightly as intensity increases
+            if (weekNumber > 3) {
+                params.currentVolume = Math.max(2, params.baseVolume - 1);
+            }
+        } else if (modelType === 'wave') {
+            // Wave loading model (3-week waves)
+            const wavePosition = (weekNumber - 1) % 3;
+            
+            if (wavePosition === 0) { // First week of wave
+                params.currentIntensity = params.baseIntensity;
+                params.currentVolume = params.baseVolume + 1;
+            } else if (wavePosition === 1) { // Second week of wave
+                params.currentIntensity = params.baseIntensity + 5;
+                params.currentVolume = params.baseVolume;
+            } else { // Third week of wave
+                params.currentIntensity = params.baseIntensity + 10;
+                params.currentVolume = Math.max(2, params.baseVolume - 1);
+            }
+        } else if (modelType === 'undulating') {
+            // Daily undulating model
+            params.currentIntensity = params.baseIntensity;
+            params.currentVolume = params.baseVolume;
+            // The daily variations will be handled in calculateExerciseParameters
+        } else {
+            // Default model (basic)
+            params.currentIntensity = params.baseIntensity;
+            params.currentVolume = params.baseVolume;
+        }
+        
+        // Cap intensity at reasonable values
+        params.currentIntensity = Math.min(95, Math.max(50, params.currentIntensity));
+        
+        return params;
+    }
+    
+    /**
+     * Selects appropriate exercises for a day based on the focus
+     * @param {Object} dayFocus - The focus for this day
+     * @param {string} goal - Training goal
+     * @param {Object} equipment - Available equipment
+     * @param {Object} modelParams - Model parameters
+     * @returns {Array} Selected exercises
+     */
+    function selectExercisesForDay(dayFocus, goal, equipment, modelParams) {
+        // Filter exercise library based on day focus and equipment
+        let eligibleExercises = dependencies.exerciseLibrary.filter(exercise => {
+            // Check if exercise matches the day focus
+            let matchesFocus = false;
+            
+            if (dayFocus.focus === 'Full Body') {
+                matchesFocus = true; // All exercises eligible for full body
+            } else if (dayFocus.focus === 'Upper Body') {
+                matchesFocus = ['Chest', 'Back', 'Shoulders', 'Arms'].some(
+                    muscle => exercise.primaryMuscles?.includes(muscle)
+                );
+            } else if (dayFocus.focus === 'Lower Body') {
+                matchesFocus = ['Quads', 'Hamstrings', 'Glutes', 'Calves'].some(
+                    muscle => exercise.primaryMuscles?.includes(muscle)
+                );
+            } else if (dayFocus.focus === 'Push') {
+                matchesFocus = exercise.category === 'Press' || 
+                               exercise.primaryMuscles?.includes('Chest') ||
+                               exercise.primaryMuscles?.includes('Shoulders') ||
+                               exercise.primaryMuscles?.includes('Triceps');
+            } else if (dayFocus.focus === 'Pull') {
+                matchesFocus = exercise.category === 'Pull' || 
+                               exercise.primaryMuscles?.includes('Back') ||
+                               exercise.primaryMuscles?.includes('Biceps') ||
+                               exercise.primaryMuscles?.includes('Traps');
+            } else if (dayFocus.focus === 'Legs') {
+                matchesFocus = exercise.category === 'Squat' ||
+                               exercise.category === 'Hinge' ||
+                               exercise.primaryMuscles?.includes('Quads') ||
+                               exercise.primaryMuscles?.includes('Hamstrings') ||
+                               exercise.primaryMuscles?.includes('Glutes') ||
+                               exercise.primaryMuscles?.includes('Calves');
+            } else {
+                // Specific body part focus
+                matchesFocus = exercise.primaryMuscles?.includes(dayFocus.focus);
+            }
+            
+            // Check if exercise matches available equipment
+            let matchesEquipment = true;
+            if (exercise.equipmentNeeded) {
+                if (exercise.equipmentNeeded.includes('barbell') && !equipment.hasBarbell) {
+                    matchesEquipment = false;
+                }
+                if (exercise.equipmentNeeded.includes('dumbbell') && !equipment.hasDumbbells) {
+                    matchesEquipment = false;
+                }
+                if (exercise.equipmentNeeded.includes('cable') && !equipment.hasCables) {
+                    matchesEquipment = false;
+                }
+                // Add more equipment checks as needed
+            }
+            
+            return matchesFocus && matchesEquipment;
+        });
+        
+        // Determine number of exercises based on day focus and goal
+        let numExercises = 4; // Default
+        
+        if (dayFocus.focus === 'Full Body') {
+            numExercises = goal === 'strength' ? 5 : 6;
+        } else if (dayFocus.focus === 'Upper Body' || dayFocus.focus === 'Lower Body') {
+            numExercises = goal === 'strength' ? 4 : 5;
+        } else if (dayFocus.focus === 'Push' || dayFocus.focus === 'Pull' || dayFocus.focus === 'Legs') {
+            numExercises = goal === 'strength' ? 4 : 6;
+        } else {
+            // Specific body part
+            numExercises = goal === 'strength' ? 3 : 5;
+        }
+        
+        // Select exercises based on emphasis and category
+        const selectedExercises = [];
+        
+        // First, select 1-2 main compound exercises that match the emphasis
+        const compoundExercises = eligibleExercises.filter(exercise => 
+            (exercise.category === 'Squat' || 
+             exercise.category === 'Bench' || 
+             exercise.category === 'Deadlift' ||
+             exercise.category === 'Press' ||
+             exercise.category === 'Pull')
+        );
+        
+        // Prioritize exercises that match the emphasis
+        const emphasizedCompounds = compoundExercises.filter(exercise => {
+            if (dayFocus.emphasis.includes('Lower Body') && 
+                (exercise.primaryMuscles?.includes('Quads') || 
+                 exercise.primaryMuscles?.includes('Hamstrings') ||
+                 exercise.primaryMuscles?.includes('Glutes'))) {
+                return true;
+            }
+            if (dayFocus.emphasis.includes('Upper Body') && 
+                (exercise.primaryMuscles?.includes('Chest') || 
+                 exercise.primaryMuscles?.includes('Back') ||
+                 exercise.primaryMuscles?.includes('Shoulders'))) {
+                return true;
+            }
+            // Add more emphasis matches as needed
+            return false;
+        });
+        
+        // Select compounds
+        const compoundsToSelect = goal === 'strength' ? 2 : 1;
+        const compoundPool = emphasizedCompounds.length > 0 ? emphasizedCompounds : compoundExercises;
+        
+        // Randomize the pool but ensure variety
+        compoundPool.sort(() => Math.random() - 0.5);
+        
+        for (let i = 0; i < Math.min(compoundsToSelect, compoundPool.length); i++) {
+            selectedExercises.push(compoundPool[i]);
+        }
+        
+        // Remove selected exercises from the eligible pool
+        const selectedIds = new Set(selectedExercises.map(ex => ex.id));
+        eligibleExercises = eligibleExercises.filter(ex => !selectedIds.has(ex.id));
+        
+        // Next, select accessory exercises to complete the workout
+        const remainingSlots = numExercises - selectedExercises.length;
+        
+        // Group by primary muscle to ensure good distribution
+        const exercisesByMuscle = {};
+        eligibleExercises.forEach(ex => {
+            ex.primaryMuscles?.forEach(muscle => {
+                if (!exercisesByMuscle[muscle]) {
+                    exercisesByMuscle[muscle] = [];
+                }
+                exercisesByMuscle[muscle].push(ex);
+            });
+        });
+        
+        // Select evenly across muscle groups
+        const muscleGroups = Object.keys(exercisesByMuscle);
+        const musclesPerSlot = Math.max(1, Math.ceil(muscleGroups.length / remainingSlots));
+        
+        for (let i = 0; i < remainingSlots; i++) {
+            // Get the next set of muscles to choose from
+            const startIdx = (i * musclesPerSlot) % muscleGroups.length;
+            const targetMuscles = muscleGroups.slice(startIdx, startIdx + musclesPerSlot);
+            
+            // Collect all exercises for these muscles
+            let candidateExercises = [];
+            targetMuscles.forEach(muscle => {
+                candidateExercises = candidateExercises.concat(exercisesByMuscle[muscle] || []);
+            });
+            
+            // Remove duplicates and already selected exercises
+            candidateExercises = candidateExercises.filter(ex => !selectedIds.has(ex.id));
+            
+            // If we have candidates, select one randomly
+            if (candidateExercises.length > 0) {
+                candidateExercises.sort(() => Math.random() - 0.5);
+                selectedExercises.push(candidateExercises[0]);
+                selectedIds.add(candidateExercises[0].id);
+            }
+        }
+        
+        // If we still need more exercises, add from remaining eligible pool
+        const remainingNeeded = numExercises - selectedExercises.length;
+        if (remainingNeeded > 0) {
+            const remainingPool = eligibleExercises.filter(ex => !selectedIds.has(ex.id));
+            remainingPool.sort(() => Math.random() - 0.5);
+            
+            for (let i = 0; i < Math.min(remainingNeeded, remainingPool.length); i++) {
+                selectedExercises.push(remainingPool[i]);
+            }
+        }
+        
+        return selectedExercises;
+    }
+    
+    /**
+     * Calculates sets, reps, and intensity for an exercise based on the model
+     * @param {Object} exercise - The exercise object
+     * @param {string} modelType - The model type
+     * @param {string} goal - Training goal
+     * @param {number} weekNumber - The week number
+     * @param {Object} dayFocus - The day's training focus
+     * @param {Object} modelParams - Model parameters 
+     * @returns {Object} Parameters for the exercise
+     */
+    function calculateExerciseParameters(exercise, modelType, goal, weekNumber, dayFocus, modelParams) {
+        // Default parameters
+        let sets = modelParams.currentVolume;
+        let reps = 8; // Default
+        let intensity = { type: 'rpe', value: 8 }; // Default
+        
+        // Adjust based on exercise category
+        const isCompound = exercise.category === 'Squat' || 
+                          exercise.category === 'Bench' || 
+                          exercise.category === 'Deadlift' ||
+                          exercise.category === 'Press' ||
+                          exercise.category === 'Pull';
+        
+        // Base parameters on training goal
+        if (goal === 'strength') {
+            reps = isCompound ? '3-5' : '6-8';
+            intensity.value = isCompound ? 8.5 : 8;
+        } else if (goal === 'hypertrophy') {
+            reps = isCompound ? '6-8' : '8-12';
+            intensity.value = isCompound ? 8 : 7.5;
+        } else { // endurance or other
+            reps = isCompound ? '8-12' : '12-15';
+            intensity.value = isCompound ? 7 : 6.5;
+        }
+        
+        // Apply model-specific adjustments
+        if (modelType === 'linear') {
+            // Linear progression model
+            intensity.value += (weekNumber - 1) * 0.5; // Increase by 0.5 RPE per week
+            
+            // For later weeks, adjust volume
+            if (weekNumber > 3) {
+                sets = Math.max(2, sets - 1); // Reduce sets in later weeks
+            }
+        } else if (modelType === 'wave') {
+            // Wave loading model (3-week waves)
+            const wavePosition = (weekNumber - 1) % 3;
+            
+            if (wavePosition === 0) { // First week of wave
+                // Higher volume, lower intensity
+                sets += 1;
+                intensity.value -= 0.5;
+            } else if (wavePosition === 1) { // Second week of wave
+                // Moderate volume/intensity
+            } else { // Third week of wave
+                // Lower volume, higher intensity
+                sets = Math.max(2, sets - 1);
+                intensity.value += 1;
+                
+                // Adjust reps down for highest intensity week
+                if (typeof reps === 'string' && reps.includes('-')) {
+                    const [min, max] = reps.split('-').map(r => parseInt(r.trim(), 10));
+                    reps = `${min}-${min + 2}`;
+                } else {
+                    reps = Math.max(1, parseInt(reps, 10) - 2);
+                }
+            }
+        } else if (modelType === 'undulating') {
+            // Daily undulating model - adjust based on day focus
+            if (dayFocus.emphasis.includes('Strength')) {
+                // Strength day: lower reps, higher intensity
+                if (typeof reps === 'string' && reps.includes('-')) {
+                    const [min, max] = reps.split('-').map(r => parseInt(r.trim(), 10));
+                    reps = `${Math.max(1, min - 2)}-${Math.max(3, max - 2)}`;
+                } else {
+                    reps = Math.max(1, parseInt(reps, 10) - 2);
+                }
+                intensity.value += 1;
+            } else if (dayFocus.emphasis.includes('Hypertrophy')) {
+                // Hypertrophy day: moderate reps, moderate intensity
+                // Use the defaults
+            } else if (dayFocus.emphasis.includes('Endurance') || dayFocus.emphasis.includes('Mobility')) {
+                // Endurance day: higher reps, lower intensity
+                if (typeof reps === 'string' && reps.includes('-')) {
+                    const [min, max] = reps.split('-').map(r => parseInt(r.trim(), 10));
+                    reps = `${min + 2}-${max + 2}`;
+                } else {
+                    reps = parseInt(reps, 10) + 2;
+                }
+                intensity.value -= 1;
+            }
+        }
+        
+        // Cap intensity at reasonable values
+        intensity.value = Math.min(10, Math.max(5, intensity.value));
+        
+        // For non-RPE loading, convert to appropriate type
+        if (exercise.suggestedLoadType === 'percent') {
+            // Convert RPE to percentage based on rough conversion
+            const percentValue = 50 + (intensity.value * 5);
+            intensity = { type: 'percent', value: Math.min(95, percentValue) };
+        } else if (exercise.suggestedLoadType === 'weight') {
+            // For weight-based loading, we'd need a 1RM or previous values
+            // Use RPE as a fallback if no better information is available
+            intensity = { type: 'rpe', value: intensity.value };
+        }
+        
+        return { sets, reps, intensity };
+    }
+    
+    /**
+     * Generates informative notes for an exercise based on the focus and goal
+     * @param {Object} exercise - The exercise object
+     * @param {Object} dayFocus - The day's training focus
+     * @param {string} goal - Training goal
+     * @returns {string} Exercise notes
+     */
+    function generateExerciseNotes(exercise, dayFocus, goal) {
+        const notes = [];
+        
+        // Add technique tips if available
+        if (exercise.techniqueCues && exercise.techniqueCues.length > 0) {
+            const randomCue = exercise.techniqueCues[Math.floor(Math.random() * exercise.techniqueCues.length)];
+            notes.push(`Technique: ${randomCue}`);
+        }
+        
+        // Add goal-specific notes
+        if (goal === 'strength') {
+            notes.push('Focus on strength: Rest 2-3 min between sets.');
+        } else if (goal === 'hypertrophy') {
+            notes.push('Focus on muscle tension: Control the eccentric.');
+        } else {
+            notes.push('Focus on endurance: Keep rest periods shorter.');
+        }
+        
+        return notes.join(' ');
     }
 
     // Public API
@@ -1250,8 +1962,8 @@ const AdaptiveScheduler = (() => {
         adjustLoadBasedOnFeedback,
         suggestExerciseRotation,
         detectDeloadNeed,
-        checkPhaseProgression,
-        suggestAccessories
+        suggestAccessories,
+        generateWeek // Added in Phase 4: Expose the week generation functionality
     };
 
 })();
