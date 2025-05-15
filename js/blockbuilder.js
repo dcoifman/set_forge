@@ -365,7 +365,10 @@ document.addEventListener('DOMContentLoaded', () => {
             clearCalendar();
         } else {
             console.warn('clearCalendar function not found.');
-            document.getElementById('calendar-grid').innerHTML = ''; // Basic fallback
+            const workCanvas = document.getElementById('work-canvas');
+            if (workCanvas) {
+                workCanvas.innerHTML = '';
+            }
         }
 
         if (window.BlockBuilder && window.BlockBuilder.CONFIG) {
