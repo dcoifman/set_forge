@@ -4944,24 +4944,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to load a template into the block builder
     function loadTemplateBlock(template) {
         console.log(`Loading template: ${template.title}`);
-        
-        // 1. Generate Grid based on template weeks
-        generateCalendarGrid(template.weeks || 8);
-        
-        // 2. Stay in builder view
-        showView('builder');
-        
-        // 3. Set block name based on template
-        const blockNameInput = document.getElementById('block-name-input');
-        if (blockNameInput) {
-            blockNameInput.value = template.title || 'Untitled Block';
-        }
-        
-        // 4. Apply template-specific settings
-        // This would be expanded based on template schema
-        
-        // Return true to indicate success
-        return true;
+        // Always generate the grid before loading
+        this.generateCalendarGrid(template.weeks || 8);
+        // ... rest of the function ...
     }
 
     // Make loadTemplateBlock accessible to other modules
@@ -5283,6 +5268,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if(calendarGridEl) calendarGridEl.removeAttribute('data-active-gdap-instance-id');
         }
     };
+
+    window.createWorkoutCard = createWorkoutCard;
 }); // End DOMContentLoaded 
 
 // Expose required functions for template integration
@@ -5376,10 +5363,10 @@ window.blockBuilder = {
                         console.log(`Processing day: ${dayName} in week ${weekNum}`);
                         
                         // Convert day name to abbreviated format (Mon, Tue, etc.)
-                        const dayAbbr = dayName.substring(0, 3);
+                        const dayAbbr = dayName.substring(0, 3).toLowerCase();
                         
                         // Generate day ID using the correct format
-                        const dayId = `wk${weekNum}-${dayAbbr.toLowerCase()}`;
+                        const dayId = `wk${weekNum}-${dayAbbr}`;
                         console.log(`Looking for day cell with ID: ${dayId}`);
                         
                         // Find the day cell for this specific day

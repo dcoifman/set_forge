@@ -909,22 +909,14 @@ function addEventListeners() {
     // Browse Templates button click
     if (hubBrowseTemplatesBtn) {
         hubBrowseTemplatesBtn.addEventListener('click', () => {
-            console.log("Templates: Opening templates modal");
+            if (templatesList) {
+                renderTemplates();
+            }
             if (templatesModal) {
-                // Reset any inline styles that might have been applied when closing
                 templatesModal.style.display = '';
                 templatesModal.style.opacity = '';
                 templatesModal.style.visibility = '';
-            
-                // Re-render templates before showing the modal
-                if (templatesList) {
-                    renderTemplates();
-                }
-                
-                // Add the visible class 
                 templatesModal.classList.add('is-visible');
-                
-                // Force layout calculation for animation
                 window.requestAnimationFrame(() => {
                     templatesModal.style.opacity = '1';
                     templatesModal.style.visibility = 'visible';
