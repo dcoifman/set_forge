@@ -5063,6 +5063,212 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // <<< NEW: Central function to populate and show the modal >>>
+
+    // --- PHASE 4: Dynamic Goal Adjustment & Block Regeneration ---
+
+    const editGoalBtn = document.getElementById('editGoalBtn');
+    const calendarGridEl = document.getElementById('calendar-grid');
+
+    // --- GDAP State Variables ---
+    let activeGDAPInstance = null; // Stores the current GDAP goal object if one is active
+    let isEditingGDAP = false; // Flag to indicate if the modal is open for editing
+
+    // --- Event Listener for Edit Goal Button ---
+    if (editGoalBtn) {
+        editGoalBtn.addEventListener('click', () => {
+            if (activeGDAPInstance) {
+                isEditingGDAP = true;
+                populateGDAPModalForEditing(activeGDAPInstance);
+                gdapModal.style.display = 'flex';
+            } else {
+                if (typeof Toast !== 'undefined' && Toast.show) Toast.show("No active GDAP goal to edit.", "info");
+                else alert("No active GDAP goal to edit.");
+            }
+        });
+    }
+
+    // --- Function to pre-fill GDAP modal for editing ---
+    function populateGDAPModalForEditing(goalInstance) {
+        resetGDAPForm(); // Clear form first
+        // Set overall goal type, timeframe, athlete level
+        if(gdapForm.elements.goalType) gdapForm.elements.goalType.value = goalInstance.overallGoalType;
+        if(gdapForm.elements.timeframe) gdapForm.elements.timeframe.value = goalInstance.timeframeWeeks;
+        if(gdapForm.elements.athleteLevel) gdapForm.elements.athleteLevel.value = goalInstance.athleteLevel;
+        if(gdapForm.elements.periodizationModel) gdapForm.elements.periodizationModel.value = goalInstance.periodizationModelName || "";
+        // Populate primary exercises
+        goalInstance.targetExercises.forEach((exGoal, index) => {
+            const slotNumber = index + 1;
+            let currentSlot;
+            if (slotNumber > 1) {
+                if (exerciseSlotCount < slotNumber) {
+                    gdapAddExerciseBtn.click();
+                }
+            }
+            currentSlot = document.getElementById(`gdapExerciseSlot${slotNumber}`);
+            if (currentSlot) {
+                const exerciseSelect = currentSlot.querySelector(`#gdapTargetExercise${slotNumber}`);
+                const currentPerfInput = currentSlot.querySelector(`#gdapCurrentPerf${slotNumber}`);
+                const targetPerfInput = currentSlot.querySelector(`#gdapTargetPerf${slotNumber}`);
+                if (exerciseSelect) {
+                    populateExerciseDropdownForGDAP(exerciseSelect);
+                    exerciseSelect.value = exGoal.exerciseId;
+                }
+                if (currentPerfInput) currentPerfInput.value = exGoal.currentPerf;
+                if (targetPerfInput) targetPerfInput.value = exGoal.targetPerf;
+            }
+        });
+    }
+
+    // --- Modify handleGDAPFormSubmit ---
+    const originalHandleGDAPFormSubmit = handleGDAPFormSubmit;
+    handleGDAPFormSubmit = async function() {
+        if (isEditingGDAP) {
+            const confirmed = confirm("Editing this goal will regenerate the program, clearing existing GDAP-generated exercises and suggestions. Any manual changes to these items may be lost. Continue?");
+            if (!confirmed) {
+                isEditingGDAP = false;
+                gdapModal.style.display = 'none';
+                return;
+            }
+        }
+        const formData = new FormData(gdapForm);
+        const newGoalInstance = {
+            id: `gdap-${Date.now()}`,
+            originalId: isEditingGDAP && activeGDAPInstance ? activeGDAPInstance.id : null,
+            overallGoalType: formData.get('goalType'),
+            timeframeWeeks: parseInt(formData.get('timeframe')),
+            athleteLevel: formData.get('athleteLevel'),
+            periodizationModelName: formData.get('periodizationModel') || null,
+            targetExercises: []
+        };
+        for (let i = 1; i <= exerciseSlotCount; i++) {
+            const exerciseId = formData.get(`targetExercise${i}`);
+            if (exerciseId) {
+                const selectEl = document.getElementById(`gdapTargetExercise${i}`);
+                newGoalInstance.targetExercises.push({
+                    exerciseId: exerciseId,
+                    exerciseName: selectEl.options[selectEl.selectedIndex].text,
+                    currentPerf: parseFloat(formData.get(`currentPerf${i}`)),
+                    targetPerf: parseFloat(formData.get(`targetPerf${i}`)),
+                });
+            }
+        }
+        if (newGoalInstance.targetExercises.length === 0) {
+            alert("Please select at least one primary target exercise.");
+            isEditingGDAP = false;
+            return;
+        }
+        // Dependency checks
+        if (typeof ProgressionPathwayOrchestrator === 'undefined' || typeof PeriodizationEngine === 'undefined' || typeof ExerciseLibrary === 'undefined') {
+            alert("Critical error: PPO, Engine or Library not available."); isEditingGDAP = false; return;
+        }
+        // --- Clear existing content BEFORE regeneration ---
+        if (window.BlockBuilder && typeof window.BlockBuilder.clearCalendar === 'function') {
+            window.BlockBuilder.clearCalendar();
+        } else {
+            if(calendarGridEl) calendarGridEl.innerHTML = '';
+        }
+        if (calendarGridEl) {
+            calendarGridEl.removeAttribute('data-gdap-day-accessory-suggestions');
+        }
+        document.querySelectorAll('.day-cell').forEach(cell => {
+            // Remove any GDAP-specific data attributes if needed
+        });
+        // --- Regenerate Calendar Grid ---
+        if (window.BlockBuilder && window.BlockBuilder.CONFIG) {
+            window.BlockBuilder.CONFIG.totalWeeks = newGoalInstance.timeframeWeeks;
+            window.BlockBuilder.generateCalendarGrid();
+        } else if (typeof generateCalendarGrid === 'function') {
+            window.totalWeeks = newGoalInstance.timeframeWeeks; generateCalendarGrid(newGoalInstance.timeframeWeeks);
+        } else {
+            alert("Error: Could not generate calendar grid."); isEditingGDAP = false; return;
+        }
+        // --- Pathway Calculation ---
+        const pathwaysData = ProgressionPathwayOrchestrator.calculateGoalDrivenPathways(
+            newGoalInstance, PeriodizationEngine, ExerciseLibrary
+        );
+        if (!pathwaysData || pathwaysData.length === 0) {
+            alert("Could not generate pathways with the new inputs."); isEditingGDAP = false; return;
+        }
+        // --- Apply Overall Periodization Model to Days (if selected) ---
+        if (newGoalInstance.periodizationModelName && window.PeriodizationModelManagerInstance) {
+            const allDayIdsInBlock = [];
+            for (let w = 0; w < newGoalInstance.timeframeWeeks; w++) {
+                ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].forEach(dayAbbr => {
+                    allDayIdsInBlock.push(window.PeriodizationModelManagerInstance.generateDayId(w, dayAbbr));
+                });
+            }
+            const modelDefaults = PeriodizationEngine.getModelDefaults(newGoalInstance.periodizationModelName);
+            window.PeriodizationModelManagerInstance.createAndApplyModel(
+                newGoalInstance.periodizationModelName, modelDefaults || {}, allDayIdsInBlock, ExerciseLibrary.getExercises()
+            );
+        }
+        // --- Store accessory suggestions and populate cards (from Phase 3) ---
+        const accessorySuggestionsByDayId = {};
+        pathwaysData.forEach(weeklyTarget => {
+            weeklyTarget.exercises.forEach(exTarget => {
+                const weekNumber = weeklyTarget.week;
+                const dayAbbreviation = exTarget.dayPreference;
+                const dayIndices = { mon: 0, tue: 1, wed: 2, thu: 3, fri: 4, sat: 5, sun: 6 };
+                const dayIndex = dayIndices[dayAbbreviation] !== undefined ? dayIndices[dayAbbreviation] : 0;
+                const cellId = `week-${weekNumber - 1}-day-${dayIndex}`;
+                const targetCell = document.getElementById(cellId);
+                if (targetCell) {
+                    const cardData = {
+                        exerciseId: exTarget.exerciseId, exerciseName: exTarget.exerciseName,
+                        sets: [{ sets: exTarget.sets, reps: exTarget.reps, weight: exTarget.load, rpe: exTarget.loadType === 'rpe' ? exTarget.load : '', notes: exTarget.loadType && exTarget.loadType !== 'weight' && exTarget.loadType !== 'rpe' ? exTarget.loadType.toUpperCase() : '' }],
+                        notes: exTarget.detailsString || `Goal: ${newGoalInstance.overallGoalType}`,
+                        isGoalDriven: true, goalInstanceId: newGoalInstance.id
+                    };
+                    let card;
+                    if (typeof window.createWorkoutCard === 'function') {
+                        card = window.createWorkoutCard(cardData.exerciseName, cardData.sets, cardData.notes, cardData.exerciseId, null, null, null, null, null, null, `card-gdap-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`);
+                    } else {
+                        card = document.createElement('div'); card.className = 'workout-card'; card.textContent = `${exTarget.exerciseName}: ${exTarget.detailsString}`; card.draggable = true; card.id = `gdap-card-${Date.now()}-${Math.random()}`;
+                        if (window.DragDrop && typeof window.DragDrop.makeDraggable === 'function') { window.DragDrop.makeDraggable(card); }
+                    }
+                    card.dataset.goalDriven = "true";
+                    card.dataset.sourceGoalId = newGoalInstance.id;
+                    card.dataset.exerciseId = exTarget.exerciseId;
+                    targetCell.appendChild(card);
+                }
+            });
+            const daySuggestionsMapForWeek = {};
+            weeklyTarget.suggestedAccessories.forEach(accSugg => {
+                if (!daySuggestionsMapForWeek[accSugg.dayPreference]) daySuggestionsMapForWeek[accSugg.dayPreference] = [];
+                daySuggestionsMapForWeek[accSugg.dayPreference].push(accSugg);
+            });
+            for (const [dayAbbr, suggestions] of Object.entries(daySuggestionsMapForWeek)) {
+                const dayIndices = { mon: 0, tue: 1, wed: 2, thu: 3, fri: 4, sat: 5, sun: 6 };
+                const dayIndex = dayIndices[dayAbbr] !== undefined ? dayIndices[dayAbbr] : 0;
+                const cellId = `week-${weeklyTarget.week - 1}-day-${dayIndex}`;
+                if (!accessorySuggestionsByDayId[cellId]) accessorySuggestionsByDayId[cellId] = [];
+                accessorySuggestionsByDayId[cellId].push(...suggestions);
+            }
+        });
+        if (calendarGridEl) {
+            calendarGridEl.dataset.gdapDayAccessorySuggestions = JSON.stringify(accessorySuggestionsByDayId);
+            calendarGridEl.dataset.activeGdapInstanceId = newGoalInstance.id;
+        }
+        activeGDAPInstance = newGoalInstance;
+        if (editGoalBtn) editGoalBtn.style.display = 'block';
+        isEditingGDAP = false;
+        if (typeof saveStateToLocalStorage === 'function') saveStateToLocalStorage();
+        if (typeof updateAnalytics === 'function') updateAnalytics();
+        if (typeof Toast !== 'undefined' && Toast.show) Toast.show('GDAP program regenerated!', 'success');
+        else alert('GDAP program regenerated!');
+        gdapModal.style.display = 'none';
+    }
+
+    // Function to update the visibility of the editGoalBtn
+    window.updateEditGoalButtonVisibility = () => {
+        if (activeGDAPInstance && calendarGridEl && calendarGridEl.dataset.activeGdapInstanceId === activeGDAPInstance.id) {
+            if(editGoalBtn) editGoalBtn.style.display = 'block';
+        } else {
+            if(editGoalBtn) editGoalBtn.style.display = 'none';
+            activeGDAPInstance = null;
+            if(calendarGridEl) calendarGridEl.removeAttribute('data-active-gdap-instance-id');
+        }
+    };
 }); // End DOMContentLoaded 
 
 // Expose required functions for template integration
