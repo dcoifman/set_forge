@@ -314,8 +314,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
 
+        // Store accessory suggestions per day for the Inspector
+        const accessorySuggestionsByDayId = {}; // e.g., { "week-0-day-0": [suggestions] }
+        
         // --- Populate Block with Workout Cards ---
-        pathwaysData.forEach(weeklyTarget => { // pathwaysData is array of {week, exercises}
+        pathwaysData.forEach(weeklyTarget => { // pathwaysData is array of {week, exercises, suggestedAccessories}
             weeklyTarget.exercises.forEach(exTarget => {
                 // exTarget = { exerciseId, name, load, sets, reps, dayPreference, detailsString, loadType }
                 const weekNumber = weeklyTarget.week; // 1-indexed
@@ -381,7 +384,36 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.warn(`GDAP: Target cell ${cellId} (Wk${weekNumber}-${dayAbbreviation}) not found.`);
                 }
             });
+            
+            // Store suggested accessories for each day of this week
+            if (weeklyTarget.suggestedAccessories && weeklyTarget.suggestedAccessories.length > 0) {
+                const daySuggestionsMapForWeek = {}; // Map dayPreference to array of accessory suggestions for this week
+                weeklyTarget.suggestedAccessories.forEach(accSugg => {
+                    if (!daySuggestionsMapForWeek[accSugg.dayPreference]) {
+                        daySuggestionsMapForWeek[accSugg.dayPreference] = [];
+                    }
+                    daySuggestionsMapForWeek[accSugg.dayPreference].push(accSugg);
+                });
+
+                // Map these suggestions to the actual grid cell IDs
+                for (const [dayAbbr, suggestions] of Object.entries(daySuggestionsMapForWeek)) {
+                    const dayIndices = { mon: 0, tue: 1, wed: 2, thu: 3, fri: 4, sat: 5, sun: 6 };
+                    const dayIndex = dayIndices[dayAbbr] !== undefined ? dayIndices[dayAbbr] : 0;
+                    const cellId = `week-${weeklyTarget.week - 1}-day-${dayIndex}`;
+                    if (!accessorySuggestionsByDayId[cellId]) {
+                        accessorySuggestionsByDayId[cellId] = [];
+                    }
+                    accessorySuggestionsByDayId[cellId].push(...suggestions);
+                }
+            }
         });
+        
+        // Store all accessory suggestions in a way the Inspector can access them
+        const calendarGridEl = document.getElementById('calendar-grid');
+        if (calendarGridEl) {
+            calendarGridEl.dataset.gdapDayAccessorySuggestions = JSON.stringify(accessorySuggestionsByDayId);
+        }
+        console.log("GDAP Accessory Suggestions by Day ID:", accessorySuggestionsByDayId);
         
         // --- Final Steps ---
         if (typeof saveStateToLocalStorage === 'function') {
@@ -395,9 +427,9 @@ document.addEventListener('DOMContentLoaded', () => {
             window.Analytics.update();
         }
         if (typeof Toast !== 'undefined' && Toast.show) {
-            Toast.show('Goal-driven program generated with periodization!', 'success');
+            Toast.show('Goal-driven program generated with accessory suggestions!', 'success');
         } else {
-            alert('Goal-driven program generated with periodization!');
+            alert('Goal-driven program generated with accessory suggestions!');
         }
     }
 
@@ -2165,6 +2197,195 @@ document.addEventListener('DOMContentLoaded', () => {
             recoveryTabContent.innerHTML = '<p><i>Recovery analysis not available.</i></p>';
             return;
         }
+    }
+    
+    /**
+     * Updates the accessory suggestions panel in the inspector when a day cell with GDAP exercises is selected.
+     */
+    function updateAccessorySuggestionsForSelected() {
+        // Create or find the accessory suggestions tab/container
+        let accessorySuggestionsContainer = document.getElementById('accessory-suggestions-container');
+        if (!accessorySuggestionsContainer) {
+            // If the container doesn't exist yet, create it
+            const inspectorPanel = document.getElementById('inspector-panel');
+            if (!inspectorPanel) return;
+            
+            const tabsContainer = inspectorPanel.querySelector('.tab-links');
+            if (tabsContainer && !tabsContainer.querySelector('[data-tab="gdap-accessories"]')) {
+                const gdapTab = document.createElement('li');
+                gdapTab.className = 'tab-link';
+                gdapTab.dataset.tab = 'gdap-accessories';
+                gdapTab.textContent = 'Accessories';
+                tabsContainer.appendChild(gdapTab);
+                
+                // Add event listener to the new tab
+                gdapTab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab-link').forEach(function(tab) {
+                        tab.classList.remove('active');
+                    });
+                    document.querySelectorAll('.tab-content').forEach(function(content) {
+                        content.classList.remove('active');
+                    });
+                    
+                    gdapTab.classList.add('active');
+                    const accessoriesContent = document.getElementById('gdap-accessories');
+                    if (accessoriesContent) {
+                        accessoriesContent.classList.add('active');
+                    }
+                });
+            }
+            
+            const tabContents = inspectorPanel.querySelector('.inspector-content');
+            if (tabContents) {
+                const gdapTabContent = document.createElement('div');
+                gdapTabContent.className = 'tab-content';
+                gdapTabContent.id = 'gdap-accessories';
+                
+                gdapTabContent.innerHTML = `
+                    <h3>Accessory Suggestions</h3>
+                    <div id="accessory-suggestions-container">
+                        <p>Select a day with GDAP exercises to see suggestions.</p>
+                    </div>
+                `;
+                
+                tabContents.appendChild(gdapTabContent);
+                accessorySuggestionsContainer = gdapTabContent.querySelector('#accessory-suggestions-container');
+            }
+        }
+        
+        if (!accessorySuggestionsContainer) return;
+        
+        // Show accessory suggestions if a day cell is selected
+        if (selectedContext.type === 'day' && selectedContext.elements.size === 1) {
+            const dayCellElement = Array.from(selectedContext.elements)[0];
+            const cellId = dayCellElement.dataset.dayId || dayCellElement.id;
+            
+            // Get suggestions for this day from the calendar grid dataset
+            const calendarGrid = document.getElementById('calendar-grid');
+            if (calendarGrid && calendarGrid.dataset.gdapDayAccessorySuggestions) {
+                try {
+                    const allSuggestions = JSON.parse(calendarGrid.dataset.gdapDayAccessorySuggestions);
+                    const suggestionsForDay = allSuggestions[cellId] || [];
+                    
+                    if (suggestionsForDay.length > 0) {
+                        // Show the GDAP tab
+                        const gdapTab = document.querySelector('.tab-link[data-tab="gdap-accessories"]');
+                        if (gdapTab) gdapTab.style.display = 'inline-block';
+                        
+                        // Populate the suggestions
+                        let html = '<h4>Recommended Accessories</h4><ul class="accessory-suggestion-list">';
+                        
+                        suggestionsForDay.forEach(suggestion => {
+                            html += `
+                                <li class="accessory-suggestion-item" draggable="true" 
+                                    data-exercise-id="${suggestion.exerciseId}"
+                                    data-exercise-name="${suggestion.exerciseName}"
+                                    data-sets="${suggestion.sets}"
+                                    data-reps="${suggestion.reps}">
+                                    <strong>${suggestion.exerciseName}</strong>
+                                    <div>${suggestion.sets} x ${suggestion.reps}</div>
+                                    <div class="suggestion-note">${suggestion.notes}</div>
+                                    <button class="add-accessory-btn" data-exercise-id="${suggestion.exerciseId}">Add</button>
+                                </li>
+                            `;
+                        });
+                        
+                        html += '</ul>';
+                        accessorySuggestionsContainer.innerHTML = html;
+                        
+                                                 // Make the items draggable
+                        accessorySuggestionsContainer.querySelectorAll('.accessory-suggestion-item').forEach(function(item) {
+                            item.addEventListener('dragstart', function(event) {
+                                const exerciseData = {
+                                    exerciseId: item.dataset.exerciseId,
+                                    exerciseName: item.dataset.exerciseName,
+                                    sets: [{
+                                        sets: item.dataset.sets,
+                                        reps: item.dataset.reps,
+                                        weight: '', // No weight set by default
+                                        notes: 'Accessory'
+                                    }]
+                                };
+                                
+                                event.dataTransfer.setData('application/json', JSON.stringify(exerciseData));
+                                event.dataTransfer.setData('text/plain', item.dataset.exerciseId);
+                                event.dataTransfer.effectAllowed = 'copy';
+                            });
+                            
+                            // Add click handler for the "Add" button
+                            const addBtn = item.querySelector('.add-accessory-btn');
+                            if (addBtn) {
+                                addBtn.addEventListener('click', function() {
+                                    const exerciseId = addBtn.dataset.exerciseId;
+                                    if (exerciseId && dayCellElement) {
+                                        // Create workout card directly in the day cell
+                                        if (typeof window.createWorkoutCard === 'function') {
+                                            const sets = [{
+                                                sets: item.dataset.sets,
+                                                reps: item.dataset.reps,
+                                                weight: '',
+                                                notes: 'Accessory'
+                                            }];
+                                            
+                                            const card = window.createWorkoutCard(
+                                                item.dataset.exerciseName,
+                                                sets,
+                                                'Suggested accessory',
+                                                exerciseId,
+                                                null, null, null, null, null, null,
+                                                `card-gdap-accessory-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`
+                                            );
+                                            
+                                            dayCellElement.appendChild(card);
+                                            
+                                            // Save state and update analytics
+                                            if (typeof saveStateToLocalStorage === 'function') {
+                                                saveStateToLocalStorage();
+                                            } else if (window.BlockBuilder && typeof window.BlockBuilder.saveState === 'function') {
+                                                window.BlockBuilder.saveState();
+                                            }
+                                            
+                                            if (typeof updateAnalytics === 'function') {
+                                                updateAnalytics();
+                                            } else if (window.Analytics && typeof window.Analytics.update === 'function') {
+                                                window.Analytics.update();
+                                            }
+                                            
+                                            // Show success message
+                                            if (typeof Toast !== 'undefined' && Toast.show) {
+                                                Toast.show('Accessory exercise added!', 'success');
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        // Hide the GDAP tab if no suggestions
+                        const gdapTab = document.querySelector('.tab-link[data-tab="gdap-accessories"]');
+                        if (gdapTab) gdapTab.style.display = 'none';
+                        
+                        accessorySuggestionsContainer.innerHTML = '<p>No accessory suggestions for this day.</p>';
+                    }
+                } catch (error) {
+                    console.error('Error parsing accessory suggestions:', error);
+                    accessorySuggestionsContainer.innerHTML = '<p>Error loading accessory suggestions.</p>';
+                }
+            } else {
+                // No suggestions stored
+                const gdapTab = document.querySelector('.tab-link[data-tab="gdap-accessories"]');
+                if (gdapTab) gdapTab.style.display = 'none';
+                
+                accessorySuggestionsContainer.innerHTML = '<p>No GDAP data available.</p>';
+            }
+        } else {
+            // No day cell selected, hide the tab
+            const gdapTab = document.querySelector('.tab-link[data-tab="gdap-accessories"]');
+            if (gdapTab) gdapTab.style.display = 'none';
+            
+            accessorySuggestionsContainer.innerHTML = '<p>Select a day to see accessory suggestions.</p>';
+        }
+    }
 
         // Get current muscle stress levels
         const stressLevels = biomechanicalAnalyzer.getCurrentStressLevels();
@@ -2459,6 +2680,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Render the Recovery tab content
         renderRecoveryTabContent();
+        
+        // Check for GDAP accessory suggestions if a day cell is selected
+        updateAccessorySuggestionsForSelected();
 
         // Render the Adaptive tab content with the selected element
         const selectedElement = selectedContext.elements.size === 1 ? 
