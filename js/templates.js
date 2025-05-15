@@ -53,11 +53,50 @@ const trainingTemplates = [
                 week: 1,
                 phase: "Accumulation",
                 days: [
-                    { day: "Monday", title: "Upper Body Strength", exercises: ["Bench Press 4x8", "Barbell Row 4x8", "Incline DB Press 3x10", "Pull-Up 3x10", "Lateral Raise 3x12", "Face Pull 3x15"] },
-                    { day: "Tuesday", title: "Lower Body Strength", exercises: ["Squat 4x8", "Romanian Deadlift 4x8", "Leg Press 3x10", "Walking Lunge 3x10", "Leg Curl 3x12", "Standing Calf Raise 4x15"] },
+                    { day: "Monday", title: "Upper Body Strength", exercises: ["Bench Press 4x8 @70%", "Barbell Row 4x8 @70%", "Incline DB Press 3x10 @RPE7", "Pull-Up 3x10", "Lateral Raise 3x12 @RPE7", "Face Pull 3x15 @60%"] },
+                    { day: "Tuesday", title: "Lower Body Strength", exercises: ["Squat 4x8 @70%", "Romanian Deadlift 4x8 @70%", "Leg Press 3x10 @RPE7", "Walking Lunge 3x10 @RPE7", "Leg Curl 3x12 @RPE6", "Standing Calf Raise 4x15 @RPE7"] },
                     { day: "Wednesday", title: "Rest", exercises: [] },
-                    { day: "Thursday", title: "Upper Body Volume", exercises: ["Incline Bench 4x10", "Seated Cable Row 4x10", "DB Shoulder Press 3x12", "Lat Pulldown 3x12", "Cable Flye 3x15", "Tricep Pushdown 3x15", "Bicep Curl 3x15"] },
-                    { day: "Friday", title: "Lower Body Volume", exercises: ["Front Squat 4x10", "Stiff-Leg Deadlift 4x10", "Bulgarian Split Squat 3x12", "Leg Extension 3x15", "Seated Leg Curl 3x15", "Seated Calf Raise 4x20"] },
+                    { day: "Thursday", title: "Upper Body Volume", exercises: ["Incline Bench 4x10 @65%", "Seated Cable Row 4x10 @65%", "DB Shoulder Press 3x12 @RPE7", "Lat Pulldown 3x12 @RPE7", "Cable Flye 3x15 @RPE6", "Tricep Pushdown 3x15 @RPE7", "Bicep Curl 3x15 @RPE7"] },
+                    { day: "Friday", title: "Lower Body Volume", exercises: ["Front Squat 4x10 @65%", "Stiff-Leg Deadlift 4x10 @65%", "Bulgarian Split Squat 3x12 @RPE7", "Leg Extension 3x15 @RPE7", "Seated Leg Curl 3x15 @RPE6", "Seated Calf Raise 4x20 @RPE7"] },
+                    { day: "Saturday", title: "Rest", exercises: [] },
+                    { day: "Sunday", title: "Rest", exercises: [] }
+                ]
+            },
+            {
+                week: 2,
+                phase: "Accumulation",
+                days: [
+                    { day: "Monday", title: "Upper Body Strength", exercises: ["Bench Press 4x8 @72.5%", "Barbell Row 4x8 @72.5%", "Incline DB Press 3x10 @RPE7.5", "Pull-Up 3x10", "Lateral Raise 3x12 @RPE7.5", "Face Pull 3x15 @65%"] },
+                    { day: "Tuesday", title: "Lower Body Strength", exercises: ["Squat 4x8 @72.5%", "Romanian Deadlift 4x8 @72.5%", "Leg Press 3x10 @RPE7.5", "Walking Lunge 3x10 @RPE7.5", "Leg Curl 3x12 @RPE6.5", "Standing Calf Raise 4x15 @RPE7.5"] },
+                    { day: "Wednesday", title: "Rest", exercises: [] },
+                    { day: "Thursday", title: "Upper Body Volume", exercises: ["Incline Bench 4x10 @67.5%", "Seated Cable Row 4x10 @67.5%", "DB Shoulder Press 3x12 @RPE7.5", "Lat Pulldown 3x12 @RPE7.5", "Cable Flye 3x15 @RPE6.5", "Tricep Pushdown 3x15 @RPE7.5", "Bicep Curl 3x15 @RPE7.5"] },
+                    { day: "Friday", title: "Lower Body Volume", exercises: ["Front Squat 4x10 @67.5%", "Stiff-Leg Deadlift 4x10 @67.5%", "Bulgarian Split Squat 3x12 @RPE7.5", "Leg Extension 3x15 @RPE7.5", "Seated Leg Curl 3x15 @RPE6.5", "Seated Calf Raise 4x20 @RPE7.5"] },
+                    { day: "Saturday", title: "Rest", exercises: [] },
+                    { day: "Sunday", title: "Rest", exercises: [] }
+                ]
+            },
+            {
+                week: 3,
+                phase: "Accumulation",
+                days: [
+                    { day: "Monday", title: "Upper Body Strength", exercises: ["Bench Press 4x8 @75%", "Barbell Row 4x8 @75%", "Incline DB Press 3x10 @RPE8", "Pull-Up 3x10", "Lateral Raise 3x12 @RPE8", "Face Pull 3x15 @70%"] },
+                    { day: "Tuesday", title: "Lower Body Strength", exercises: ["Squat 4x8 @75%", "Romanian Deadlift 4x8 @75%", "Leg Press 3x10 @RPE8", "Walking Lunge 3x10 @RPE8", "Leg Curl 3x12 @RPE7", "Standing Calf Raise 4x15 @RPE8"] },
+                    { day: "Wednesday", title: "Rest", exercises: [] },
+                    { day: "Thursday", title: "Upper Body Volume", exercises: ["Incline Bench 4x10 @70%", "Seated Cable Row 4x10 @70%", "DB Shoulder Press 3x12 @RPE8", "Lat Pulldown 3x12 @RPE8", "Cable Flye 3x15 @RPE7", "Tricep Pushdown 3x15 @RPE8", "Bicep Curl 3x15 @RPE8"] },
+                    { day: "Friday", title: "Lower Body Volume", exercises: ["Front Squat 4x10 @70%", "Stiff-Leg Deadlift 4x10 @70%", "Bulgarian Split Squat 3x12 @RPE8", "Leg Extension 3x15 @RPE8", "Seated Leg Curl 3x15 @RPE7", "Seated Calf Raise 4x20 @RPE8"] },
+                    { day: "Saturday", title: "Rest", exercises: [] },
+                    { day: "Sunday", title: "Rest", exercises: [] }
+                ]
+            },
+            {
+                week: 4,
+                phase: "Intensification",
+                days: [
+                    { day: "Monday", title: "Upper Body Strength", exercises: ["Bench Press 5x5 @80%", "Barbell Row 5x5 @80%", "Incline DB Press 4x8 @RPE8", "Pull-Up 4x8", "Lateral Raise 4x10 @RPE8", "Face Pull 4x12 @75%"] },
+                    { day: "Tuesday", title: "Lower Body Strength", exercises: ["Squat 5x5 @80%", "Romanian Deadlift 5x5 @80%", "Leg Press 4x8 @RPE8", "Walking Lunge 4x8 @RPE8", "Leg Curl 4x10 @RPE7.5", "Standing Calf Raise 5x12 @RPE8"] },
+                    { day: "Wednesday", title: "Rest", exercises: [] },
+                    { day: "Thursday", title: "Upper Body Volume", exercises: ["Incline Bench 5x8 @75%", "Seated Cable Row 5x8 @75%", "DB Shoulder Press 4x10 @RPE8", "Lat Pulldown 4x10 @RPE8", "Cable Flye 4x12 @RPE7.5", "Tricep Pushdown 4x12 @RPE8", "Bicep Curl 4x12 @RPE8"] },
+                    { day: "Friday", title: "Lower Body Volume", exercises: ["Front Squat 5x8 @75%", "Stiff-Leg Deadlift 5x8 @75%", "Bulgarian Split Squat 4x10 @RPE8", "Leg Extension 4x12 @RPE8", "Seated Leg Curl 4x12 @RPE7.5", "Seated Calf Raise 5x15 @RPE8"] },
                     { day: "Saturday", title: "Rest", exercises: [] },
                     { day: "Sunday", title: "Rest", exercises: [] }
                 ]

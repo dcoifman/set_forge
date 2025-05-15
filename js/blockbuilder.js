@@ -5006,38 +5006,61 @@ document.addEventListener('DOMContentLoaded', () => {
                             dayData.exercises.forEach(exerciseText => {
                                 if (exerciseText) {
                                     try {
-                                        // Parse the exercise text (e.g., "Bench Press 4x8")
+                                        // Parse the exercise text (e.g., "Bench Press 4x8 @70%" or "Squat 3x10 @RPE8")
+                                        // Split by spaces but be careful with the @RPE or @% notation
                                         const parts = exerciseText.split(' ');
                                         
-                                        // Extract sets and reps if available
-                                        const lastPart = parts[parts.length - 1];
+                                        // Extract sets and reps from the notation like "4x8"
                                         let sets = '';
                                         let reps = '';
+                                        let loadType = 'weight'; // Default load type
+                                        let loadValue = '';
+                                        let exerciseName = '';
                                         
-                                        // Check for common pattern like 3x10, 5x5, etc.
-                                        if (lastPart.includes('x')) {
-                                            const setsReps = lastPart.split('x');
+                                        const setsRepsIndex = parts.findIndex(part => part.includes('x') && /\d+x\d+/.test(part));
+                                        
+                                        if (setsRepsIndex > -1) {
+                                            const setsReps = parts[setsRepsIndex].split('x');
                                             if (setsReps.length === 2) {
                                                 sets = setsReps[0];
                                                 reps = setsReps[1];
-                                                // Remove the sets/reps part from exercise name
-                                                parts.pop();
                                             }
                                         }
                                         
-                                        // Join the remaining parts as the exercise name
-                                        const exerciseName = parts.join(' ');
+                                        // Look for intensity notation like "@70%" or "@RPE8"
+                                        const intensityIndex = parts.findIndex(part => part.startsWith('@'));
+                                        if (intensityIndex > -1) {
+                                            const intensityPart = parts[intensityIndex].substring(1); // Remove the @ symbol
+                                            
+                                            if (intensityPart.includes('RPE')) {
+                                                loadType = 'rpe';
+                                                loadValue = intensityPart.replace('RPE', '');
+                                            } else if (intensityPart.includes('%')) {
+                                                loadType = 'percent';
+                                                loadValue = intensityPart.replace('%', '');
+                                            } else {
+                                                // If format is just @75 without % or RPE, assume it's percent
+                                                loadType = 'percent';
+                                                loadValue = intensityPart;
+                                            }
+                                        }
                                         
-                                        console.log(`Creating card for ${exerciseName} (${sets}x${reps})`);
+                                        // Build the exercise name from the remaining parts
+                                        // Exclude the parts that are sets/reps and intensity
+                                        exerciseName = parts
+                                            .filter((part, index) => index !== setsRepsIndex && index !== intensityIndex)
+                                            .join(' ');
                                         
-                                        // Create workout card
+                                        console.log(`Creating card for ${exerciseName} (${sets}x${reps}) with ${loadType}=${loadValue}`);
+                                        
+                                        // Create workout card with all details
                                         let card;
                                         if (typeof window.createWorkoutCard === 'function') {
-                                            card = window.createWorkoutCard(exerciseName, {
+                                            card = window.createWorkoutCard(exerciseName, null, {
                                                 sets: sets,
                                                 reps: reps,
-                                                loadType: 'weight',
-                                                loadValue: '',
+                                                loadType: loadType,
+                                                loadValue: loadValue,
                                                 rest: '90s'
                                             });
                                             
@@ -5053,10 +5076,24 @@ document.addEventListener('DOMContentLoaded', () => {
                                             // Fallback to basic card creation
                                             card = document.createElement('div');
                                             card.className = 'workout-card';
+                                            
+                                            // Create intensity text based on load type
+                                            let intensityText = '';
+                                            if (loadType === 'rpe' && loadValue) {
+                                                intensityText = `RPE ${loadValue}`;
+                                            } else if (loadType === 'percent' && loadValue) {
+                                                intensityText = `${loadValue}%`;
+                                            }
+                                            
                                             card.innerHTML = `
                                                 <div class="exercise-name">${exerciseName}</div>
-                                                <div class="card-details">
-                                                    <span class="card-reps">${sets}x${reps}</span>
+                                                <div class="card-details-row">
+                                                    <span class="card-reps">${sets}×${reps}</span>
+                                                    <span class="card-intensity">${intensityText}</span>
+                                                </div>
+                                                <div class="card-actions">
+                                                    <button class="card-action-btn edit-btn" title="Edit Exercise">✏️</button>
+                                                    <button class="card-action-btn delete-btn" title="Delete Exercise">🗑️</button>
                                                 </div>
                                             `;
                                             card.draggable = true;
