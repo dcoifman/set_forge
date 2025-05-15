@@ -3,156 +3,196 @@
 /* Inherit variables from style.css */
 
 /* GDAP Modal Styles */
-#gdapPrimaryExercisesContainer {
-    border: 1px solid #e0e0e0;
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 6px;
-    background: #f9f9f9;
-}
-#gdapPrimaryExercisesContainer legend {
-    font-weight: bold;
-    padding: 0 10px;
-    color: #444;
-}
-.gdap-exercise-slot {
-    border: 1px dashed #ccc;
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 6px;
-    background-color: #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-.gdap-exercise-slot h4 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    color: #333;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 8px;
-}
-.gdap-exercise-slot label {
-    display: block;
-    margin-top: 8px;
-    margin-bottom: 5px;
-    font-weight: normal;
-    color: #555;
-}
-.button-small {
-    padding: 6px 12px;
-    font-size: 0.9em;
-    margin-top: 5px;
-    margin-bottom: 15px;
-    background-color: #6c757d;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-.button-small:hover {
-    background-color: #5a6268;
-}
 #newGoalDrivenBlockBtn {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background-color: #FF703B;
+    background: linear-gradient(135deg, #ff703b, #e65a2a);
     color: white;
     border: none;
     border-radius: 4px;
     padding: 10px 15px;
     font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     cursor: pointer;
     z-index: 50;
-    transition: transform 0.2s, background-color 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
+
 #newGoalDrivenBlockBtn:hover {
-    background-color: #E0602B;
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
 }
-.modal {
+
+/* GDAP Modal Styling - Template Style */
+#gdapModal {
     position: fixed;
-    z-index: 1000;
-    left: 0;
     top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.5);
-    display: none;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.85);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    pointer-events: none;
+}
+
+#gdapModal.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+#gdapModal .modal-content {
+    background-color: var(--background-color, #1B1C22);
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 30px;
+    position: relative;
+    animation: modalFadeIn 0.4s ease forwards;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#gdapModal .template-title {
+    color: #FF703B;
+    font-size: 24px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+#gdapModal .template-description {
+    color: var(--text-color-medium, #A0A5AF);
+    margin-bottom: 24px;
+    font-size: 16px;
+}
+
+#gdapModal .modal-close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    font-size: 20px;
+    color: var(--text-color-medium, #A0A5AF);
+    cursor: pointer;
+    z-index: 10;
+    padding: 4px 10px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    width: 36px;
+    height: 36px;
+    display: flex;
     align-items: center;
     justify-content: center;
 }
 
-#gdapModal .modal-content {
-    background-color: #fefefe;
-    padding: 25px;
-    border: 1px solid #888;
-    width: 90%;
-    max-width: 600px;
-    border-radius: 8px;
-    color: #333;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+#gdapModal .modal-close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: var(--text-color, #CCD1D9);
 }
 
-#gdapModal h2 {
-    color: #FF703B;
-    margin-bottom: 20px;
+/* GDAP Form Elements */
+#gdapForm .form-group {
+    margin-bottom: 18px;
 }
 
 #gdapForm label {
     display: block;
-    margin-bottom: 8px;
-    color: #444;
+    margin-bottom: 6px;
+    color: var(--text-color-light, #E0E4EB);
     font-weight: 500;
+    font-size: 14px;
 }
 
 #gdapForm select,
 #gdapForm input[type="number"] {
     width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
+    padding: 12px;
+    background-color: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 4px;
+    color: var(--text-color, #CCD1D9);
     font-size: 14px;
+    transition: all 0.2s ease;
 }
 
 #gdapForm select:focus,
 #gdapForm input[type="number"]:focus {
     border-color: #FF703B;
     outline: none;
-    box-shadow: 0 0 5px rgba(255, 112, 59, 0.3);
+    box-shadow: 0 0 0 2px rgba(255, 112, 59, 0.3);
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
-#gdapForm button[type="submit"] {
-    background-color: #FF703B;
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    margin-top: 15px;
-    border-radius: 4px;
-    cursor: pointer;
+#gdapPrimaryExercisesContainer {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    margin-bottom: 25px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+#gdapPrimaryExercisesContainer legend {
     font-weight: bold;
-    transition: background-color 0.2s;
+    padding: 0 10px;
+    color: var(--text-color, #CCD1D9);
 }
 
-#gdapForm button[type="submit"]:hover {
-    background-color: #E0602B;
+.gdap-exercise-slot {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 20px;
+    margin-bottom: 18px;
+    border-radius: 6px;
+    background-color: rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
 }
 
-#gdapModal .close-button {
-    position: absolute;
-    right: 15px;
-    top: 10px;
-    font-size: 24px;
-    font-weight: bold;
-    color: #777;
-    cursor: pointer;
+.gdap-exercise-slot:hover {
+    border-color: rgba(255, 112, 59, 0.3);
+    box-shadow: 0 0 15px rgba(255, 112, 59, 0.1);
 }
 
-#gdapModal .close-button:hover {
-    color: #FF703B;
+.gdap-exercise-slot h4 {
+    margin-top: 0;
+    margin-bottom: 18px;
+    color: var(--text-color-light, #E0E4EB);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+    font-weight: 500;
+    font-size: 16px;
+}
+
+.remove-gdap-exercise-btn {
+    padding: 4px 8px !important;
+    font-size: 12px !important;
+    opacity: 0.8;
+}
+
+.remove-gdap-exercise-btn:hover {
+    opacity: 1;
+}
+
+/* Animation */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* GDAP Modal Styles */

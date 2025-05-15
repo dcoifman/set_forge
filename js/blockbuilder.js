@@ -80,20 +80,27 @@ document.addEventListener('DOMContentLoaded', () => {
             resetGDAPForm(); // Reset form to initial state
             populateExerciseDropdownForGDAP(document.getElementById('gdapTargetExercise1'));
             populatePeriodizationModelDropdown();
-            gdapModal.style.display = 'flex';
+            gdapModal.classList.add('is-visible');
         });
     }
 
     if (gdapCloseBtn) {
         gdapCloseBtn.addEventListener('click', () => {
-            gdapModal.style.display = 'none';
+            gdapModal.classList.remove('is-visible');
         });
     }
 
     // Close modal if user clicks outside of it
     window.addEventListener('click', (event) => {
         if (event.target === gdapModal) {
-            gdapModal.style.display = 'none';
+            gdapModal.classList.remove('is-visible');
+        }
+    });
+
+    // Add escape key handling
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && gdapModal.classList.contains('is-visible')) {
+            gdapModal.classList.remove('is-visible');
         }
     });
 
@@ -116,17 +123,17 @@ document.addEventListener('DOMContentLoaded', () => {
         slotDiv.className = 'gdap-exercise-slot';
         slotDiv.id = `gdapExerciseSlot${slotNumber}`;
         slotDiv.innerHTML = `
-            <h4>Exercise ${slotNumber} <button type="button" class="button-small remove-gdap-exercise-btn" data-slot-id="${slotNumber}" style="float: right; display: ${slotNumber > 1 ? 'inline-block' : 'none'};">- Remove</button></h4>
-            <div>
+            <h4>Exercise ${slotNumber} <button type="button" class="cta-button secondary-cta remove-gdap-exercise-btn" data-slot-id="${slotNumber}" style="float: right; display: ${slotNumber > 1 ? 'inline-block' : 'none'};">✕ Remove</button></h4>
+            <div class="form-group">
                 <label for="gdapTargetExercise${slotNumber}">Exercise:</label>
                 <select id="gdapTargetExercise${slotNumber}" name="targetExercise${slotNumber}" class="gdap-exercise-select" required>
                     </select>
             </div>
-            <div>
+            <div class="form-group">
                 <label for="gdapCurrentPerf${slotNumber}">Current Performance (e.g., Est. 1RM):</label>
                 <input type="number" id="gdapCurrentPerf${slotNumber}" name="currentPerf${slotNumber}" class="gdap-current-perf" step="0.1" required>
             </div>
-            <div>
+            <div class="form-group">
                 <label for="gdapTargetPerf${slotNumber}">Target Performance:</label>
                 <input type="number" id="gdapTargetPerf${slotNumber}" name="targetPerf${slotNumber}" class="gdap-target-perf" step="0.1" required>
             </div>
