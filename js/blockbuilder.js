@@ -428,54 +428,51 @@ document.addEventListener('DOMContentLoaded', () => {
                 const targetCell = document.querySelector(`.day-cell[data-week='${cellWeek}'][data-day='${cellDay}']`);
                 
                 if (targetCell) {
-                    // Create card data object with exercise info and goal-driven flag
-                    const cardData = {
+                    // Create workout card with exercise details for primary exercise
+                    const card = createWorkoutCard(exTarget.name, exTarget.detailsString, {
                         exerciseId: exTarget.exerciseId,
-                        exerciseName: exTarget.exerciseName,
-                        sets: [{
-                            sets: exTarget.sets,
-                            reps: exTarget.reps,
-                            weight: exTarget.load,
-                            rpe: exTarget.loadType === 'rpe' ? exTarget.load : '',
-                            notes: exTarget.loadType && exTarget.loadType !== 'weight' && exTarget.loadType !== 'rpe' ? exTarget.loadType.toUpperCase() : ''
-                        }],
-                        notes: exTarget.detailsString || `Goal: ${goalInstance.overallGoalType}`,
-                        isGoalDriven: true,
-                        goalInstanceId: goalInstance.id
-                    };
+                        load: exTarget.load, 
+                        sets: exTarget.sets,
+                        reps: exTarget.reps,
+                        primaryTarget: true,
+                        targetExercise: true,
+                        isPrimary: true
+                    });
+
+                    if (targetCell) {
+                        targetCell.appendChild(card);
+                        
+                        // Store card reference in cards array for later access
+                        generatedCards.push(card);
                     
-                    // Create the workout card element with unique ID
-                    let card;
-                    if (typeof createWorkoutCard === 'function') {
-                        // Use the proper createWorkoutCard function if available
-                        card = createWorkoutCard(
-                            cardData.exerciseName,
-                            cardData.sets,
-                            cardData.notes,
-                            cardData.exerciseId,
-                            null, null, null, null, null, null, 
-                            `card-gdap-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`
-                        );
-                    } else {
-                        // Fallback to basic card creation
-                        card = document.createElement('div');
-                        card.className = 'workout-card';
-                        card.textContent = `${exTarget.exerciseName}: ${exTarget.detailsString}`;
-                        card.draggable = true;
-                        card.id = `gdap-card-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-                        // Make it draggable if DragDrop is available
-                        if (window.DragDrop && typeof window.DragDrop.makeDraggable === 'function') {
-                            window.DragDrop.makeDraggable(card);
+                        // Now add accessory exercises for this day if available
+                        const dayAccessories = weeklyTarget.suggestedAccessories?.filter(acc => 
+                            acc.dayPreference === dayAbbreviation) || [];
+                        
+                        if (dayAccessories.length > 0) {
+                            console.log(`Adding ${dayAccessories.length} accessory exercises to ${cellDay} of Week ${cellWeek}`);
+                            
+                            dayAccessories.forEach(accessory => {
+                                const accessoryCard = createWorkoutCard(accessory.name, accessory.detailsString || `${accessory.sets}x${accessory.reps}`, {
+                                    exerciseId: accessory.exerciseId,
+                                    load: accessory.load || '',
+                                    sets: accessory.sets || 3,
+                                    reps: accessory.reps || 10,
+                                    primaryTarget: false,
+                                    targetExercise: false,
+                                    isPrimary: false,
+                                    isAccessory: true
+                                });
+                                
+                                if (targetCell) {
+                                    targetCell.appendChild(accessoryCard);
+                                    generatedCards.push(accessoryCard);
+                                }
+                            });
                         }
+                    } else {
+                        console.warn(`Could not find target cell for week ${cellWeek}, day ${cellDay}`);
                     }
-                    
-                    // Add goal-driven markers to the card's dataset
-                    card.dataset.goalDriven = "true";
-                    card.dataset.sourceGoalId = goalInstance.id;
-                    card.dataset.exerciseId = exTarget.exerciseId;
-                    
-                    // Add the card to the target cell
-                    targetCell.appendChild(card);
                 } else {
                     console.warn(`GDAP: Target cell ${cellId} not found for exercise ${exTarget.exerciseName}.`);
                 }
@@ -493,13 +490,20 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Map day preference to cell ID and store
             for (const [dayPref, suggestions] of Object.entries(daySuggestionsByDayPref)) {
-                const dayIndices = { mon: 0, tue: 1, wed: 2, thu: 3, fri: 4, sat: 5, sun: 6 };
-                const dayIndex = dayIndices[dayPref] !== undefined ? dayIndices[dayPref] : 0;
-                const cellId = `week-${weeklyTarget.week - 1}-day-${dayIndex}`;
+                // Convert to the format that matches our HTML structure
+                const weekNumber = weeklyTarget.week; // 1-based from PPO
+                const dayCapitalized = dayPref.charAt(0).toUpperCase() + dayPref.slice(1);
                 
-                // Initialize array for this cell if needed
-                if (!accessorySuggestionsByDayId[cellId]) {
-                    accessorySuggestionsByDayId[cellId] = [];
+                // Find the cell using the proper selector
+                const targetCell = document.querySelector(`.day-cell[data-week='${weekNumber}'][data-day='${dayCapitalized}']`);
+                if (targetCell) {
+                    // Get the cell's id attribute - if it doesn't have one, use a consistent format
+                    const cellId = targetCell.id || `week-${weekNumber}-day-${dayCapitalized}`;
+                    
+                    // Initialize array for this cell if needed
+                    if (!accessorySuggestionsByDayId[cellId]) {
+                        accessorySuggestionsByDayId[cellId] = [];
+                    }
                 }
                 
                 // Add all suggestions for this day
@@ -507,11 +511,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Store accessory suggestions in a global data attribute for inspector access
-        const calendarGrid = document.getElementById('calendar-grid');
-        if (calendarGrid) {
-            calendarGrid.dataset.gdapAccessorySuggestions = JSON.stringify(accessorySuggestionsByDayId);
-            console.log("GDAP: Stored accessory suggestions for inspectors:", accessorySuggestionsByDayId);
+        // Store accessory suggestions in the work canvas for inspector access
+        const workCanvas = document.getElementById('work-canvas');
+        if (workCanvas) {
+            workCanvas.dataset.gdapAccessorySuggestions = JSON.stringify(accessorySuggestionsByDayId);
+            console.log("GDAP: Stored accessory suggestions for inspectors:", Object.keys(accessorySuggestionsByDayId).length, "days with suggestions");
         }
         
         // --- Update State & Analytics ---
@@ -570,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
         suggestionContainer.innerHTML = '';
         
         // Get the calendar grid and check for suggestions
-        const calendarGrid = document.getElementById('calendar-grid');
+        const calendarGrid = document.getElementById('work-canvas');
         if (!calendarGrid || !calendarGrid.dataset.gdapAccessorySuggestions) {
             suggestionContainer.innerHTML = '<p>No accessory suggestions available.</p>';
             return;
