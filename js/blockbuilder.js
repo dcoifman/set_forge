@@ -1789,22 +1789,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (browseTemplatesBtn) {
          browseTemplatesBtn.addEventListener('click', () => {
             console.log("Browse Templates button clicked");
-            const templatesModal = document.getElementById('templates-modal');
-            if (templatesModal) {
-                templatesModal.classList.add('is-visible');
+            // Use the templates module's showModal function if it exists
+            if (typeof window.templates !== 'undefined' && typeof window.templates.showModal === 'function') {
+                window.templates.showModal();
             } else {
-                console.error("Templates modal not found!");
+                // Fallback - find the modal directly
+                const templatesModal = document.getElementById('templates-modal');
+                if (templatesModal) {
+                    templatesModal.classList.add('is-visible');
+                } else {
+                    console.error("Templates modal not found!");
+                }
             }
         });
-            } else {
+    } else {
         console.error("Browse Templates button not found!");
-    }
-
-    if (browseTemplatesBtn) {
-        browseTemplatesBtn.addEventListener('click', () => {
-            if (templatesModal) templatesModal.style.display = 'block';
-            // Show templates grid/modal logic
-        });
     }
     
     // Add goal-driven program button event listener
@@ -4921,12 +4920,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (browseTemplatesBtn) { // <-- Corrected variable name
         browseTemplatesBtn.addEventListener('click', () => { // <-- Corrected variable name
             console.log("Browse Templates button clicked (hub)");
-            // showToast("Template browser not yet implemented.", "info"); // <<< REMOVE THIS LINE
-            const templatesModal = document.getElementById('templates-modal');
-            if (templatesModal) {
-                templatesModal.classList.add('is-visible');
+            // Use the templates module's showModal function if it exists
+            if (typeof window.templates !== 'undefined' && typeof window.templates.showModal === 'function') {
+                window.templates.showModal();
             } else {
-                console.error("Templates modal not found!");
+                // Fallback - find the modal directly
+                const templatesModal = document.getElementById('templates-modal');
+                if (templatesModal) {
+                    templatesModal.classList.add('is-visible');
+                } else {
+                    console.error("Templates modal not found!");
+                }
             }
         });
     }

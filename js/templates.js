@@ -1256,7 +1256,7 @@ function createCategoryAnimation(category) {
     }
     
     return container;
-} 
+}
 
 // Initialize the module when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -1280,4 +1280,39 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Export functionality with named exports only (no default export)
-export { useTemplate, showTemplatePreview }; 
+export { useTemplate, showTemplatePreview };
+
+// Add these functions for external access
+function showModal() {
+    console.log("Templates: Showing templates modal (external call)");
+    if (templatesModal) {
+        renderTemplates(); // Always render before showing
+        templatesModal.style.display = '';
+        templatesModal.style.opacity = '';
+        templatesModal.style.visibility = '';
+        templatesModal.classList.add('is-visible');
+        window.requestAnimationFrame(() => {
+            templatesModal.style.opacity = '1';
+            templatesModal.style.visibility = 'visible';
+        });
+    } else {
+        console.error("Templates modal not found for external showModal call");
+    }
+}
+
+function hideModal() {
+    console.log("Templates: Hiding templates modal (external call)");
+    if (templatesModal) {
+        templatesModal.classList.remove('is-visible');
+        setTimeout(() => {
+            templatesModal.style.opacity = '0';
+            templatesModal.style.visibility = 'hidden';
+        }, 300);
+    }
+}
+
+// Export functions to window.templates object
+window.templates = window.templates || {};
+window.templates.showModal = showModal;
+window.templates.hideModal = hideModal;
+window.templates.useTemplate = useTemplate; 
