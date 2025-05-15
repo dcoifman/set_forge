@@ -1842,6 +1842,24 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
         console.error("Browse Templates button not found!");
     }
+
+    if (browseTemplatesBtn) {
+        browseTemplatesBtn.addEventListener('click', () => {
+            if (templatesModal) templatesModal.style.display = 'block';
+            // Show templates grid/modal logic
+        });
+    }
+    
+    // Add goal-driven program button event listener
+    const goalDrivenBtn = document.getElementById('hub-goal-driven');
+    if (goalDrivenBtn && gdapModal) {
+        goalDrivenBtn.addEventListener('click', () => {
+            resetGDAPForm(); // Reset form if needed
+            populateExerciseDropdownForGDAP(gdapTargetExercise1);
+            populatePeriodizationModelDropdown();
+            gdapModal.style.display = 'block';
+        });
+    }
     // <<<--- END ADDED EVENT LISTENERS --- >>>
 
     // --- Helper Functions Now Defined INSIDE DOMContentLoaded ---
@@ -1856,6 +1874,22 @@ document.addEventListener('DOMContentLoaded', () => {
         card.className = 'workout-card';
         card.draggable = true;
         card.id = options.id || `workout-${Date.now()}-${Math.random().toString(16).slice(2)}`; 
+
+        // If exerciseName is not provided but there's an exerciseId, try to get it from the library
+        if (!exerciseName && options.exerciseId) {
+            const exercise = typeof findExerciseById === 'function' 
+                ? findExerciseById(options.exerciseId)
+                : (typeof ExerciseLibrary !== 'undefined' && typeof ExerciseLibrary.getExerciseById === 'function'
+                    ? ExerciseLibrary.getExerciseById(options.exerciseId)
+                    : null);
+            
+            if (exercise) {
+                exerciseName = exercise.name;
+            }
+        }
+
+        // Default to "Unknown Exercise" if still not found
+        exerciseName = exerciseName || "Unknown Exercise";
 
         // --- MODIFIED: Use options directly, remove getStructuredDetails call --- 
         // Set dataset attributes directly from options or use defaults

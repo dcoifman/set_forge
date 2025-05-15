@@ -14,17 +14,20 @@ const ProgressionPathwayOrchestrator = {
      *    suggestedAccessories: [ { exerciseId, exerciseName, sets, reps, notes, dayPreference } , ... ] }, ...]
      */
     calculateGoalDrivenPathways: function(goalInstance) {
+        // Access exerciseLibrary via import
+        const allExercises = exerciseLibrary.getExercises();
+        
+        // --- Setup ---
         const {
-            targetExercises, // Array: [{ exerciseId, exerciseName, currentPerf, targetPerf, goalType, athleteLevel }]
+            overallGoalType,
             timeframeWeeks,
-            overallGoalType, // The main goal type selected (Strength, Hypertrophy etc.)
-            athleteLevel,    // Overall athlete level
-            periodizationModelName, // Optional: e.g., "linear", "wave"
-            // baseModelParams (if we need to provide specific default params for the chosen model)
+            athleteLevel,
+            periodizationModelName, // Optional
+            targetExercises // Array of { exerciseId, currentPerf, targetPerf, ... }
         } = goalInstance;
-
+        
         const weeklyTargets = [];
-
+        
         if (!periodizationEngine || typeof periodizationEngine.calculateExercisesForDay !== 'function' || typeof periodizationEngine.getModelDefaults !== 'function') {
             console.error("PPO: Valid PeriodizationEngine is required.");
             return weeklyTargets;
@@ -34,35 +37,47 @@ const ProgressionPathwayOrchestrator = {
             return weeklyTargets;
         }
 
+        // Iterate through each week and calculate targets
         for (let weekIdx = 0; weekIdx < timeframeWeeks; weekIdx++) {
-            const currentWeekNumber = weekIdx + 1;
+            const currentWeekNumber = weekIdx + 1; // 1-based for user display
             const exercisesForThisWeek = [];
-            const dailyPrimaryExercisesMap = new Map(); // Map<dayPreference, Array<primaryExerciseObjects>>
-
-            targetExercises.forEach((goalEx, exIdx) => {
-                const { exerciseId, exerciseName, currentPerf, targetPerf } = goalEx;
-                // Use specific goalType/athleteLevel for exercise if available, else use overall
-                const exGoalType = goalEx.goalType || overallGoalType;
-                const exAthleteLevel = goalEx.athleteLevel || athleteLevel;
-
-                // 1. Calculate Base Linear Progression for this exercise for the current week
+            const dailyPrimaryExercisesMap = new Map(); // For grouping by day
+            
+            // For each target exercise, create a progression for this week
+            targetExercises.forEach((targetEx, exerciseIndex) => {
+                const { exerciseId, currentPerf, targetPerf, goalType = overallGoalType, athleteLevel: exAthleteLevel = athleteLevel } = targetEx;
+                
+                // Get the full exercise data from the library for name and other metadata
+                const exerciseData = exerciseLibrary.getExerciseById(exerciseId);
+                if (!exerciseData) {
+                    console.error(`Exercise with ID ${exerciseId} not found in the library!`);
+                    return; // Skip this exercise
+                }
+                
+                const exerciseName = exerciseData.name;
+                
+                // Calculate a simple linear progression as our base target
                 const baseProg = this._calculateSimpleLinearTargetForWeek(
-                    parseFloat(currentPerf), parseFloat(targetPerf), timeframeWeeks, currentWeekNumber, exGoalType, exAthleteLevel
+                    currentPerf,
+                    targetPerf,
+                    timeframeWeeks,
+                    currentWeekNumber,
+                    goalType,
+                    exAthleteLevel
                 );
-                // baseProg = { week, load, sets, reps }
-
+                
+                // Determine which day this exercise should preferably be trained on
+                const dayPreference = this._getPreferredDay(exerciseIndex, targetExercises.length);
+                
+                // Start with the base target
                 let finalExerciseTarget = {
                     exerciseId: exerciseId,
-                    exerciseName: exerciseName,
-                    rawLoad: baseProg.load, // Store the simple linear progression value
-                    rawSets: baseProg.sets,
-                    rawReps: baseProg.reps,
+                    name: exerciseName, // Use the name from the library
                     load: baseProg.load,
                     sets: baseProg.sets,
                     reps: baseProg.reps,
-                    dayPreference: this._getPreferredDay(exIdx, targetExercises.length), // e.g., mon, tue, wed
-                    detailsString: `${baseProg.sets}x${baseProg.reps} @ ${baseProg.load}kg (Linear Goal)`,
-                    isPrimary: true // Mark as primary
+                    dayPreference: dayPreference,
+                    detailsString: `${baseProg.sets}x${baseProg.reps} @ ${baseProg.load}kg`
                 };
 
                 // 2. If a periodization model is selected, use PeriodizationEngine to refine
@@ -266,7 +281,7 @@ const ProgressionPathwayOrchestrator = {
      * @param {string|null} periodizationModelName - Name of the active periodization model, if any.
      * @param {number} weekIdx - Current week index (0-based).
      * @param {number} timeframeWeeks - Total weeks in the block.
-     * @returns {Array<Object>} Suggested accessories: [{ exerciseId, exerciseName, sets, reps, notes }, ...]
+     * @returns {Array<Object>} Suggested accessories: [{ exerciseId, name, sets, reps, notes }, ...]
      */
     suggestAccessoryWork: function(primaryExercisesOnDay, overallGoalType, athleteLevel, exerciseLibrary, periodizationModelName, weekIdx, timeframeWeeks) {
         const suggestions = [];
@@ -296,107 +311,72 @@ const ProgressionPathwayOrchestrator = {
         let desiredCategories = ['isolation', 'machine']; // Default accessory types
         let repRange = "10-15";
         let setsCount = 3;
-
-        switch (overallGoalType.toLowerCase()) {
-            case 'strength':
-                // For strength, might suggest compound accessories or direct antagonists
-                // Or exercises targeting common weak points for the primary lifts
-                desiredCategories = ['compound', 'isolation', 'machine']; // Broader
-                repRange = "6-10";
-                setsCount = 3;
-                break;
-            case 'hypertrophy':
-                desiredCategories = ['isolation', 'machine', 'unilateral'];
-                repRange = "8-15"; // Could be wider
-                setsCount = 3;
-                break;
-            case 'endurance':
-                desiredCategories = ['isolation', 'bodyweight', 'machine'];
-                repRange = "15-20";
-                setsCount = 2;
-                break;
-        }
         
-        // Adjust volume based on phase (simple early/mid/late for now)
-        const blockPhase = weekIdx < timeframeWeeks / 3 ? 'early' : (weekIdx < (timeframeWeeks * 2) / 3 ? 'mid' : 'late');
-        if (blockPhase === 'early') { /* setsCount might be higher */ }
-        else if (blockPhase === 'late') { numAccessories = Math.max(1, numAccessories -1); setsCount = Math.max(2, setsCount -1); }
-
-        // 4. Filter candidate exercises
-        const candidates = allExercises.filter(ex => {
-            if (primaryExercisesOnDay.some(pEx => pEx.id === ex.id)) return false; // Don't suggest a primary
-            if (suggestions.some(s => s.exerciseId === ex.id)) return false; // Already suggested
-
-            // Check if it's an "accessory-like" exercise based on tags or category
-            const isAccessoryTag = ex.tags && (ex.tags.includes('isolation') || ex.tags.includes('accessory') || ex.tags.includes('unilateral') || ex.tags.includes('bodyweight'));
-            const isMachine = ex.equipmentNeeded && ex.equipmentNeeded.some(eq => eq.toLowerCase().includes('machine') || eq.toLowerCase().includes('cable'));
-            
-            if (!isAccessoryTag && !isMachine && !desiredCategories.some(cat => ex.category?.toLowerCase().includes(cat) || ex.tags?.includes(cat) ) ) {
-                 // If not explicitly accessory-like, allow if it's a compound but not too similar to primary
-                 if (!ex.tags || !ex.tags.includes('compound')) return false;
-            }
-
-            // Rule: For hypertrophy, prioritize same muscle groups or directly related ones.
-            // For strength, can be same or antagonists or common supporting muscles.
-            let targetsRelevantMuscle = false;
-            if (ex.primaryMuscles) {
-                for (const muscle of ex.primaryMuscles) {
-                    if (primaryMusclesWorked.has(muscle.toLowerCase())) {
-                        targetsRelevantMuscle = true;
-                        break;
-                    }
-                    // For strength, also consider antagonists (simple example: push vs pull focus)
-                    if (overallGoalType.toLowerCase() === 'strength') {
-                        if ((primaryCategories.has('upper body push') && ex.tags?.includes('pull')) ||
-                            (primaryCategories.has('upper body pull') && ex.tags?.includes('push'))) {
-                            targetsRelevantMuscle = true; break;
-                        }
-                    }
-                }
-            }
-            if (!targetsRelevantMuscle && ex.secondaryMuscles) { // Check secondary if primary doesn't match
-                 for (const muscle of ex.secondaryMuscles) {
-                    if (primaryMusclesWorked.has(muscle.toLowerCase())) {
-                        targetsRelevantMuscle = true;
-                        break;
-                    }
-                }
-            }
-            return targetsRelevantMuscle;
-        });
-
-        // 5. Select top N candidates (simple selection for now, could be smarter)
-        // Prioritize exercises matching `desiredCategories` or those that are clearly not main compound lifts
-        candidates.sort((a, b) => {
-            let scoreA = 0;
-            let scoreB = 0;
-            if (a.tags && desiredCategories.some(cat => a.tags.includes(cat))) scoreA += 2;
-            if (b.tags && desiredCategories.some(cat => b.tags.includes(cat))) scoreB += 2;
-            if (a.category && desiredCategories.some(cat => a.category.toLowerCase().includes(cat))) scoreA +=1;
-            if (b.category && desiredCategories.some(cat => b.category.toLowerCase().includes(cat))) scoreB +=1;
-            
-            // Penalize being too similar to primary movement patterns if not for hypertrophy
-            if (overallGoalType.toLowerCase() !== 'hypertrophy') {
-                primaryExercisesOnDay.forEach(pEx => {
-                    if(pEx.tags && a.tags && pEx.tags.some(pt => a.tags.includes(pt))) scoreA -=1; // e.g. both 'squat' tag
-                    if(pEx.tags && b.tags && pEx.tags.some(pt => b.tags.includes(pt))) scoreB -=1;
-                });
-            }
-
-            return scoreB - scoreA; // Higher score first
-        });
-
-        for (let i = 0; i < Math.min(candidates.length, numAccessories); i++) {
-            const chosenEx = candidates[i];
-            suggestions.push({
-                exerciseId: chosenEx.id,
-                exerciseName: chosenEx.name,
-                sets: String(setsCount),
-                reps: repRange,
-                notes: `Accessory for ${overallGoalType.toLowerCase()}`
-            });
+        // For later weeks, reduce volume as we near target
+        const isLatePhase = weekIdx >= Math.floor(timeframeWeeks * 0.75);
+        if (isLatePhase) {
+            numAccessories = Math.max(1, numAccessories - 1); // Reduce by 1 but min 1
+            setsCount = 2; // Fewer sets in later phases
         }
-        console.log(`PPO Accessory Suggestions for day with primaries [${primaryExercisesOnDay.map(p=>p.name).join(', ')}]:`, suggestions);
+
+        // Find suitable accessories: First ones that specifically target muscles used in primaries
+        const primaryExNames = primaryExercisesOnDay.map(ex => ex.name.toLowerCase());
+        let potentialAccessories = allExercises.filter(ex => {
+            // Skip if this is one of our primary exercises
+            if (primaryExercisesOnDay.some(p => p.id === ex.id)) return false;
+            
+            // Look for exercises that target muscles worked by primaries as secondary muscles
+            return ex.primaryMuscles?.some(m => 
+                primaryMusclesWorked.has(m.toLowerCase())
+            ) || ex.secondaryMuscles?.some(m => 
+                primaryMusclesWorked.has(m.toLowerCase())
+            );
+        });
+
+        console.log(`PPO Accessory Suggestions for day with primaries [${primaryExercisesOnDay.map(ex => ex.name).join(', ')}]:`, potentialAccessories.slice(0, 5));
+
+        // If not enough, add exercises that match desired category/equipment
+        if (potentialAccessories.length < numAccessories) {
+            const moreAccessories = allExercises.filter(ex => {
+                // Skip if already in our list or a primary
+                if (primaryExercisesOnDay.some(p => p.id === ex.id)) return false;
+                if (potentialAccessories.some(p => p.id === ex.id)) return false;
+                
+                // Look for category matches
+                return ex.tags?.some(t => desiredCategories.includes(t.toLowerCase()));
+            });
+            potentialAccessories = [...potentialAccessories, ...moreAccessories];
+        }
+
+        // Sort by relevance (more primary/secondary muscle matches = higher relevance)
+        potentialAccessories.sort((a, b) => {
+            const aMatches = (a.primaryMuscles?.filter(m => primaryMusclesWorked.has(m.toLowerCase())).length || 0) +
+                            (a.secondaryMuscles?.filter(m => primaryMusclesWorked.has(m.toLowerCase())).length || 0);
+            const bMatches = (b.primaryMuscles?.filter(m => primaryMusclesWorked.has(m.toLowerCase())).length || 0) +
+                            (b.secondaryMuscles?.filter(m => primaryMusclesWorked.has(m.toLowerCase())).length || 0);
+            return bMatches - aMatches; // Highest matches first
+        });
+
+        // Take top N accessories
+        potentialAccessories = potentialAccessories.slice(0, numAccessories);
+        
+        // Turn into suggestion objects
+        potentialAccessories.forEach(ex => {
+            // Get rep range based on exercise type and goal
+            const isIsolation = ex.tags?.includes('isolation');
+            const mainMuscles = ex.primaryMuscles?.join(', ') || '';
+            
+            // Build standard suggestion
+            suggestions.push({
+                exerciseId: ex.id,
+                name: ex.name, // Ensure name is included
+                sets: setsCount,
+                reps: repRange.split('-')[0], // Just take lower range as number
+                notes: `Accessory (${mainMuscles})`,
+                detailsString: `${setsCount}x${repRange}`
+            });
+        });
+        
         return suggestions;
     },
 
