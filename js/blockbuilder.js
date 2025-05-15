@@ -357,7 +357,10 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("Could not generate pathways with the provided inputs.");
             return;
         }
-        
+
+        // Switch to the block builder view
+        showView('builder');
+
         // --- Clear and Regenerate Calendar ---
         if (window.BlockBuilder && typeof window.BlockBuilder.clearCalendar === 'function') {
             window.BlockBuilder.clearCalendar();
