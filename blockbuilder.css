@@ -5,30 +5,35 @@
 /* GDAP Modal Styles */
 #gdapPrimaryExercisesContainer {
     border: 1px solid #e0e0e0;
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    background: #f9f9f9;
 }
 #gdapPrimaryExercisesContainer legend {
     font-weight: bold;
-    padding: 0 5px;
+    padding: 0 10px;
+    color: #444;
 }
 .gdap-exercise-slot {
     border: 1px dashed #ccc;
     padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 4px;
-    background-color: #f9f9f9;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 .gdap-exercise-slot h4 {
     margin-top: 0;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
 }
 .gdap-exercise-slot label {
     display: block;
     margin-top: 8px;
-    margin-bottom: 3px;
+    margin-bottom: 5px;
     font-weight: normal;
     color: #555;
 }
@@ -36,24 +41,35 @@
     padding: 6px 12px;
     font-size: 0.9em;
     margin-top: 5px;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.button-small:hover {
+    background-color: #5a6268;
 }
 #newGoalDrivenBlockBtn {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    z-index: 900;
-    padding: 10px 15px;
-    background-color: var(--accent-color, #3498db);
+    background-color: #FF703B;
     color: white;
     border: none;
     border-radius: 4px;
+    padding: 10px 15px;
     font-weight: bold;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     cursor: pointer;
+    z-index: 50;
+    transition: transform 0.2s, background-color 0.2s;
 }
 #newGoalDrivenBlockBtn:hover {
-    background-color: var(--accent-color-dark, #2980b9);
+    background-color: #E0602B;
+    transform: translateY(-2px);
 }
 .modal {
     position: fixed;
@@ -65,28 +81,78 @@
     overflow: auto;
     background-color: rgba(0,0,0,0.5);
     display: none;
+    align-items: center;
+    justify-content: center;
 }
-.modal-content {
+
+#gdapModal .modal-content {
     background-color: #fefefe;
-    margin: 10% auto;
-    padding: 20px;
+    padding: 25px;
     border: 1px solid #888;
-    width: 80%;
+    width: 90%;
     max-width: 600px;
-    border-radius: 5px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    border-radius: 8px;
+    color: #333;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
-.close-button {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
+
+#gdapModal h2 {
+    color: #FF703B;
+    margin-bottom: 20px;
+}
+
+#gdapForm label {
+    display: block;
+    margin-bottom: 8px;
+    color: #444;
+    font-weight: 500;
+}
+
+#gdapForm select,
+#gdapForm input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+#gdapForm select:focus,
+#gdapForm input[type="number"]:focus {
+    border-color: #FF703B;
+    outline: none;
+    box-shadow: 0 0 5px rgba(255, 112, 59, 0.3);
+}
+
+#gdapForm button[type="submit"] {
+    background-color: #FF703B;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    margin-top: 15px;
+    border-radius: 4px;
+    cursor: pointer;
     font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+#gdapForm button[type="submit"]:hover {
+    background-color: #E0602B;
+}
+
+#gdapModal .close-button {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #777;
     cursor: pointer;
 }
-.close-button:hover,
-.close-button:focus {
-    color: black;
-    text-decoration: none;
+
+#gdapModal .close-button:hover {
+    color: #FF703B;
 }
 
 /* GDAP Modal Styles */
@@ -3160,9 +3226,9 @@ body.show-hub #back-to-hub-btn {
 }
 
 .version-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 0.75rem 1rem;
     background-color: rgba(255, 255, 255, 0.05);
     border-radius: 6px;

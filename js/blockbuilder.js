@@ -54,7 +54,9 @@ const createNewBtn = document.getElementById('hub-create-new'); // Added missing
 const browseTemplatesBtn = document.getElementById('hub-browse-templates'); // Added missing reference
 
 // Global variables for managing state
-let currentLoadedVersionTimestamp = null; // Initialize the timestamp variable
+let currentLoadedVersionTimestamp = null;
+// Global variable to hold exercise library data - accessible to all functions
+window.exerciseLibraryData = []; // Initialize the timestamp variable
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM fully loaded and parsed for blockbuilder.js");
@@ -164,8 +166,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function populateExerciseDropdownForGDAP(selectElement) {
         if (!selectElement) return;
-        if (typeof ExerciseLibrary !== 'undefined' && ExerciseLibrary.getExercises) {
-            const exercises = ExerciseLibrary.getExercises();
+        
+        // Get exercises from the global exerciseLibraryData variable that's populated after loadExerciseLibrary()
+        if (window.exerciseLibraryData && Array.isArray(window.exerciseLibraryData) && window.exerciseLibraryData.length > 0) {
+            const exercises = window.exerciseLibraryData;
             selectElement.innerHTML = '<option value="">Select an exercise...</option>';
             exercises.sort((a, b) => a.name.localeCompare(b.name));
             exercises.forEach(exercise => {
@@ -174,8 +178,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 option.textContent = exercise.name;
                 selectElement.appendChild(option);
             });
+            console.log('GDAP: Populated exercise dropdown with', exercises.length, 'exercises');
         } else {
-            console.warn('ExerciseLibrary not available for GDAP modal.');
+            console.warn('Exercise Library data not available for GDAP modal.');
             selectElement.innerHTML = '<option value="" disabled>Exercise library not loaded</option>';
         }
     }
