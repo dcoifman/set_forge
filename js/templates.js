@@ -3,7 +3,7 @@
  * Contains detailed, research-based training program templates.
  */
 
-// Import necessary utilities
+// Import necessary utilities - use named import to avoid the default import issue
 import { showToast } from './ui/toast.js';
 
 console.log("Templates module loading...");
@@ -884,6 +884,17 @@ function setupPreviewUseButton() {
 
 // Add all event listeners
 function addEventListeners() {
+    // Make sure we have all necessary global references
+    if (!templatesModal) templatesModal = document.getElementById('templates-modal');
+    if (!templatePreviewModal) templatePreviewModal = document.getElementById('template-preview-modal');
+    if (!templatesList) templatesList = document.getElementById('templates-list');
+    if (!templatesCloseBtn) templatesCloseBtn = document.getElementById('templates-close-btn');
+    if (!templatePreviewCloseBtn) templatePreviewCloseBtn = document.getElementById('template-preview-close-btn');
+    if (!hubBrowseTemplatesBtn) hubBrowseTemplatesBtn = document.getElementById('hub-browse-templates-btn') || document.getElementById('hub-browse-templates');
+    if (!templatesSearch) templatesSearch = document.getElementById('templates-search');
+    if (!categoryButtons || categoryButtons.length === 0) categoryButtons = document.querySelectorAll('.template-category-btn');
+    if (!useTemplateBtn) useTemplateBtn = document.getElementById('preview-use-template-btn');
+    
     // Make sure PeriodizationEngine and getExercises are available globally
     if (!window.PeriodizationEngine) {
         console.warn("PeriodizationEngine not available in global scope, some template features may not work correctly");
@@ -893,24 +904,12 @@ function addEventListeners() {
         console.warn("getExercises function not available, some template features may not work correctly");
     }
 
-    // Ensure all DOM references are up to date and initialized
-    if (typeof templatesModal === 'undefined' || !templatesModal) templatesModal = document.getElementById('templates-modal');
-    if (typeof templatePreviewModal === 'undefined' || !templatePreviewModal) templatePreviewModal = document.getElementById('template-preview-modal');
-    if (typeof templatesList === 'undefined' || !templatesList) templatesList = document.getElementById('templates-list');
-    if (typeof templatesCloseBtn === 'undefined' || !templatesCloseBtn) templatesCloseBtn = document.getElementById('templates-close-btn');
-    if (typeof templatePreviewCloseBtn === 'undefined' || !templatePreviewCloseBtn) templatePreviewCloseBtn = document.getElementById('template-preview-close-btn');
-    if (typeof hubBrowseTemplatesBtn === 'undefined' || !hubBrowseTemplatesBtn) hubBrowseTemplatesBtn = document.getElementById('hub-browse-templates-btn') || document.getElementById('hub-browse-templates');
-    if (typeof templatesSearch === 'undefined' || !templatesSearch) templatesSearch = document.getElementById('templates-search');
-    if (typeof categoryButtons === 'undefined' || !categoryButtons || categoryButtons.length === 0) categoryButtons = document.querySelectorAll('.template-category-btn');
-    if (typeof useTemplateBtn === 'undefined' || !useTemplateBtn) useTemplateBtn = document.getElementById('preview-use-template-btn');
-    
     console.log("Templates module: Adding event listeners");
     
     // Browse Templates button click
     if (hubBrowseTemplatesBtn) {
         hubBrowseTemplatesBtn.addEventListener('click', () => {
             console.log("Templates: Opening templates modal");
-            const templatesModal = document.getElementById('templates-modal');
             if (templatesModal) {
                 // Reset any inline styles that might have been applied when closing
                 templatesModal.style.display = '';
@@ -918,7 +917,6 @@ function addEventListeners() {
                 templatesModal.style.visibility = '';
             
                 // Re-render templates before showing the modal
-                const templatesList = document.getElementById('templates-list');
                 if (templatesList) {
                     renderTemplates();
                 }
@@ -941,7 +939,6 @@ function addEventListeners() {
         console.log('Templates: Adding close button event listener');
         templatesCloseBtn.addEventListener('click', () => {
             console.log('Templates: Close button clicked');
-            const templatesModal = document.getElementById('templates-modal');
             if (templatesModal) {
                 templatesModal.classList.remove('is-visible');
                 // Clear the templates list when modal is closed
@@ -1025,7 +1022,6 @@ function addEventListeners() {
     }
     
     // Close modal when clicking outside of content
-    const templatesModal = document.getElementById('templates-modal');
     if (templatesModal) {
         templatesModal.addEventListener('click', (e) => {
             // Only close if clicking directly on the modal overlay (not its children)
@@ -1044,7 +1040,6 @@ function addEventListeners() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             console.log('Templates: Escape key pressed');
-            const templatesModal = document.getElementById('templates-modal');
             if (templatesModal && templatesModal.classList.contains('is-visible')) {
                 templatesModal.classList.remove('is-visible');
                 // Clear the templates list when modal is closed
@@ -1224,5 +1219,5 @@ document.addEventListener('DOMContentLoaded', function() {
     initialize();
 });
 
-// Export functionality if needed
+// Export functionality with named exports only (no default export)
 export { useTemplate, showTemplatePreview }; 
