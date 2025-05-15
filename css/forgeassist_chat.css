@@ -1,0 +1,330 @@
+/* ForgeAssist Chat Interface Styles */
+
+/* Chat Container */
+.forge-chat-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    font-family: var(--font-primary, 'Inter', sans-serif);
+    display: flex;
+    flex-direction: column;
+    width: 320px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Chat Toggle Button */
+.forge-chat-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1001;
+    background-color: var(--accent-color, #FF703B);
+    border: none;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 50px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.forge-chat-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.forge-chat-icon {
+    font-size: 18px;
+}
+
+/* Chat Panel */
+.forge-chat-panel {
+    background-color: var(--background-color-dark, #16171C);
+    border: 1px solid var(--border-color, #4A4C54);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: 450px;
+    height: 450px;
+    width: 100%;
+    transform: translateY(calc(100% + 20px));
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.forge-chat-container.is-open .forge-chat-panel {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.forge-chat-container.is-open .forge-chat-toggle {
+    transform: translateY(-460px);
+}
+
+/* Chat Header */
+.forge-chat-header {
+    background-color: var(--background-color-medium, #282A32);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color-light, #5A5C64);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.forge-chat-header h4 {
+    color: white;
+    margin: 0;
+    font-size: 1rem;
+}
+
+.forge-chat-minimize {
+    background: none;
+    border: none;
+    color: var(--text-color-medium, #A0A5AF);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.forge-chat-minimize:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+/* Chat Messages Area */
+.forge-chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+
+.forge-chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.forge-chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.forge-chat-messages::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 3px;
+}
+
+/* Message Styles */
+.forge-chat-message {
+    display: flex;
+    gap: 8px;
+    max-width: 90%;
+}
+
+.forge-chat-message.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.forge-chat-avatar {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    background-color: var(--background-color-medium, #282A32);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.forge-chat-bubble {
+    background-color: var(--background-color-medium, #282A32);
+    padding: 10px 14px;
+    border-radius: 18px;
+    color: var(--text-color-light, #E0E4EB);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    max-width: 100%;
+}
+
+.forge-chat-message.user .forge-chat-bubble {
+    background-color: var(--accent-color, #FF703B);
+    color: white;
+}
+
+.forge-chat-message.assistant .forge-chat-bubble {
+    border-top-left-radius: 4px;
+}
+
+.forge-chat-message.user .forge-chat-bubble {
+    border-top-right-radius: 4px;
+}
+
+/* Typing Indicator */
+.typing-indicator .forge-chat-bubble {
+    display: flex;
+    align-items: center;
+    min-width: 40px;
+}
+
+.typing-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin: 0 2px;
+    background-color: var(--text-color-medium, #A0A5AF);
+    border-radius: 50%;
+    animation: typingAnimation 1.5s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.typing-dot:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.typing-dot:nth-child(3) {
+    animation-delay: 0.6s;
+}
+
+@keyframes typingAnimation {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.6;
+    }
+    30% {
+        transform: translateY(-4px);
+        opacity: 1;
+    }
+}
+
+/* Input Area */
+.forge-chat-input-container {
+    padding: 12px;
+    border-top: 1px solid var(--border-color, #4A4C54);
+    display: flex;
+    gap: 8px;
+}
+
+.forge-chat-input {
+    flex-grow: 1;
+    background-color: var(--background-color-medium, #282A32);
+    border: 1px solid var(--border-color, #4A4C54);
+    border-radius: 20px;
+    padding: 10px 16px;
+    color: var(--text-color-light, #E0E4EB);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.forge-chat-input:focus {
+    border-color: var(--accent-color, #FF703B);
+}
+
+.forge-chat-send {
+    background-color: var(--accent-color, #FF703B);
+    border: none;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.forge-chat-send:hover {
+    background-color: var(--accent-color-light, #FF8A5C);
+    transform: translateY(-2px);
+}
+
+.forge-chat-send:active {
+    transform: translateY(0);
+}
+
+.send-icon {
+    font-size: 18px;
+}
+
+/* Suggestions Area */
+.forge-chat-suggestions {
+    padding: 8px 12px;
+    border-top: 1px solid var(--border-color, #4A4C54);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.forge-chat-suggestion {
+    background-color: var(--background-color-medium, #282A32);
+    border: 1px solid var(--border-color-light, #5A5C64);
+    border-radius: 16px;
+    padding: 6px 12px;
+    color: var(--text-color, #CCD1D9);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.forge-chat-suggestion:hover {
+    background-color: var(--background-color-light, #3A3C44);
+    color: white;
+}
+
+/* Responsive Styling */
+@media (max-width: 768px) {
+    .forge-chat-container {
+        width: 90%;
+        max-width: 350px;
+    }
+    
+    .forge-chat-panel {
+        max-height: 400px;
+        height: 400px;
+    }
+    
+    .forge-chat-container.is-open .forge-chat-toggle {
+        transform: translateY(-410px);
+    }
+}
+
+@media (max-width: 480px) {
+    .forge-chat-container {
+        width: 95%;
+        right: 10px;
+        bottom: 10px;
+    }
+    
+    .forge-chat-toggle {
+        right: 10px;
+        bottom: 10px;
+    }
+    
+    .forge-chat-panel {
+        max-height: 350px;
+        height: 350px;
+    }
+    
+    .forge-chat-container.is-open .forge-chat-toggle {
+        transform: translateY(-360px);
+    }
+} 
