@@ -956,17 +956,38 @@
     <script type="module" src="js/periodizationEngine.js"></script>
     <script type="module" src="js/exercises/library.js"></script>
     <script type="module" src="js/progressionPathwayOrchestrator.js"></script>
+    
+    <!-- Load these in second wave after dependencies are established -->
+    <script type="module" src="js/blockbuilder.js"></script>
     <script type="module" src="js/forgeassist.js"></script>
     <script type="module" src="js/adaptiveScheduler.js"></script>
     <script type="module" src="js/periodizationModelManager.js"></script>
+    
     <!-- Load analytics -->
     <script type="module" src="js/analytics/updates.js"></script>
-    <!-- Load main blockbuilder logic -->
-    <script type="module" src="js/blockbuilder.js"></script>
+    
     <!-- Load UI/Helper scripts -->
     <script src="js/forgeassist_education.js"></script>
     <script type="module" src="js/forgeassist_chat.js"></script>
     <script type="module" src="js/templates.js"></script>
+    
+    <!-- Ensure global variables are properly exposed -->
+    <script>
+      window.addEventListener('DOMContentLoaded', () => {
+        // Check if modules are loaded properly
+        setTimeout(() => {
+          if (typeof window.ProgressionPathwayOrchestrator === 'undefined') {
+            console.error("ProgressionPathwayOrchestrator not available globally");
+          }
+          if (typeof window.PeriodizationEngine === 'undefined') {
+            console.error("PeriodizationEngine not available globally");
+          }
+          if (typeof window.ExerciseLibrary === 'undefined') {
+            console.error("ExerciseLibrary not available globally");
+          }
+        }, 1000); // Give a second for modules to initialize
+      });
+    </script>
 </body>
 </html>
  

@@ -285,13 +285,10 @@ const MODEL_PARAMETER_DEFINITIONS = {
  * @returns {object|null} The default parameters or null if type is unknown.
  */
 export function getModelDefaults(type) {
-    console.log(`[Engine] Getting defaults for type: ${type}`);
-    // --- DEBUG LOG --- 
-    console.log('[Engine Debug] Available model keys:', Object.keys(MODEL_DEFAULTS));
-    console.log('[Engine Debug] Requested type lowercased:', type.toLowerCase());
-    console.log('[Engine Debug] Result for requested type:', MODEL_DEFAULTS[type.toLowerCase()]);
-    // --- END DEBUG LOG ---
-    return MODEL_DEFAULTS[type.toLowerCase()] || null;
+    if(MODEL_DEFAULTS[type]) {
+        return JSON.parse(JSON.stringify(MODEL_DEFAULTS[type])); // Return a deep copy to prevent mutation
+    }
+    return null;
 }
 
 /**
