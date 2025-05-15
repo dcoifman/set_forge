@@ -64,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM fully loaded and parsed for blockbuilder.js");
     
     const gdapModal = document.getElementById('gdapModal');
-    const newGoalDrivenBlockBtn = document.getElementById('newGoalDrivenBlockBtn');
     const gdapCloseBtn = document.getElementById('gdapCloseBtn');
     const gdapForm = document.getElementById('gdapForm');
     const gdapPrimaryExercisesContainer = document.getElementById('gdapPrimaryExercisesContainer');
@@ -77,63 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeGoalInstance = null; // For Phase 1, store a single active goal.
 
     // --- GDAP Modal Logic ---
-    if (newGoalDrivenBlockBtn) {
-        newGoalDrivenBlockBtn.addEventListener('click', () => {
-            resetGDAPForm(); // Reset form to initial state
-            
-            // Make sure we have the exercises loaded before showing the modal
-            const tryPopulateExercises = () => {
-                // First try using getExercises
-                if (typeof getExercises === 'function') {
-                    const exercises = getExercises();
-                    if (exercises && Array.isArray(exercises) && exercises.length > 0) {
-                        // We have the data from getExercises, populate and show modal
-                        console.log("GDAP: Using exercises from getExercises with", exercises.length, "exercises");
-                        populateExerciseDropdownForGDAP(document.getElementById('gdapTargetExercise1'));
-                        populatePeriodizationModelDropdown();
-                        gdapModal.classList.add('is-visible');
-                        return;
-                    }
-                }
-                
-                // Fallback to exerciseLibraryData
-                if (exerciseLibraryData && Array.isArray(exerciseLibraryData) && exerciseLibraryData.length > 0) {
-                    // We have the data, populate and show modal
-                    console.log("GDAP: Using loaded exercise library with", exerciseLibraryData.length, "exercises");
-                    populateExerciseDropdownForGDAP(document.getElementById('gdapTargetExercise1'));
-                    populatePeriodizationModelDropdown();
-                    gdapModal.classList.add('is-visible');
-                } else {
-                    // Try to load the library first
-                    console.log("GDAP: Exercise library not found, attempting to load");
-                    if (typeof loadExerciseLibrary === 'function') {
-                        loadExerciseLibrary().then(loadedData => {
-                            if (loadedData) {
-                                exerciseLibraryData = loadedData;  // Save it for future use
-                                console.log("GDAP: Successfully loaded exercise library with", loadedData.length, "exercises");
-                                populateExerciseDropdownForGDAP(document.getElementById('gdapTargetExercise1'));
-                                populatePeriodizationModelDropdown();
-                                gdapModal.classList.add('is-visible');
-                            }
-                        }).catch(err => {
-                            console.error("GDAP: Failed to load exercise library", err);
-                            // Show modal anyway
-                            populateExerciseDropdownForGDAP(document.getElementById('gdapTargetExercise1'));
-                            populatePeriodizationModelDropdown();
-                            gdapModal.classList.add('is-visible');
-                        });
-                    } else {
-                        // No way to load the library, just show modal with error
-                        populateExerciseDropdownForGDAP(document.getElementById('gdapTargetExercise1'));
-                        populatePeriodizationModelDropdown();
-                        gdapModal.classList.add('is-visible');
-                    }
-                }
-            };
-            
-            tryPopulateExercises();
-        });
-    }
+    // The newGoalDrivenBlockBtn code is removed as we're using the hub button instead
 
     if (gdapCloseBtn) {
         gdapCloseBtn.addEventListener('click', () => {
@@ -1854,10 +1797,59 @@ document.addEventListener('DOMContentLoaded', () => {
     const goalDrivenBtn = document.getElementById('hub-goal-driven');
     if (goalDrivenBtn && gdapModal) {
         goalDrivenBtn.addEventListener('click', () => {
-            resetGDAPForm(); // Reset form if needed
-            populateExerciseDropdownForGDAP(gdapTargetExercise1);
-            populatePeriodizationModelDropdown();
-            gdapModal.style.display = 'block';
+            resetGDAPForm(); // Reset form to initial state
+            
+            // Make sure we have the exercises loaded before showing the modal
+            const tryPopulateExercises = () => {
+                // First try using getExercises
+                if (typeof getExercises === 'function') {
+                    const exercises = getExercises();
+                    if (exercises && Array.isArray(exercises) && exercises.length > 0) {
+                        // We have the data from getExercises, populate and show modal
+                        console.log("GDAP: Using exercises from getExercises with", exercises.length, "exercises");
+                        populateExerciseDropdownForGDAP(document.getElementById('gdapTargetExercise1'));
+                        populatePeriodizationModelDropdown();
+                        gdapModal.classList.add('is-visible');
+                        return;
+                    }
+                }
+                
+                // Fallback to exerciseLibraryData
+                if (exerciseLibraryData && Array.isArray(exerciseLibraryData) && exerciseLibraryData.length > 0) {
+                    // We have the data, populate and show modal
+                    console.log("GDAP: Using loaded exercise library with", exerciseLibraryData.length, "exercises");
+                    populateExerciseDropdownForGDAP(document.getElementById('gdapTargetExercise1'));
+                    populatePeriodizationModelDropdown();
+                    gdapModal.classList.add('is-visible');
+                } else {
+                    // Try to load the library first
+                    console.log("GDAP: Exercise library not found, attempting to load");
+                    if (typeof loadExerciseLibrary === 'function') {
+                        loadExerciseLibrary().then(loadedData => {
+                            if (loadedData) {
+                                exerciseLibraryData = loadedData;  // Save it for future use
+                                console.log("GDAP: Successfully loaded exercise library with", loadedData.length, "exercises");
+                                populateExerciseDropdownForGDAP(document.getElementById('gdapTargetExercise1'));
+                                populatePeriodizationModelDropdown();
+                                gdapModal.classList.add('is-visible');
+                            }
+                        }).catch(err => {
+                            console.error("GDAP: Failed to load exercise library", err);
+                            // Show modal anyway
+                            populateExerciseDropdownForGDAP(document.getElementById('gdapTargetExercise1'));
+                            populatePeriodizationModelDropdown();
+                            gdapModal.classList.add('is-visible');
+                        });
+                    } else {
+                        // No way to load the library, just show modal with error
+                        populateExerciseDropdownForGDAP(document.getElementById('gdapTargetExercise1'));
+                        populatePeriodizationModelDropdown();
+                        gdapModal.classList.add('is-visible');
+                    }
+                }
+            };
+            
+            tryPopulateExercises();
         });
     }
     // <<<--- END ADDED EVENT LISTENERS --- >>>
