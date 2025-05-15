@@ -309,6 +309,9 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleGDAPFormSubmit() {
         const formData = new FormData(gdapForm);
         
+        // Create an array to track generated cards
+        const generatedCards = [];
+        
         // Create goal instance from form
         const goalInstance = {
             id: `gdap-${Date.now()}`,
@@ -474,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.warn(`Could not find target cell for week ${cellWeek}, day ${cellDay}`);
                     }
                 } else {
-                    console.warn(`GDAP: Target cell ${cellId} not found for exercise ${exTarget.exerciseName}.`);
+                    console.warn(`GDAP: Target cell not found for ${exTarget.name} on ${cellDay} of Week ${cellWeek}.`);
                 }
             });
 
