@@ -636,21 +636,21 @@ export function updateInspectorForSelection() {
     try {
         // Safely call clearInspectorFocusMessage
         if (typeof clearInspectorFocusMessage === 'function') {
-            clearInspectorFocusMessage();
+    clearInspectorFocusMessage();
         }
         
-        const detailsTabContent = document.getElementById('details');
-        if (!detailsTabContent) return;
+    const detailsTabContent = document.getElementById('details');
+    if (!detailsTabContent) return;
 
         const selectionState = getSelectionState ? getSelectionState() : 
             { selectedElement: null, selectedElements: new Set(), multiSelectActive: false };
-            
+
         const { selectedElement, selectedElements, multiSelectActive } = selectionState;
 
         if (multiSelectActive && selectedElements && selectedElements.size > 0) {
-            openMultiSelectInspector();
-            return;
-        }
+        openMultiSelectInspector();
+        return;
+    }
 
         if (!selectedElement) {
             if (inspectorTitle) inspectorTitle.textContent = 'Inspector';
@@ -660,14 +660,14 @@ export function updateInspectorForSelection() {
             detailsTabContent.innerHTML = '<p>Select an item to see details.</p>';
             
             updateInspectorLoadGauges({ selectedElement: null });
-            return;
-        }
+        return;
+    }
 
-        if (!inspectorPanel.classList.contains('is-visible')) {
+    if (!inspectorPanel.classList.contains('is-visible')) {
             openInspector(selectedElement);
-        }
+    }
         setTabVisibility(['library', 'details', 'assist', 'analytics', 'adaptive', 'settings']);
-        activateTab('details');
+    activateTab('details');
 
         updateInspectorLoadGauges({ selectedElement });
 
@@ -704,87 +704,87 @@ export function updateInspectorForSelection() {
 
         // Update content based on selected element type
         if (selectedElement.classList.contains('session-placeholder-card')) {
-            if (inspectorTitle) inspectorTitle.textContent = 'Placeholder Details';
+         if (inspectorTitle) inspectorTitle.textContent = 'Placeholder Details';
             const sessionType = selectedElement.dataset.sessionType || 'Placeholder';
             const targetMetric = selectedElement.dataset.targetMetric || 'N/A';
             const cell = selectedElement.closest('.day-cell');
-            const day = cell?.dataset.day || '?';
-            const week = cell?.dataset.week || '?';
-            detailsTabContent.innerHTML = `
-                <h4>${sessionType} Session Placeholder</h4>
-                <p><strong>Location:</strong> ${day}, Week ${week}</p>
-                <p><strong>Target / Details:</strong> ${targetMetric}</p>
-                <hr class="detail-separator">
-                <p><em>This is a planned session outline.</em></p>
-                <p><strong>Next Steps:</strong></p>
-                <ul>
-                    <li>Click the '+' button on the card to quickly open the Library.</li>
-                    <li>Double-click the card to open the Library.</li>
-                    <li>Drag specific exercises from the Library tab onto the calendar day.</li>
-                </ul>
-            `;
+         const day = cell?.dataset.day || '?';
+         const week = cell?.dataset.week || '?';
+         detailsTabContent.innerHTML = `
+            <h4>${sessionType} Session Placeholder</h4>
+            <p><strong>Location:</strong> ${day}, Week ${week}</p>
+            <p><strong>Target / Details:</strong> ${targetMetric}</p>
+            <hr class="detail-separator">
+            <p><em>This is a planned session outline.</em></p>
+            <p><strong>Next Steps:</strong></p>
+            <ul>
+                <li>Click the '+' button on the card to quickly open the Library.</li>
+                <li>Double-click the card to open the Library.</li>
+                <li>Drag specific exercises from the Library tab onto the calendar day.</li>
+            </ul>
+         `;
         } else if (selectedElement.classList.contains('workout-card')) {
             const structuredDetails = getStructuredDetails ? getStructuredDetails(selectedElement) : 
                 { name: 'Exercise', sets: 3, reps: 10, loadType: 'rpe', loadValue: 7, rest: '90s', notes: '' };
                 
             const parentCell = selectedElement.closest('.day-cell');
-            const week = parentCell?.dataset.week || '?';
-            const day = parentCell?.dataset.day || '?';
+        const week = parentCell?.dataset.week || '?';
+        const day = parentCell?.dataset.day || '?';
             const cardLoad = parseInt(selectedElement.dataset.load || '0', 10);
 
-            if (inspectorTitle) inspectorTitle.textContent = `Edit: ${structuredDetails.name}`;
+        if (inspectorTitle) inspectorTitle.textContent = `Edit: ${structuredDetails.name}`;
 
-            detailsTabContent.innerHTML = `
-                <p><small>Location: Week ${week}, ${day}</small></p>
-                <p><small>Est. Load Contribution: ${cardLoad} units</small></p>
-                <hr class="detail-separator">
-                <div class="form-group full-width">
-                    <label for="inspector-exercise-name">Exercise Name</label>
-                    <input type="text" id="inspector-exercise-name" value="${structuredDetails.name}">
-                </div>
-                <div class="structured-inputs" style="display: flex; flex-wrap: wrap; gap: 0 1rem;">
-                    <div style="display: flex; gap: 1rem; width: 100%; margin-bottom: 1rem;">
-                        <div class="form-group" style="flex: 1;">
-                            <label for="inspector-sets">Sets</label>
-                            <input type="number" id="inspector-sets" value="${structuredDetails.sets}" min="1">
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label for="inspector-reps">Reps</label>
-                            <input type="text" id="inspector-reps" value="${structuredDetails.reps}" placeholder="e.g., 5 or 8-12">
-                        </div>
+        detailsTabContent.innerHTML = `
+             <p><small>Location: Week ${week}, ${day}</small></p>
+             <p><small>Est. Load Contribution: ${cardLoad} units</small></p>
+             <hr class="detail-separator">
+             <div class="form-group full-width">
+                <label for="inspector-exercise-name">Exercise Name</label>
+                <input type="text" id="inspector-exercise-name" value="${structuredDetails.name}">
+             </div>
+             <div class="structured-inputs" style="display: flex; flex-wrap: wrap; gap: 0 1rem;">
+                <div style="display: flex; gap: 1rem; width: 100%; margin-bottom: 1rem;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="inspector-sets">Sets</label>
+                        <input type="number" id="inspector-sets" value="${structuredDetails.sets}" min="1">
                     </div>
-                    <div class="form-group" style="flex-basis: 50%; flex-grow: 1;">
-                        <label for="inspector-load-type">Load Type</label>
-                        <select id="inspector-load-type">
-                            <option value="rpe" ${structuredDetails.loadType === 'rpe' ? 'selected' : ''}>RPE</option>
-                            <option value="percent" ${structuredDetails.loadType === 'percent' ? 'selected' : ''}>% 1RM</option>
-                            <option value="weight" ${structuredDetails.loadType === 'weight' ? 'selected' : ''}>Weight (kg)</option>
-                            <option value="text" ${structuredDetails.loadType === 'text' ? 'selected' : ''}>Text</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="flex-basis: calc(50% - 1rem); flex-grow: 1;">
-                        <label for="inspector-load-value">Load Value</label>
-                        <input type="text" id="inspector-load-value" value="${structuredDetails.loadValue}" placeholder="e.g., 8 or 75">
-                        <div id="load-value-explanation" style="font-size: 0.75rem; color: var(--text-color); margin-top: 4px; min-height: 1em;"></div>
-                    </div>
-                    <div class="form-group" style="flex-basis: 100%;">
-                        <label for="inspector-rest">Rest</label>
-                        <input type="text" id="inspector-rest" value="${structuredDetails.rest}" placeholder="e.g., 90s or 2m">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="inspector-reps">Reps</label>
+                        <input type="text" id="inspector-reps" value="${structuredDetails.reps}" placeholder="e.g., 5 or 8-12">
                     </div>
                 </div>
-                <div class="form-group full-width">
-                    <label for="inspector-notes">Notes</label>
-                    <textarea id="inspector-notes" rows="3">${structuredDetails.notes}</textarea>
+                <div class="form-group" style="flex-basis: 50%; flex-grow: 1;">
+                    <label for="inspector-load-type">Load Type</label>
+                    <select id="inspector-load-type">
+                        <option value="rpe" ${structuredDetails.loadType === 'rpe' ? 'selected' : ''}>RPE</option>
+                        <option value="percent" ${structuredDetails.loadType === 'percent' ? 'selected' : ''}>% 1RM</option>
+                        <option value="weight" ${structuredDetails.loadType === 'weight' ? 'selected' : ''}>Weight (kg)</option>
+                        <option value="text" ${structuredDetails.loadType === 'text' ? 'selected' : ''}>Text</option>
+                    </select>
                 </div>
-                <hr class="detail-separator">
-                <button id="save-card-details" class="cta-button primary-cta">Save Details</button>
-                <button id="delete-card" class="cta-button secondary-cta" style="margin-top: 10px; background-color: #555;">Delete Card</button>
-            `;
+                <div class="form-group" style="flex-basis: calc(50% - 1rem); flex-grow: 1;">
+                    <label for="inspector-load-value">Load Value</label>
+                    <input type="text" id="inspector-load-value" value="${structuredDetails.loadValue}" placeholder="e.g., 8 or 75">
+                    <div id="load-value-explanation" style="font-size: 0.75rem; color: var(--text-color); margin-top: 4px; min-height: 1em;"></div>
+                </div>
+                <div class="form-group" style="flex-basis: 100%;">
+                    <label for="inspector-rest">Rest</label>
+                    <input type="text" id="inspector-rest" value="${structuredDetails.rest}" placeholder="e.g., 90s or 2m">
+                </div>
+             </div>
+             <div class="form-group full-width">
+                <label for="inspector-notes">Notes</label>
+                <textarea id="inspector-notes" rows="3">${structuredDetails.notes}</textarea>
+             </div>
+             <hr class="detail-separator">
+             <button id="save-card-details" class="cta-button primary-cta">Save Details</button>
+             <button id="delete-card" class="cta-button secondary-cta" style="margin-top: 10px; background-color: #555;">Delete Card</button>
+        `;
 
             document.getElementById('save-card-details')?.addEventListener('click', saveWorkoutCardDetails);
             document.getElementById('delete-card')?.addEventListener('click', deleteSelectedWorkoutCard);
 
-            const loadTypeSelect = document.getElementById('inspector-load-type');
+        const loadTypeSelect = document.getElementById('inspector-load-type');
             if (loadTypeSelect && typeof updateLoadValueExplanation === 'function') {
                 loadTypeSelect.addEventListener('change', updateLoadValueExplanation);
                 updateLoadValueExplanation();
@@ -792,42 +792,42 @@ export function updateInspectorForSelection() {
         } else if (selectedElement.classList.contains('day-cell')) {
             const week = selectedElement.dataset.week;
             const day = selectedElement.dataset.day;
-            if (inspectorTitle) inspectorTitle.textContent = `Day Details: Wk ${week}, ${day}`;
+         if (inspectorTitle) inspectorTitle.textContent = `Day Details: Wk ${week}, ${day}`;
 
-            let totalDayLoad = 0;
-            let cardCount = 0;
-            let exerciseNames = [];
+         let totalDayLoad = 0;
+         let cardCount = 0;
+         let exerciseNames = [];
             selectedElement.querySelectorAll('.workout-card:not(.session-placeholder-card)').forEach(card => {
-                const name = card.querySelector('.exercise-name')?.textContent || '';
-                if(name) exerciseNames.push(name.toLowerCase());
-                totalDayLoad += parseInt(card.dataset.load || '0', 10);
-                cardCount++;
-            });
+             const name = card.querySelector('.exercise-name')?.textContent || '';
+             if(name) exerciseNames.push(name.toLowerCase());
+             totalDayLoad += parseInt(card.dataset.load || '0', 10);
+             cardCount++;
+         });
 
-            let focus = 'Mixed';
-            if (cardCount > 0) {
-                if (exerciseNames.every(name => name.includes('squat') || name.includes('deadlift') || name.includes('leg'))) focus = 'Lower Body';
-                else if (exerciseNames.every(name => name.includes('press') || name.includes('row') || name.includes('pull'))) focus = 'Upper Body';
-                else if (exerciseNames.every(name => name.includes('run') || name.includes('sprint') || name.includes('jump'))) focus = 'Conditioning/Plyo';
-            }
+         let focus = 'Mixed';
+         if (cardCount > 0) {
+             if (exerciseNames.every(name => name.includes('squat') || name.includes('deadlift') || name.includes('leg'))) focus = 'Lower Body';
+             else if (exerciseNames.every(name => name.includes('press') || name.includes('row') || name.includes('pull'))) focus = 'Upper Body';
+             else if (exerciseNames.every(name => name.includes('run') || name.includes('sprint') || name.includes('jump'))) focus = 'Conditioning/Plyo';
+         }
 
-            detailsTabContent.innerHTML = `<h4>Week ${week}, ${day}</h4>`;
-            if (cardCount > 0) {
-                detailsTabContent.innerHTML += '<ul>' + exerciseNames.map(name => `<li>${name}</li>`).join('') + '</ul>';
-            }
-            detailsTabContent.innerHTML += `
-                <hr class="detail-separator">
-                <p><small>Card Count: ${cardCount}</small></p>
-                <p><small>Est. Daily Load: ${totalDayLoad} units</small></p>
-                <p><small>Focus: ${focus}</small></p>
-                <p><small>Phase: [Needs Phase Info]</small></p> 
-            `;
+         detailsTabContent.innerHTML = `<h4>Week ${week}, ${day}</h4>`;
+         if (cardCount > 0) {
+            detailsTabContent.innerHTML += '<ul>' + exerciseNames.map(name => `<li>${name}</li>`).join('') + '</ul>';
+         }
+         detailsTabContent.innerHTML += `
+             <hr class="detail-separator">
+             <p><small>Card Count: ${cardCount}</small></p>
+             <p><small>Est. Daily Load: ${totalDayLoad} units</small></p>
+             <p><small>Focus: ${focus}</small></p>
+             <p><small>Phase: [Needs Phase Info]</small></p> 
+         `;
         } else if (selectedElement.classList.contains('phase-bar')) {
             updateInspectorPhaseDetails(selectedElement);
-        } else {
-            detailsTabContent.innerHTML = '<p>Select an item on the canvas to see details.</p>';
-            if (inspectorTitle) inspectorTitle.textContent = 'Inspector';
-        }
+    } else {
+        detailsTabContent.innerHTML = '<p>Select an item on the canvas to see details.</p>';
+        if (inspectorTitle) inspectorTitle.textContent = 'Inspector';
+    }
 
         // Safely call renderAssistTabContent function
         if (typeof renderAssistTabContent === 'function') {
@@ -908,32 +908,6 @@ export function saveWorkoutCardDetails() {
     }
 }
 
-// Setup listeners originally in blockbuilder.js
-export function initializeInspectorListeners() {
-    if (inspectorCloseBtn) inspectorCloseBtn.addEventListener('click', closeInspector);
-
-    inspectorTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-           activateTab(tab.dataset.tab);
-        });
-    });
-    // Potentially add listener for clicking outside inspector to close it here?
-}
-
-// --- Inspector Focus Message ---
-let inspectorFocusTimeout = null;
-export function showInspectorFocusMessage(message, duration = 4000) {
-    clearTimeout(inspectorFocusTimeout);
-    const focusArea = document.getElementById('inspector-focus-message'); // Assumes this element exists in HTML
-    if (focusArea) {
-        focusArea.textContent = message;
-        focusArea.style.display = 'block';
-        inspectorFocusTimeout = setTimeout(() => {
-            focusArea.style.display = 'none';
-            focusArea.textContent = '';
-        }, duration);
-    }
-}
 
 export function clearInspectorFocusMessage() {
      clearTimeout(inspectorFocusTimeout);
