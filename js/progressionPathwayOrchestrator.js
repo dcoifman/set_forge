@@ -377,9 +377,17 @@ const ProgressionPathwayOrchestrator = {
         // 1. Identify muscle groups worked by primaries
         const primaryMusclesWorked = new Set();
         const primaryCategories = new Set();
-        primaryExercisesOnDay.forEach(ex => {
-            if (ex && ex.primaryMuscles) ex.primaryMuscles.forEach(m => primaryMusclesWorked.add(m.toLowerCase()));
-            if (ex && ex.category) primaryCategories.add(ex.category.toLowerCase());
+        
+        // Add defensive checks to filter out null/undefined exercises
+        const validPrimaryExercises = primaryExercisesOnDay.filter(ex => ex != null);
+        
+        validPrimaryExercises.forEach(ex => {
+            if (ex && ex.primaryMuscles) {
+                ex.primaryMuscles.forEach(m => m && primaryMusclesWorked.add(m.toLowerCase()));
+            }
+            if (ex && ex.category) {
+                primaryCategories.add(ex.category.toLowerCase());
+            }
         });
 
         // 2. Determine number of accessories
@@ -388,7 +396,7 @@ const ProgressionPathwayOrchestrator = {
         else if (athleteLevel === 'Intermediate') numAccessories = 2;
         else if (athleteLevel === 'Advanced') numAccessories = 3; // Max 3 for now
 
-        if (primaryExercisesOnDay.length === 0) return suggestions; // No primaries, no accessories
+        if (validPrimaryExercises.length === 0) return suggestions; // No primaries, no accessories
 
         // 3. Determine accessory type based on goal
         let desiredCategories = ['isolation', 'machine']; // Default accessory types
@@ -422,7 +430,7 @@ const ProgressionPathwayOrchestrator = {
 
         // 4. Filter candidate exercises
         const candidates = allExercises.filter(ex => {
-            if (primaryExercisesOnDay.some(pEx => pEx.id === ex.id)) return false; // Don't suggest a primary
+            if (validPrimaryExercises.some(pEx => pEx.id === ex.id)) return false; // Don't suggest a primary
             if (suggestions.some(s => s.exerciseId === ex.id)) return false; // Already suggested
 
             // Check if it's an "accessory-like" exercise based on tags or category
@@ -475,7 +483,7 @@ const ProgressionPathwayOrchestrator = {
             
             // Penalize being too similar to primary movement patterns if not for hypertrophy
             if (overallGoalType.toLowerCase() !== 'hypertrophy') {
-                primaryExercisesOnDay.forEach(pEx => {
+                validPrimaryExercises.forEach(pEx => {
                     if(pEx.tags && a.tags && pEx.tags.some(pt => a.tags.includes(pt))) scoreA -=1; // e.g. both 'squat' tag
                     if(pEx.tags && b.tags && pEx.tags.some(pt => b.tags.includes(pt))) scoreB -=1;
                 });
@@ -494,7 +502,7 @@ const ProgressionPathwayOrchestrator = {
                 notes: `Accessory for ${overallGoalType.toLowerCase()}`
             });
         }
-        console.log(`PPO Accessory Suggestions for day with primaries [${primaryExercisesOnDay.map(p=>p.name).join(', ')}]:`, suggestions);
+        console.log(`PPO Accessory Suggestions for day with primaries [${validPrimaryExercises.map(p => p.name || 'unknown').join(', ')}]:`, suggestions);
         return suggestions;
     },
 
