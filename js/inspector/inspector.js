@@ -878,16 +878,22 @@ export function saveWorkoutCardDetails() {
              else if (loadTypeSelect.value === 'weight') detailsString += `${loadValueInput.value}kg`;
              else detailsString += loadValueInput.value;
         }
-         if (restInput.value) detailsString += ` (${restInput.value} rest)`;
 
-        selectedElement.querySelector('.details').textContent = detailsString || 'No details';
+        if (restInput.value) detailsString += ` (${restInput.value} rest)`;
 
+        const detailsElement = selectedElement.querySelector('.exercise-details') || selectedElement.querySelector('.details');
+        if (detailsElement) {
+            detailsElement.textContent = detailsString || 'No details';
+        }
+
+        // Update data attributes
         selectedElement.dataset.sets = setsInput.value;
         selectedElement.dataset.reps = repsInput.value;
         selectedElement.dataset.loadType = loadTypeSelect.value;
         selectedElement.dataset.loadValue = loadValueInput.value;
         selectedElement.dataset.rest = restInput.value;
         selectedElement.dataset.notes = notesInput.value;
+        selectedElement.dataset.exerciseName = nameInput.value;
 
         // Update estimated load (duplicate logic, should be in a helper)
         let estimatedLoad = 300;
@@ -897,14 +903,46 @@ export function saveWorkoutCardDetails() {
         estimatedLoad += sets * reps * 5;
         if (loadTypeSelect.value === 'rpe' && loadVal > 7) estimatedLoad *= (1 + (loadVal - 7) * 0.15);
         if (loadTypeSelect.value === 'percent' && loadVal > 70) estimatedLoad *= (1 + (loadVal - 70) * 0.015);
-         if (loadTypeSelect.value === 'weight') estimatedLoad = Math.max(estimatedLoad, loadVal * sets * reps * 0.5);
+        if (loadTypeSelect.value === 'weight') estimatedLoad = Math.max(estimatedLoad, loadVal * sets * reps * 0.5);
         if (nameInput.value.toLowerCase().includes('squat') || nameInput.value.toLowerCase().includes('deadlift')) estimatedLoad *= 1.2;
         if (nameInput.value.toLowerCase().includes('press')) estimatedLoad *= 0.8;
         selectedElement.dataset.load = Math.round(estimatedLoad);
 
-        triggerAnalyticsUpdate();
-        triggerSaveState();
-        showToast('Workout details saved', 'info', 1500);
+        // Refresh ForgeAssist context to reflect the updated exercise details
+        try {
+            const forgeAssist = window.ForgeAssist || ForgeAssist || null;
+            if (forgeAssist) {
+                // Clear context first
+                if (typeof forgeAssist.clearContext === 'function') {
+                    forgeAssist.clearContext();
+                }
+                
+                // Then update with the current selection
+                if (typeof forgeAssist.updateContext === 'function') {
+                    const selectionState = getSelectionState ? getSelectionState() : 
+                        { selectedElement: null, selectedElements: new Set() };
+                    forgeAssist.updateContext(selectionState.selectedElement, selectionState.selectedElements);
+                }
+                
+                // Update the ForgeAssist tab content
+                if (typeof updateForgeAssistTab === 'function') {
+                    updateForgeAssistTab();
+                }
+            }
+        } catch (e) {
+            console.warn('[Inspector] Error refreshing ForgeAssist context:', e);
+        }
+
+        // Trigger analytics update and save state if the functions exist
+        if (typeof triggerAnalyticsUpdate === 'function') {
+            triggerAnalyticsUpdate();
+        }
+        
+        if (typeof triggerSaveState === 'function') {
+            triggerSaveState();
+        }
+
+        showToast('Exercise details updated', 'success');
     }
 }
 

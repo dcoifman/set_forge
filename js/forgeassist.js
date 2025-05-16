@@ -2476,10 +2476,15 @@ const ForgeAssist = (() => {
      */
     function clearContext() {
         console.log('[ForgeAssist.clearContext] Clearing selection context.');
-        currentContext.selectedElement = null;
-        currentContext.selectedElements = new Set();
-        // Optionally trigger UI updates if context clearing should affect inspector, etc.
-        // document.body.dispatchEvent(new CustomEvent('forge-assist:context-cleared', { bubbles: true }));
+        currentContext = {
+            selectedElement: null,
+            selectedElements: new Set(),
+        };
+        
+        // Log the cleared state for debugging
+        console.log('[ForgeAssist.clearContext] Context cleared successfully.');
+        
+        return { success: true, message: 'Context cleared successfully' };
     }
     
     /**
