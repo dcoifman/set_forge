@@ -23,6 +23,36 @@
     }
 }
 
+/* Enhance the display transition - make it more visible and robust */
+body.show-builder .block-builder-container {
+    opacity: 1;
+    visibility: visible;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(0);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+body.show-hub .block-builder-container {
+    opacity: 0;
+    visibility: hidden;
+    display: none;
+    transform: translateY(20px);
+}
+
+body.show-builder #block-builder-hub {
+    display: none;
+    opacity: 0;
+    visibility: hidden;
+}
+
+body.show-hub #block-builder-hub {
+    opacity: 1;
+    visibility: visible;
+    display: block;
+    transition: opacity 0.5s ease-out;
+}
+
 .gdap-program-generating .work-canvas {
     animation: gdapProgramGeneration 1.5s ease-out forwards;
 }

@@ -254,7 +254,24 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
             
             // Close the modal first to allow overlay to show
-            gdapModal.classList.remove('is-visible');
+            if (gdapModal.classList) {
+                gdapModal.classList.remove('is-visible');
+            } else {
+                gdapModal.style.display = 'none';
+            }
+            
+            // Force switch to builder view
+            document.body.classList.add('show-builder');
+            document.body.classList.remove('show-hub');
+            
+            // Get references to containers and update their display style
+            const hubContainer = document.getElementById('block-builder-hub');
+            const blockBuilderContainer = document.querySelector('.block-builder-container');
+            
+            if (hubContainer) hubContainer.style.display = 'none';
+            if (blockBuilderContainer) blockBuilderContainer.style.display = 'flex';
+            
+            console.log("GDAP: Form submitted, switching to builder view");
             
             // Then run the GDAP generation process
             await handleGDAPFormSubmit();
@@ -345,9 +362,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Switch to the block builder view (but keep overlay visible)
-        showView('builder');
+        // Force direct view switching instead of using showView to avoid any issues
+        document.body.classList.add('show-builder');
+        document.body.classList.remove('show-hub');
         
-        console.log("GDAP: Switched to builder view");
+        // Directly manipulate the containers
+        const hubContainer = document.getElementById('block-builder-hub');
+        const blockBuilderContainer = document.querySelector('.block-builder-container');
+        const backToHubBtn = document.getElementById('back-to-hub-btn');
+        
+        if (hubContainer) hubContainer.style.display = 'none';
+        if (blockBuilderContainer) blockBuilderContainer.style.display = 'flex';
+        if (backToHubBtn) backToHubBtn.style.display = 'inline';
+        
+        console.log("GDAP: Directly forced builder view");
 
         // Add generating class to trigger animation
         document.body.classList.add('gdap-program-generating');
@@ -5600,7 +5628,13 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('GDAP program regenerated!');
         }
         
-        gdapModal.style.display = 'none';
+        // Handle modal closing properly
+        if (gdapModal) {
+            if (gdapModal.classList) {
+                gdapModal.classList.remove('is-visible');
+            }
+            gdapModal.style.display = 'none';
+        }
     }
 
     // Function to update the visibility of the editGoalBtn
