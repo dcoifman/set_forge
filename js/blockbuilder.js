@@ -408,13 +408,46 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Function to create and animate a card with delay
         const createAndAnimateCard = (cardConfig, targetCell, delay) => {
-            const card = createWorkoutCard(cardConfig.name, cardConfig.detailsString, cardConfig.options);
+            // Create the card
+            let card;
+            if (typeof window.createWorkoutCard === 'function') {
+                card = window.createWorkoutCard(
+                    cardConfig.name, 
+                    cardConfig.detailsString, 
+                    {
+                        ...cardConfig.options,
+                        id: `gdap-card-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`
+                    }
+                );
+            } else {
+                card = document.createElement('div');
+                card.className = 'workout-card';
+                card.textContent = `${cardConfig.name}: ${cardConfig.detailsString}`;
+                card.draggable = true;
+                card.id = `gdap-card-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+                if (window.DragDrop && typeof window.DragDrop.makeDraggable === 'function') {
+                    window.DragDrop.makeDraggable(card);
+                }
+            }
+            
+            // Add data attributes and classes for animation
+            card.dataset.goalDriven = "true";
+            if (cardConfig.options && cardConfig.options.sourceGoalId) {
+                card.dataset.sourceGoalId = cardConfig.options.sourceGoalId;
+            }
+            if (cardConfig.options && cardConfig.options.exerciseId) {
+                card.dataset.exerciseId = cardConfig.options.exerciseId;
+            }
             
             // Add classes for animation
             card.classList.add('gdap-card-entry');
             
             if (targetCell) {
+                // Append the card to its container
                 targetCell.appendChild(card);
+                
+                // Track the card for potential further operations
+                generatedCards.push(card);
                 
                 // Animate after a delay
                 setTimeout(() => {
@@ -1815,12 +1848,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (viewName === 'builder') {
+            // Update both style and classes for better animation compatibility
             hubContainer.style.display = 'none';
             blockBuilderContainer.style.display = 'flex'; // Assuming flex layout for builder
+            
+            // Add body classes for consistent state management
+            document.body.classList.add('show-builder');
+            document.body.classList.remove('show-hub');
+            
             if (backToHubBtn) backToHubBtn.style.display = 'inline'; // Show back button
         } else if (viewName === 'hub') {
             hubContainer.style.display = 'block'; // Or flex, depending on its CSS
             blockBuilderContainer.style.display = 'none';
+            
+            // Update body classes
+            document.body.classList.add('show-hub');
+            document.body.classList.remove('show-builder');
+            document.body.classList.remove('gdap-program-generating'); // Ensure this is removed when going back
+            
             if (backToHubBtn) backToHubBtn.style.display = 'none'; // Hide back button
         } else {
             console.warn(`Unknown view name: ${viewName}`);
