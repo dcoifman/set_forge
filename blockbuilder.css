@@ -4045,3 +4045,535 @@ body.show-hub #back-to-hub-btn {
         transform: scale(1);
     }
 }
+
+/* Inspector Load & Tonnage Gauges */
+.inspector-load-gauges {
+    background-color: rgba(25, 26, 31, 0.5);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+}
+
+.inspector-load-gauges h4 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-color-light);
+}
+
+.gauge-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.inspector-gauge {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.inspector-gauge .gauge-label {
+    font-size: 0.8rem;
+    color: var(--text-color-light);
+}
+
+.inspector-gauge .gauge-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: white;
+    line-height: 1;
+}
+
+.inspector-gauge .gauge-bar-bg {
+    height: 6px;
+    background-color: rgba(204, 209, 217, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 2px;
+}
+
+.inspector-gauge .gauge-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-color), var(--accent-color-light));
+    border-radius: 3px;
+    transition: width 0.5s ease-out;
+}
+
+/* Special colors for different load ranges */
+.inspector-gauge .gauge-bar.low-load {
+    background: linear-gradient(90deg, #4CAF50, #81C784);
+}
+
+.inspector-gauge .gauge-bar.medium-load {
+    background: linear-gradient(90deg, #FFC107, #FFD54F);
+}
+
+.inspector-gauge .gauge-bar.high-load {
+    background: linear-gradient(90deg, #FF5722, #FF8A65);
+}
+
+/* Media Support for Inspector Panel */
+.media-preview-container {
+    margin-top: 16px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: rgba(25, 26, 31, 0.5);
+}
+
+.media-preview-container iframe {
+    width: 100%;
+    height: 200px;
+    border: none;
+}
+
+.media-preview-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.media-input-group {
+    display: flex;
+    margin-top: 12px;
+}
+
+.media-input-group input {
+    flex-grow: 1;
+    background-color: rgba(27, 28, 34, 0.7);
+    border: 1px solid rgba(204, 209, 217, 0.2);
+    color: var(--text-color);
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    border-radius: 4px 0 0 4px;
+}
+
+.media-input-group button {
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.media-input-group button:hover {
+    background-color: var(--accent-color-light);
+}
+
+/* Media Indicator for Workout Cards */
+.media-indicator {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: var(--accent-color);
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.8rem;
+    opacity: 0.85;
+    transition: opacity 0.2s;
+    z-index: 10;
+}
+
+.workout-card:hover .media-indicator {
+    opacity: 1;
+}
+
+/* Media Preview Header */
+.media-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: rgba(58, 123, 213, 0.2);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.media-preview-header h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.remove-media-btn {
+    background: none;
+    border: none;
+    color: var(--text-color-light);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0;
+    height: 24px;
+    width: 24px;
+    line-height: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: color 0.2s;
+}
+
+.remove-media-btn:hover {
+    color: white;
+}
+
+/* Drag-and-Drop Highlighting */
+.inspector-panel.drag-highlight {
+    box-shadow: 0 0 0 2px var(--accent-color);
+}
+
+.inspector-panel.drag-highlight::after {
+    content: "Drop media here";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(34, 36, 43, 0.85);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    pointer-events: none;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Adaptive Tab Styles */
+.adaptive-header {
+    margin-bottom: 12px;
+}
+
+.adaptive-subtitle {
+    margin-top: 4px;
+    color: var(--text-color-light);
+    font-size: 0.85rem;
+}
+
+.adaptive-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(204, 209, 217, 0.1);
+    margin-bottom: 16px;
+}
+
+.adaptive-tab {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.adaptive-tab:hover {
+    color: white;
+}
+
+.adaptive-tab.active {
+    color: var(--accent-color);
+    border-bottom-color: var(--accent-color);
+}
+
+.adaptive-tab-content {
+    display: none;
+}
+
+.adaptive-tab-content.active {
+    display: block;
+}
+
+.adaptive-options {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.adaptive-option {
+    background-color: rgba(25, 26, 31, 0.5);
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.adaptive-option h5 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1rem;
+    color: white;
+}
+
+.adaptive-option p {
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    color: var(--text-color-light);
+}
+
+.adaptive-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.readiness-slider-container {
+    margin: 16px 0;
+}
+
+.readiness-levels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.readiness-low {
+    color: #FF5252;
+}
+
+.readiness-moderate {
+    color: #FFC107;
+}
+
+.readiness-high {
+    color: #4CAF50;
+}
+
+.adaptive-slider {
+    width: 100%;
+    height: 8px;
+    -webkit-appearance: none;
+    background: linear-gradient(to right, #FF5252, #FFC107, #4CAF50);
+    border-radius: 4px;
+    outline: none;
+}
+
+.adaptive-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.adaptive-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+    border: none;
+}
+
+.adaptive-recommendations {
+    margin-top: 16px;
+    background-color: rgba(58, 123, 213, 0.1);
+    border-left: 4px solid var(--accent-color);
+    padding: 12px;
+    border-radius: 0 4px 4px 0;
+}
+
+.adaptive-recommendations h6 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: var(--accent-color);
+}
+
+.adaptive-recommendations ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.adaptive-recommendations li {
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+}
+
+.adaptive-select {
+    width: 100%;
+    padding: 8px 12px;
+    background-color: rgba(27, 28, 34, 0.7);
+    border: 1px solid rgba(204, 209, 217, 0.2);
+    border-radius: 4px;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.phase-params {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.param-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.param-item label {
+    font-size: 0.9rem;
+    color: var(--text-color-light);
+}
+
+.param-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.param-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(58, 123, 213, 0.2);
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    transition: background-color 0.2s;
+}
+
+.param-btn:hover {
+    background-color: rgba(58, 123, 213, 0.4);
+}
+
+.param-value {
+    min-width: 70px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.load-pattern-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.load-pattern-btn {
+    background-color: rgba(58, 123, 213, 0.2);
+    border: 1px solid rgba(58, 123, 213, 0.3);
+    border-radius: 4px;
+    padding: 6px 12px;
+    color: white;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.load-pattern-btn:hover {
+    background-color: rgba(58, 123, 213, 0.4);
+}
+
+.load-pattern-btn.selected {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+/* Analytics Tab Styles */
+.analytics-header {
+    margin-bottom: 12px;
+}
+
+.analytics-subtitle {
+    margin-top: 4px;
+    color: var(--text-color-light);
+    font-size: 0.85rem;
+}
+
+.analytics-chart-container {
+    background-color: rgba(25, 26, 31, 0.5);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    height: 180px;
+}
+
+.analytics-chart-container canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.metric-card {
+    background-color: rgba(25, 26, 31, 0.5);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.metric-label {
+    font-size: 0.8rem;
+    color: var(--text-color-light);
+    margin-bottom: 6px;
+}
+
+.metric-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: white;
+}
+
+.metric-high {
+    color: #FF5252;
+}
+
+.metric-low {
+    color: #FFC107;
+}
+
+.metric-normal {
+    color: #4CAF50;
+}
+
+.analytics-insights {
+    background-color: rgba(58, 123, 213, 0.1);
+    border-left: 4px solid var(--accent-color);
+    padding: 12px;
+    border-radius: 0 8px 8px 0;
+    margin-top: 20px;
+}
+
+.analytics-insights h4 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    color: var(--accent-color);
+}
+
+.analytics-insights ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.analytics-insights li {
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+}
+
+/* Responsive adjustments for small screens */
+@media (max-width: 500px) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+}
