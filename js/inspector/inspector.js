@@ -637,8 +637,8 @@ function handleAddSuggestion(event) {
 export function updateInspectorForSelection() {
     try {
         // Safely call clearInspectorFocusMessage
-        if (typeof clearInspectorFocusMessage === 'function') {
-            clearInspectorFocusMessage();
+        if (typeof inspectorFocusTimeout !== 'undefined') {
+            clearTimeout(inspectorFocusTimeout);
         }
         
         const detailsTabContent = document.getElementById('details');
@@ -668,11 +668,7 @@ export function updateInspectorForSelection() {
         if (!inspectorPanel.classList.contains('is-visible')) {
             openInspector(selectedElement);
         }
-        setTabVisibility(['library', 'details', 'assist', 'analytics', 'adaptive', 'settings']);
-        activateTab('details');
-
-        updateInspectorLoadGauges({ selectedElement });
-
+        
         // Update ForgeAssist context - safely check if function exists
         const forgeAssist = window.ForgeAssist || ForgeAssist || null;
         if (forgeAssist && typeof forgeAssist.updateContext === 'function') {
@@ -726,104 +722,29 @@ export function updateInspectorForSelection() {
                 </ul>
             `;
         } else if (selectedElement.classList.contains('workout-card')) {
-            // Log for debugging
-            console.log("[Inspector] Processing workout card:", selectedElement);
-            
-            const structuredDetails = getStructuredDetails ? getStructuredDetails(selectedElement) : 
-                { name: 'Exercise', sets: 3, reps: 10, loadType: 'rpe', loadValue: 7, rest: '90s', notes: '' };
-                
-            const parentCell = selectedElement.closest('.day-cell');
-            const week = parentCell?.dataset.week || '?';
-            const day = parentCell?.dataset.day || '?';
-            const cardLoad = parseInt(selectedElement.dataset.load || '0', 10);
-
-            if (inspectorTitle) {
-                // Add origin indicator for GDAP or model-driven exercises
-                let titlePrefix = '';
-                if (structuredDetails.isGDAP) {
-                    titlePrefix = '[GDAP] ';
-                } else if (structuredDetails.isModelDriven) {
-                    titlePrefix = '[Model] ';
-                }
-                inspectorTitle.textContent = `Edit: ${titlePrefix}${structuredDetails.name}`;
-            }
-
-            detailsTabContent.innerHTML = `
-                <p><small>Location: Week ${week}, ${day}</small></p>
-                <p><small>Est. Load Contribution: ${cardLoad} units</small></p>
-                <hr class="detail-separator">
-                <div class="form-group full-width">
-                    <label for="inspector-exercise-name">Exercise Name</label>
-                    <input type="text" id="inspector-exercise-name" value="${structuredDetails.name}">
-                </div>
-                <div class="structured-inputs" style="display: flex; flex-wrap: wrap; gap: 0 1rem;">
-                    <div style="display: flex; gap: 1rem; width: 100%; margin-bottom: 1rem;">
-                        <div class="form-group" style="flex: 1;">
-                            <label for="inspector-sets">Sets</label>
-                            <input type="number" id="inspector-sets" value="${structuredDetails.sets}" min="1">
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label for="inspector-reps">Reps</label>
-                            <input type="text" id="inspector-reps" value="${structuredDetails.reps}" placeholder="e.g., 5 or 8-12">
-                        </div>
-                    </div>
-                    <div class="form-group" style="flex-basis: 50%; flex-grow: 1;">
-                        <label for="inspector-load-type">Load Type</label>
-                        <select id="inspector-load-type">
-                            <option value="rpe" ${structuredDetails.loadType === 'rpe' ? 'selected' : ''}>RPE</option>
-                            <option value="percent" ${structuredDetails.loadType === 'percent' ? 'selected' : ''}>% 1RM</option>
-                            <option value="weight" ${structuredDetails.loadType === 'weight' ? 'selected' : ''}>Weight (kg)</option>
-                            <option value="text" ${structuredDetails.loadType === 'text' ? 'selected' : ''}>Text</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="flex-basis: calc(50% - 1rem); flex-grow: 1;">
-                        <label for="inspector-load-value">Load Value</label>
-                        <input type="text" id="inspector-load-value" value="${structuredDetails.loadValue}" placeholder="e.g., 8 or 75">
-                        <div id="load-value-explanation" style="font-size: 0.75rem; color: var(--text-color); margin-top: 4px; min-height: 1em;"></div>
-                    </div>
-                    <div class="form-group" style="flex-basis: 100%;">
-                        <label for="inspector-rest">Rest</label>
-                        <input type="text" id="inspector-rest" value="${structuredDetails.rest}" placeholder="e.g., 90s or 2m">
-                    </div>
-                </div>
-                <div class="form-group full-width">
-                    <label for="inspector-notes">Notes</label>
-                    <textarea id="inspector-notes" rows="3">${structuredDetails.notes}</textarea>
-                </div>
-                <hr class="detail-separator">
-                <button id="save-card-details" class="cta-button primary-cta">Save Details</button>
-                <button id="delete-card" class="cta-button secondary-cta" style="margin-top: 10px; background-color: #555;">Delete Card</button>
-            `;
-
-            const saveBtn = document.getElementById('save-card-details');
-            const deleteBtn = document.getElementById('delete-card');
-            
-            if (saveBtn && typeof saveWorkoutCardDetails === 'function') {
-                saveBtn.addEventListener('click', saveWorkoutCardDetails);
-            }
-            
-            if (deleteBtn && typeof deleteSelectedWorkoutCard === 'function') {
-                deleteBtn.addEventListener('click', deleteSelectedWorkoutCard);
-            }
-
-            const loadTypeSelect = document.getElementById('inspector-load-type');
-            if (loadTypeSelect && typeof updateLoadValueExplanation === 'function') {
-                loadTypeSelect.addEventListener('change', updateLoadValueExplanation);
-                updateLoadValueExplanation();
-            }
+            // Use the dedicated function instead of implementing card handling here
+            updateInspectorForCard(selectedElement);
         } else if (selectedElement.classList.contains('day-cell')) {
-            const week = selectedElement.dataset.week;
-            const day = selectedElement.dataset.day;
-            if (inspectorTitle) inspectorTitle.textContent = `Day Details: Wk ${week}, ${day}`;
-
+            const week = selectedElement.dataset.week || '?';
+            const day = selectedElement.dataset.day || '?';
+            if (inspectorTitle) inspectorTitle.textContent = `Day: Week ${week}, ${day}`;
+            
+            // Get any cards inside this day
+            const cards = selectedElement.querySelectorAll('.workout-card');
+            const cardCount = cards.length;
+            
+            // Calculate total day load
             let totalDayLoad = 0;
-            let cardCount = 0;
             let exerciseNames = [];
-            selectedElement.querySelectorAll('.workout-card:not(.session-placeholder-card)').forEach(card => {
-                const name = card.querySelector('.exercise-name')?.textContent || '';
-                if(name) exerciseNames.push(name.toLowerCase());
-                totalDayLoad += parseInt(card.dataset.load || '0', 10);
-                cardCount++;
+            
+            cards.forEach(card => {
+                // Add to total load if present
+                const cardLoad = parseInt(card.dataset.load || '0', 10);
+                if (!isNaN(cardLoad)) totalDayLoad += cardLoad;
+                
+                // Extract exercise name
+                const exerciseName = card.querySelector('.exercise-name')?.textContent || 'Exercise';
+                exerciseNames.push(exerciseName);
             });
 
             let focus = 'Mixed';
@@ -974,7 +895,7 @@ let inspectorFocusTimeout; // Global variable to track timeout
 export function showInspectorFocusMessage(message, duration = 5000) {
     // Clear any existing timeout
     if (typeof inspectorFocusTimeout !== 'undefined') {
-        clearTimeout(inspectorFocusTimeout);
+    clearTimeout(inspectorFocusTimeout);
     }
     
     // Get or create the focus message area
@@ -993,10 +914,10 @@ export function showInspectorFocusMessage(message, duration = 5000) {
         
         // Auto-hide after duration if > 0
         if (duration > 0) {
-            inspectorFocusTimeout = setTimeout(() => {
-                focusArea.style.display = 'none';
-                focusArea.textContent = '';
-            }, duration);
+        inspectorFocusTimeout = setTimeout(() => {
+            focusArea.style.display = 'none';
+            focusArea.textContent = '';
+        }, duration);
         }
     }
 }
@@ -1004,14 +925,14 @@ export function showInspectorFocusMessage(message, duration = 5000) {
 export function clearInspectorFocusMessage() {
     // Check if inspectorFocusTimeout is defined before clearing it
     if (typeof inspectorFocusTimeout !== 'undefined') {
-        clearTimeout(inspectorFocusTimeout);
+     clearTimeout(inspectorFocusTimeout);
     }
     
-    const focusArea = document.getElementById('inspector-focus-message');
-    if (focusArea) {
-        focusArea.style.display = 'none';
-        focusArea.textContent = '';
-    }
+     const focusArea = document.getElementById('inspector-focus-message');
+     if (focusArea) {
+         focusArea.style.display = 'none';
+         focusArea.textContent = '';
+     }
     // If element doesn't exist, create it for future use
     else if (inspectorPanel) {
         const newFocusArea = document.createElement('div');
@@ -1339,64 +1260,103 @@ function updateInspectorForCard(card) {
     // First, check if it's a workout card
     if (!card.classList.contains('workout-card')) return;
     
+    console.log("[Inspector] Updating inspector for card:", card.id);
+    
     // Get the exercise name or card ID for the title
     const exerciseName = card.querySelector('.exercise-name')?.textContent || 'Exercise';
     
-    // Set the inspector title
-    if (inspectorTitle) inspectorTitle.textContent = `Edit: ${exerciseName}`;
-    
-    // Show relevant tabs
-    setTabVisibility(['library', 'details', 'assist', 'adaptive', 'settings']);
-    
     // Get card details for the form
     const cardDetails = getStructuredDetails(card);
+    
+    // Set the inspector title with additional context for GDAP or model-driven exercises
+    if (inspectorTitle) {
+        let titlePrefix = '';
+        if (cardDetails.isGDAP) {
+            titlePrefix = '[GDAP] ';
+        } else if (cardDetails.isModelDriven) {
+            titlePrefix = '[Model] ';
+        }
+        inspectorTitle.textContent = `Edit: ${titlePrefix}${cardDetails.name}`;
+    }
+    
+    // Show relevant tabs
+    setTabVisibility(['library', 'details', 'assist', 'adaptive', 'analytics', 'settings']);
+    activateTab('details');
     
     // Clear previous details
     const detailsTab = document.getElementById('details');
     if (!detailsTab) return;
     
-    // Create the details form
+    // Highlight GDAP or model status if applicable
+    let statusHtml = '';
+    if (cardDetails.isGDAP) {
+        statusHtml = `<div style="margin-bottom: 10px; padding: 8px; background-color: rgba(255, 112, 59, 0.1); border-left: 3px solid var(--accent-color); font-size: 0.9rem;">
+            <strong>Goal-Driven Exercise:</strong> This exercise is part of your goal-driven program.
+        </div>`;
+    } else if (cardDetails.isModelDriven) {
+        const modelType = card.dataset.modelType || 'Custom';
+        statusHtml = `<div style="margin-bottom: 10px; padding: 8px; background-color: rgba(58, 123, 213, 0.1); border-left: 3px solid #3a7bd5; font-size: 0.9rem;">
+            <strong>${modelType} Model Exercise:</strong> This exercise is generated by a periodization model.
+        </div>`;
+    }
+    
+    // Get day information
+    const parentCell = card.closest('.day-cell');
+    const week = parentCell?.dataset.week || '?';
+    const day = parentCell?.dataset.day || '?';
+    const cardLoad = parseInt(card.dataset.load || '0', 10);
+    
+    // Create form
     detailsTab.innerHTML = `
-        <h4>Exercise Details</h4>
-        <form class="exercise-details-form">
+        ${statusHtml}
+        <h4>${cardDetails.name} <small>(Week ${week}, ${day})</small></h4>
+        <div class="form-row">
             <div class="form-group">
-                <label for="exercise-name">Exercise Name</label>
-                <input type="text" id="exercise-name" value="${cardDetails.name || exerciseName}" placeholder="Exercise Name">
-            </div>
-            <div class="form-group">
-                <label for="exercise-sets">Sets</label>
-                <input type="number" id="exercise-sets" value="${cardDetails.sets || 3}" min="1" max="20">
+                <label for="inspector-sets">Sets</label>
+                <input type="text" id="inspector-sets" value="${cardDetails.sets}" placeholder="Sets number">
             </div>
             <div class="form-group">
-                <label for="exercise-reps">Reps</label>
-                <input type="number" id="exercise-reps" value="${cardDetails.reps || 8}" min="1" max="100">
+                <label for="inspector-reps">Reps</label>
+                <input type="text" id="inspector-reps" value="${cardDetails.reps}" placeholder="Reps (e.g. 8 or 5-8)">
             </div>
-            <div class="form-group">
-                <label for="exercise-load">Load (%1RM)</label>
-                <input type="number" id="exercise-load" value="${cardDetails.load || 70}" min="0" max="100">
-                <div id="load-explanation" class="form-help">Moderate intensity</div>
+        </div>
+        <div class="form-row">
+            <div class="form-group" style="flex-basis: calc(50% - 1rem); flex-grow: 1;">
+                <label for="inspector-load-type">Load Type</label>
+                <select id="inspector-load-type">
+                    <option value="rpe" ${cardDetails.loadType === 'rpe' ? 'selected' : ''}>RPE</option>
+                    <option value="%" ${cardDetails.loadType === '%' ? 'selected' : ''}>Percentage (%)</option>
+                    <option value="weight" ${cardDetails.loadType === 'weight' ? 'selected' : ''}>Weight (kg)</option>
+                    <option value="text" ${cardDetails.loadType === 'text' ? 'selected' : ''}>Text</option>
+                </select>
             </div>
-            <div class="form-group">
-                <label for="exercise-rest">Rest (sec)</label>
-                <input type="number" id="exercise-rest" value="${cardDetails.rest || 90}" min="0" max="600" step="15">
+            <div class="form-group" style="flex-basis: calc(50% - 1rem); flex-grow: 1;">
+                <label for="inspector-load-value">Load Value</label>
+                <input type="text" id="inspector-load-value" value="${cardDetails.loadValue}" placeholder="e.g., 8 or 75">
+                <div id="load-explanation" style="font-size: 0.75rem; color: var(--text-color); margin-top: 4px; min-height: 1em;"></div>
             </div>
-            <div class="form-group">
-                <label for="exercise-notes">Notes</label>
-                <textarea id="exercise-notes" placeholder="Add notes here...">${cardDetails.notes || ''}</textarea>
+            <div class="form-group" style="flex-basis: 100%;">
+                <label for="inspector-rest">Rest</label>
+                <input type="text" id="inspector-rest" value="${cardDetails.rest}" placeholder="e.g., 90s or 2m">
             </div>
-            <div class="form-actions">
-                <button type="button" id="save-card-details" class="primary-cta">Save</button>
-                <button type="button" id="delete-card" class="secondary-cta">Delete</button>
-            </div>
-        </form>
+        </div>
+        <div class="form-group full-width">
+            <label for="inspector-notes">Notes</label>
+            <textarea id="inspector-notes" rows="3">${cardDetails.notes}</textarea>
+        </div>
+        <hr class="detail-separator">
+        <button id="save-card-details" class="cta-button primary-cta">Save Details</button>
+        <button id="delete-card" class="cta-button secondary-cta" style="margin-top: 10px; background-color: #555;">Delete Card</button>
     `;
     
-    // Set up event listeners for the form
+    // Add event listeners - clean up old ones and add fresh ones for this card
     const saveBtn = detailsTab.querySelector('#save-card-details');
     const deleteBtn = detailsTab.querySelector('#delete-card');
-    const loadInput = detailsTab.querySelector('#exercise-load');
+    const loadInput = detailsTab.querySelector('#inspector-load-value');
+    const loadTypeSelect = detailsTab.querySelector('#inspector-load-type');
     
     if (saveBtn) {
+        // Use a specific function to target this card explicitly
         saveBtn.addEventListener('click', () => saveWorkoutCardDetails(card));
     }
     
@@ -1413,6 +1373,14 @@ function updateInspectorForCard(card) {
         // Initial update
         const loadValue = parseInt(loadInput.value, 10);
         updateLoadValueExplanation(loadValue, detailsTab.querySelector('#load-explanation'));
+    }
+    
+    if (loadTypeSelect) {
+        loadTypeSelect.addEventListener('change', () => {
+            // Refresh load explanation when type changes
+            const loadValue = parseInt(loadInput.value, 10);
+            updateLoadValueExplanation(loadValue, detailsTab.querySelector('#load-explanation'));
+        });
     }
     
     // Update the media preview if needed
