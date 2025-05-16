@@ -210,15 +210,18 @@ function renderAssistTabContent() {
     if (!container) return;
 
     try {
+        // Make a defensive check for ForgeAssist
+        const forgeAssist = window.ForgeAssist || ForgeAssist || null;
+        
         // Check if ForgeAssist is properly initialized
-        if (!ForgeAssist || typeof ForgeAssist.getContextualActions !== 'function') {
-            container.innerHTML = '<p><i>ForgeAssist is not available. Please refresh the page.</i></p>';
-            console.error('[Inspector] ForgeAssist module not properly loaded');
+        if (!forgeAssist || typeof forgeAssist.getContextualActions !== 'function') {
+            container.innerHTML = '<p><i>ForgeAssist is initializing. Please wait or refresh the page if this message persists.</i></p>';
+            console.warn('[Inspector] ForgeAssist module not properly loaded or still initializing');
             return;
         }
 
         // Try to get actions from ForgeAssist with proper error handling
-        const actions = ForgeAssist.getContextualActions() || [];
+        const actions = forgeAssist.getContextualActions() || [];
 
         container.innerHTML = ''; // Clear previous content
 
@@ -253,7 +256,7 @@ function renderAssistTabContent() {
                      button.addEventListener('click', (e) => {
                          e.stopPropagation();
                          try {
-                             ForgeAssist.processCommand(action.handler);
+                             forgeAssist.processCommand(action.handler);
                          } catch (error) {
                             console.error(`[Inspector] Error executing command "${action.handler}":`, error);
                             showToast(`Error executing command: ${error.message}`, 'error');
@@ -464,11 +467,15 @@ export function updateForgeAssistTab() {
     // Get contextual actions from ForgeAssist
     let contextualActions = [];
     try {
-        if (typeof ForgeAssist.getContextualActions === 'function') {
-            contextualActions = ForgeAssist.getContextualActions() || [];
+        // Make a defensive check for ForgeAssist
+        const forgeAssist = window.ForgeAssist || ForgeAssist || null;
+        
+        if (forgeAssist && typeof forgeAssist.getContextualActions === 'function') {
+            contextualActions = forgeAssist.getContextualActions() || [];
         }
     } catch (error) {
         console.error('[Inspector] Error getting contextual actions:', error);
+        contextualActions = []; // Ensure empty array on error
     }
     
     // Get the containers
@@ -489,9 +496,9 @@ export function updateForgeAssistTab() {
             let disabledAttr = action.disabled ? 'disabled' : '';
             actionsHtml += `
                 <button class="cta-button secondary-cta assist-action-btn" 
-                        data-action-id="${action.id}" 
+                        data-action-id="${action.id || ''}" 
                         ${disabledAttr}>
-                    ${action.label}
+                    ${action.label || 'Action'}
                 </button>
             `;
         });
@@ -507,7 +514,9 @@ export function updateForgeAssistTab() {
     }
     
     // Update accessory suggestions if in the right context
-    updateAccessorySuggestions(accessorySuggestionsContainer);
+    if (accessorySuggestionsContainer) {
+        updateAccessorySuggestions(accessorySuggestionsContainer);
+    }
 }
 
 // Function to handle ForgeAssist action button clicks
@@ -622,172 +631,223 @@ function handleAddSuggestion(event) {
     }
 }
 
-// Modify the existing updateInspectorForSelection function to include load gauges and ForgeAssist tab updates
+// Modify the existing updateInspectorForSelection function 
 export function updateInspectorForSelection() {
-    clearInspectorFocusMessage();
-    const detailsTabContent = document.getElementById('details');
-    if (!detailsTabContent) return;
-
-    const { selectedElement, selectedElements, multiSelectActive } = getSelectionState ? getSelectionState() : 
-        { selectedElement: null, selectedElements: new Set(), multiSelectActive: false };
-
-    if (multiSelectActive && selectedElements && selectedElements.size > 0) {
-        openMultiSelectInspector();
-        return;
-    }
-
-    if (!selectedElement) {
-        if (inspectorTitle) inspectorTitle.textContent = 'Inspector';
+    try {
+        // Safely call clearInspectorFocusMessage
+        if (typeof clearInspectorFocusMessage === 'function') {
+            clearInspectorFocusMessage();
+        }
         
-        setTabVisibility(['library', 'details', 'assist', 'settings']);
+        const detailsTabContent = document.getElementById('details');
+        if (!detailsTabContent) return;
+
+        const selectionState = getSelectionState ? getSelectionState() : 
+            { selectedElement: null, selectedElements: new Set(), multiSelectActive: false };
+            
+        const { selectedElement, selectedElements, multiSelectActive } = selectionState;
+
+        if (multiSelectActive && selectedElements && selectedElements.size > 0) {
+            openMultiSelectInspector();
+            return;
+        }
+
+        if (!selectedElement) {
+            if (inspectorTitle) inspectorTitle.textContent = 'Inspector';
+            
+            setTabVisibility(['library', 'details', 'assist', 'settings']);
+            
+            detailsTabContent.innerHTML = '<p>Select an item to see details.</p>';
+            
+            updateInspectorLoadGauges({ selectedElement: null });
+            return;
+        }
+
+        if (!inspectorPanel.classList.contains('is-visible')) {
+            openInspector(selectedElement);
+        }
+        setTabVisibility(['library', 'details', 'assist', 'analytics', 'adaptive', 'settings']);
+        activateTab('details');
+
+        updateInspectorLoadGauges({ selectedElement });
+
+        // Update ForgeAssist context - safely check if function exists
+        const forgeAssist = window.ForgeAssist || ForgeAssist || null;
+        if (forgeAssist && typeof forgeAssist.updateContext === 'function') {
+            try {
+                forgeAssist.updateContext(selectedElement, selectedElements);
+            } catch (e) {
+                console.warn('[Inspector] Error updating ForgeAssist context:', e);
+            }
+        }
         
-        detailsTabContent.innerHTML = '<p>Select an item to see details.</p>';
+        // Update the tabs with new content
+        if (typeof updateForgeAssistTab === 'function') {
+            updateForgeAssistTab();
+        }
         
-        updateInspectorLoadGauges({ selectedElement: null });
-        return;
-    }
+        if (typeof updateAdaptiveTab === 'function') {
+            try {
+                updateAdaptiveTab();
+            } catch (e) {
+                console.warn('[Inspector] Error updating Adaptive tab:', e);
+            }
+        }
+        
+        if (typeof updateAnalyticsTab === 'function') {
+            try {
+                updateAnalyticsTab();
+            } catch (e) {
+                console.warn('[Inspector] Error updating Analytics tab:', e);
+            }
+        }
 
-    if (!inspectorPanel.classList.contains('is-visible')) {
-        openInspector(selectedElement);
-    }
-    setTabVisibility(['library', 'details', 'assist', 'analytics', 'settings']);
-    activateTab('details');
+        // Update content based on selected element type
+        if (selectedElement.classList.contains('session-placeholder-card')) {
+            if (inspectorTitle) inspectorTitle.textContent = 'Placeholder Details';
+            const sessionType = selectedElement.dataset.sessionType || 'Placeholder';
+            const targetMetric = selectedElement.dataset.targetMetric || 'N/A';
+            const cell = selectedElement.closest('.day-cell');
+            const day = cell?.dataset.day || '?';
+            const week = cell?.dataset.week || '?';
+            detailsTabContent.innerHTML = `
+                <h4>${sessionType} Session Placeholder</h4>
+                <p><strong>Location:</strong> ${day}, Week ${week}</p>
+                <p><strong>Target / Details:</strong> ${targetMetric}</p>
+                <hr class="detail-separator">
+                <p><em>This is a planned session outline.</em></p>
+                <p><strong>Next Steps:</strong></p>
+                <ul>
+                    <li>Click the '+' button on the card to quickly open the Library.</li>
+                    <li>Double-click the card to open the Library.</li>
+                    <li>Drag specific exercises from the Library tab onto the calendar day.</li>
+                </ul>
+            `;
+        } else if (selectedElement.classList.contains('workout-card')) {
+            const structuredDetails = getStructuredDetails ? getStructuredDetails(selectedElement) : 
+                { name: 'Exercise', sets: 3, reps: 10, loadType: 'rpe', loadValue: 7, rest: '90s', notes: '' };
+                
+            const parentCell = selectedElement.closest('.day-cell');
+            const week = parentCell?.dataset.week || '?';
+            const day = parentCell?.dataset.day || '?';
+            const cardLoad = parseInt(selectedElement.dataset.load || '0', 10);
 
-    updateInspectorLoadGauges({ selectedElement });
+            if (inspectorTitle) inspectorTitle.textContent = `Edit: ${structuredDetails.name}`;
 
-    // Update ForgeAssist context
-    if (typeof ForgeAssist.updateContext === 'function') {
-        ForgeAssist.updateContext(selectedElement, selectedElements);
-    }
-    
-    // Update the ForgeAssist tab
-    updateForgeAssistTab();
-
-    if (selectedElement.classList.contains('session-placeholder-card')) {
-        if (inspectorTitle) inspectorTitle.textContent = 'Placeholder Details';
-        const sessionType = selectedElement.dataset.sessionType || 'Placeholder';
-        const targetMetric = selectedElement.dataset.targetMetric || 'N/A';
-        const cell = selectedElement.closest('.day-cell');
-        const day = cell?.dataset.day || '?';
-        const week = cell?.dataset.week || '?';
-        detailsTabContent.innerHTML = `
-            <h4>${sessionType} Session Placeholder</h4>
-            <p><strong>Location:</strong> ${day}, Week ${week}</p>
-            <p><strong>Target / Details:</strong> ${targetMetric}</p>
-            <hr class="detail-separator">
-            <p><em>This is a planned session outline.</em></p>
-            <p><strong>Next Steps:</strong></p>
-            <ul>
-                <li>Click the '+' button on the card to quickly open the Library.</li>
-                <li>Double-click the card to open the Library.</li>
-                <li>Drag specific exercises from the Library tab onto the calendar day.</li>
-            </ul>
-        `;
-    } else if (selectedElement.classList.contains('workout-card')) {
-        const structuredDetails = getStructuredDetails(selectedElement);
-        const parentCell = selectedElement.closest('.day-cell');
-        const week = parentCell?.dataset.week || '?';
-        const day = parentCell?.dataset.day || '?';
-        const cardLoad = parseInt(selectedElement.dataset.load || '0', 10);
-
-        if (inspectorTitle) inspectorTitle.textContent = `Edit: ${structuredDetails.name}`;
-
-        detailsTabContent.innerHTML = `
-            <p><small>Location: Week ${week}, ${day}</small></p>
-            <p><small>Est. Load Contribution: ${cardLoad} units</small></p>
-            <hr class="detail-separator">
-            <div class="form-group full-width">
-                <label for="inspector-exercise-name">Exercise Name</label>
-                <input type="text" id="inspector-exercise-name" value="${structuredDetails.name}">
-            </div>
-            <div class="structured-inputs" style="display: flex; flex-wrap: wrap; gap: 0 1rem;">
-                <div style="display: flex; gap: 1rem; width: 100%; margin-bottom: 1rem;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="inspector-sets">Sets</label>
-                        <input type="number" id="inspector-sets" value="${structuredDetails.sets}" min="1">
+            detailsTabContent.innerHTML = `
+                <p><small>Location: Week ${week}, ${day}</small></p>
+                <p><small>Est. Load Contribution: ${cardLoad} units</small></p>
+                <hr class="detail-separator">
+                <div class="form-group full-width">
+                    <label for="inspector-exercise-name">Exercise Name</label>
+                    <input type="text" id="inspector-exercise-name" value="${structuredDetails.name}">
+                </div>
+                <div class="structured-inputs" style="display: flex; flex-wrap: wrap; gap: 0 1rem;">
+                    <div style="display: flex; gap: 1rem; width: 100%; margin-bottom: 1rem;">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="inspector-sets">Sets</label>
+                            <input type="number" id="inspector-sets" value="${structuredDetails.sets}" min="1">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="inspector-reps">Reps</label>
+                            <input type="text" id="inspector-reps" value="${structuredDetails.reps}" placeholder="e.g., 5 or 8-12">
+                        </div>
                     </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="inspector-reps">Reps</label>
-                        <input type="text" id="inspector-reps" value="${structuredDetails.reps}" placeholder="e.g., 5 or 8-12">
+                    <div class="form-group" style="flex-basis: 50%; flex-grow: 1;">
+                        <label for="inspector-load-type">Load Type</label>
+                        <select id="inspector-load-type">
+                            <option value="rpe" ${structuredDetails.loadType === 'rpe' ? 'selected' : ''}>RPE</option>
+                            <option value="percent" ${structuredDetails.loadType === 'percent' ? 'selected' : ''}>% 1RM</option>
+                            <option value="weight" ${structuredDetails.loadType === 'weight' ? 'selected' : ''}>Weight (kg)</option>
+                            <option value="text" ${structuredDetails.loadType === 'text' ? 'selected' : ''}>Text</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex-basis: calc(50% - 1rem); flex-grow: 1;">
+                        <label for="inspector-load-value">Load Value</label>
+                        <input type="text" id="inspector-load-value" value="${structuredDetails.loadValue}" placeholder="e.g., 8 or 75">
+                        <div id="load-value-explanation" style="font-size: 0.75rem; color: var(--text-color); margin-top: 4px; min-height: 1em;"></div>
+                    </div>
+                    <div class="form-group" style="flex-basis: 100%;">
+                        <label for="inspector-rest">Rest</label>
+                        <input type="text" id="inspector-rest" value="${structuredDetails.rest}" placeholder="e.g., 90s or 2m">
                     </div>
                 </div>
-                <div class="form-group" style="flex-basis: 50%; flex-grow: 1;">
-                    <label for="inspector-load-type">Load Type</label>
-                    <select id="inspector-load-type">
-                        <option value="rpe" ${structuredDetails.loadType === 'rpe' ? 'selected' : ''}>RPE</option>
-                        <option value="percent" ${structuredDetails.loadType === 'percent' ? 'selected' : ''}>% 1RM</option>
-                        <option value="weight" ${structuredDetails.loadType === 'weight' ? 'selected' : ''}>Weight (kg)</option>
-                        <option value="text" ${structuredDetails.loadType === 'text' ? 'selected' : ''}>Text</option>
-                    </select>
+                <div class="form-group full-width">
+                    <label for="inspector-notes">Notes</label>
+                    <textarea id="inspector-notes" rows="3">${structuredDetails.notes}</textarea>
                 </div>
-                <div class="form-group" style="flex-basis: calc(50% - 1rem); flex-grow: 1;">
-                    <label for="inspector-load-value">Load Value</label>
-                    <input type="text" id="inspector-load-value" value="${structuredDetails.loadValue}" placeholder="e.g., 8 or 75">
-                    <div id="load-value-explanation" style="font-size: 0.75rem; color: var(--text-color); margin-top: 4px; min-height: 1em;"></div>
-                </div>
-                <div class="form-group" style="flex-basis: 100%;">
-                    <label for="inspector-rest">Rest</label>
-                    <input type="text" id="inspector-rest" value="${structuredDetails.rest}" placeholder="e.g., 90s or 2m">
-                </div>
-            </div>
-            <div class="form-group full-width">
-                <label for="inspector-notes">Notes</label>
-                <textarea id="inspector-notes" rows="3">${structuredDetails.notes}</textarea>
-            </div>
-            <hr class="detail-separator">
-            <button id="save-card-details" class="cta-button primary-cta">Save Details</button>
-            <button id="delete-card" class="cta-button secondary-cta" style="margin-top: 10px; background-color: #555;">Delete Card</button>
-        `;
+                <hr class="detail-separator">
+                <button id="save-card-details" class="cta-button primary-cta">Save Details</button>
+                <button id="delete-card" class="cta-button secondary-cta" style="margin-top: 10px; background-color: #555;">Delete Card</button>
+            `;
 
-        document.getElementById('save-card-details')?.addEventListener('click', saveWorkoutCardDetails);
-        document.getElementById('delete-card')?.addEventListener('click', deleteSelectedWorkoutCard);
+            document.getElementById('save-card-details')?.addEventListener('click', saveWorkoutCardDetails);
+            document.getElementById('delete-card')?.addEventListener('click', deleteSelectedWorkoutCard);
 
-        const loadTypeSelect = document.getElementById('inspector-load-type');
-        if (loadTypeSelect) {
-            loadTypeSelect.addEventListener('change', updateLoadValueExplanation);
-            updateLoadValueExplanation();
+            const loadTypeSelect = document.getElementById('inspector-load-type');
+            if (loadTypeSelect && typeof updateLoadValueExplanation === 'function') {
+                loadTypeSelect.addEventListener('change', updateLoadValueExplanation);
+                updateLoadValueExplanation();
+            }
+        } else if (selectedElement.classList.contains('day-cell')) {
+            const week = selectedElement.dataset.week;
+            const day = selectedElement.dataset.day;
+            if (inspectorTitle) inspectorTitle.textContent = `Day Details: Wk ${week}, ${day}`;
+
+            let totalDayLoad = 0;
+            let cardCount = 0;
+            let exerciseNames = [];
+            selectedElement.querySelectorAll('.workout-card:not(.session-placeholder-card)').forEach(card => {
+                const name = card.querySelector('.exercise-name')?.textContent || '';
+                if(name) exerciseNames.push(name.toLowerCase());
+                totalDayLoad += parseInt(card.dataset.load || '0', 10);
+                cardCount++;
+            });
+
+            let focus = 'Mixed';
+            if (cardCount > 0) {
+                if (exerciseNames.every(name => name.includes('squat') || name.includes('deadlift') || name.includes('leg'))) focus = 'Lower Body';
+                else if (exerciseNames.every(name => name.includes('press') || name.includes('row') || name.includes('pull'))) focus = 'Upper Body';
+                else if (exerciseNames.every(name => name.includes('run') || name.includes('sprint') || name.includes('jump'))) focus = 'Conditioning/Plyo';
+            }
+
+            detailsTabContent.innerHTML = `<h4>Week ${week}, ${day}</h4>`;
+            if (cardCount > 0) {
+                detailsTabContent.innerHTML += '<ul>' + exerciseNames.map(name => `<li>${name}</li>`).join('') + '</ul>';
+            }
+            detailsTabContent.innerHTML += `
+                <hr class="detail-separator">
+                <p><small>Card Count: ${cardCount}</small></p>
+                <p><small>Est. Daily Load: ${totalDayLoad} units</small></p>
+                <p><small>Focus: ${focus}</small></p>
+                <p><small>Phase: [Needs Phase Info]</small></p> 
+            `;
+        } else if (selectedElement.classList.contains('phase-bar')) {
+            updateInspectorPhaseDetails(selectedElement);
+        } else {
+            detailsTabContent.innerHTML = '<p>Select an item on the canvas to see details.</p>';
+            if (inspectorTitle) inspectorTitle.textContent = 'Inspector';
         }
-    } else if (selectedElement.classList.contains('day-cell')) {
-        const week = selectedElement.dataset.week;
-        const day = selectedElement.dataset.day;
-        if (inspectorTitle) inspectorTitle.textContent = `Day Details: Wk ${week}, ${day}`;
 
-        let totalDayLoad = 0;
-        let cardCount = 0;
-        let exerciseNames = [];
-        selectedElement.querySelectorAll('.workout-card:not(.session-placeholder-card)').forEach(card => {
-            const name = card.querySelector('.exercise-name')?.textContent || '';
-            if(name) exerciseNames.push(name.toLowerCase());
-            totalDayLoad += parseInt(card.dataset.load || '0', 10);
-            cardCount++;
-        });
-
-        let focus = 'Mixed';
-        if (cardCount > 0) {
-            if (exerciseNames.every(name => name.includes('squat') || name.includes('deadlift') || name.includes('leg'))) focus = 'Lower Body';
-            else if (exerciseNames.every(name => name.includes('press') || name.includes('row') || name.includes('pull'))) focus = 'Upper Body';
-            else if (exerciseNames.every(name => name.includes('run') || name.includes('sprint') || name.includes('jump'))) focus = 'Conditioning/Plyo';
+        // Safely call renderAssistTabContent function
+        if (typeof renderAssistTabContent === 'function') {
+            renderAssistTabContent();
         }
-
-        detailsTabContent.innerHTML = `<h4>Week ${week}, ${day}</h4>`;
-        if (cardCount > 0) {
-            detailsTabContent.innerHTML += '<ul>' + exerciseNames.map(name => `<li>${name}</li>`).join('') + '</ul>';
+    } catch (error) {
+        console.error('[Inspector] Error in updateInspectorForSelection:', error);
+        // Attempt to show some basic content if an error occurs
+        try {
+            const detailsTab = document.getElementById('details');
+            if (detailsTab) {
+                detailsTab.innerHTML = '<p>An error occurred while updating inspector content. Please try again.</p>';
+            }
+            if (inspectorTitle) {
+                inspectorTitle.textContent = 'Inspector';
+            }
+        } catch (e) {
+            // Silent fail if even recovery fails
         }
-        detailsTabContent.innerHTML += `
-            <hr class="detail-separator">
-            <p><small>Card Count: ${cardCount}</small></p>
-            <p><small>Est. Daily Load: ${totalDayLoad} units</small></p>
-            <p><small>Focus: ${focus}</small></p>
-            <p><small>Phase: [Needs Phase Info]</small></p> 
-        `;
-    } else if (selectedElement.classList.contains('phase-bar')) {
-        updateInspectorPhaseDetails(selectedElement);
-    } else {
-        detailsTabContent.innerHTML = '<p>Select an item on the canvas to see details.</p>';
-        if (inspectorTitle) inspectorTitle.textContent = 'Inspector';
     }
-
-    renderAssistTabContent();
 }
 
 // Save function (was inside openInspector initially)
@@ -881,6 +941,13 @@ export function clearInspectorFocusMessage() {
      if (focusArea) {
          focusArea.style.display = 'none';
          focusArea.textContent = '';
+     }
+     // If element doesn't exist, create it for future use
+     else if (inspectorPanel) {
+         const newFocusArea = document.createElement('div');
+         newFocusArea.id = 'inspector-focus-message';
+         newFocusArea.style.display = 'none';
+         inspectorPanel.appendChild(newFocusArea);
      }
 }
 
@@ -1922,31 +1989,6 @@ export function initializeInspectorListeners() {
     initMediaSupport();
 }
 
-// Update the updateInspectorForSelection function to include adaptive tab updates
-export function updateInspectorForSelection() {
-    // ... existing code ...
-    
-    // Get selection state
-    const { selectedElement, selectedElements, multiSelectActive } = getSelectionState ? getSelectionState() : 
-        { selectedElement: null, selectedElements: new Set(), multiSelectActive: false };
-
-    // Update ForgeAssist context
-    if (typeof ForgeAssist.updateContext === 'function') {
-        ForgeAssist.updateContext(selectedElement, selectedElements);
-    }
-    
-    // Update the ForgeAssist tab
-    updateForgeAssistTab();
-    
-    // Update the Adaptive tab
-    updateAdaptiveTab();
-    
-    // Update the Analytics tab
-    updateAnalyticsTab();
-    
-    // ... rest of existing function ...
-}
-
 // Function to update the Analytics tab based on selection
 export function updateAnalyticsTab() {
     const analyticsTab = document.getElementById('analytics');
@@ -2501,8 +2543,10 @@ function determinePhasePattern(weeklyLoads) {
 // Placeholder function to render chart
 // In a real implementation, this would use Chart.js or similar
 function renderChart(canvas, data, type) {
-    // Placeholder function
-    console.log(`Rendering ${type} chart with data:`, data);
+    // Safe console log
+    try {
+        console.log(`Rendering ${type} chart with data:`, data);
+    } catch (e) {}
     
     // In a real implementation, you would use Chart.js or similar
     // Example with Chart.js:
@@ -2512,20 +2556,37 @@ function renderChart(canvas, data, type) {
     //     options: { ... }
     // });
     
-    // For a placeholder visual, draw a basic representation on the canvas
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    // Clear the canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw a placeholder chart based on type
-    if (type === 'line') {
-        drawPlaceholderLineChart(ctx, canvas.width, canvas.height, data);
-    } else if (type === 'pie') {
-        drawPlaceholderPieChart(ctx, canvas.width, canvas.height, data);
-    } else if (type === 'bar') {
-        drawPlaceholderBarChart(ctx, canvas.width, canvas.height, data);
+    try {
+        // For a placeholder visual, draw a basic representation on the canvas
+        const ctx = canvas?.getContext && canvas.getContext('2d');
+        if (!ctx) return;
+        
+        // Clear the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw a placeholder chart based on type
+        if (type === 'line') {
+            drawPlaceholderLineChart(ctx, canvas.width, canvas.height, data);
+        } else if (type === 'pie') {
+            drawPlaceholderPieChart(ctx, canvas.width, canvas.height, data);
+        } else if (type === 'bar') {
+            drawPlaceholderBarChart(ctx, canvas.width, canvas.height, data);
+        }
+    } catch (error) {
+        console.warn('Error rendering placeholder chart:', error);
+        // Draw fallback message in the canvas if possible
+        try {
+            const ctx = canvas?.getContext && canvas.getContext('2d');
+            if (ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.font = '12px Arial';
+                ctx.fillStyle = '#999';
+                ctx.textAlign = 'center';
+                ctx.fillText('Chart visualization unavailable', canvas.width / 2, canvas.height / 2);
+            }
+        } catch (e) {
+            // Silently fail if we can't even draw the fallback
+        }
     }
 }
 

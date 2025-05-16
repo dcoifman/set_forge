@@ -997,6 +997,20 @@
         }, 1000); // Give a second for modules to initialize
       });
     </script>
+
+    <!-- Add fallback ExerciseLibrary if it doesn't exist yet -->
+    <script>
+    if (typeof window.ExerciseLibrary === 'undefined') {
+        window.ExerciseLibrary = {
+            getExerciseById: function(id) { console.log("Fallback ExerciseLibrary.getExerciseById called", id); return null; },
+            getExercises: function() { console.log("Fallback ExerciseLibrary.getExercises called"); return []; },
+            suggestAlternatives: function(id, constraints) { console.log("Fallback ExerciseLibrary.suggestAlternatives called", id); return []; }
+        };
+        console.warn("Added fallback ExerciseLibrary. Real library should be loaded soon.");
+    } else {
+        console.error("ExerciseLibrary not available globally");
+    }
+    </script>
 </body>
 </html>
  
