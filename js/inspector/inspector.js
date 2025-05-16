@@ -968,21 +968,57 @@ export function saveWorkoutCardDetails() {
     }
 }
 
+// Add missing showInspectorFocusMessage function
+let inspectorFocusTimeout; // Global variable to track timeout
+
+export function showInspectorFocusMessage(message, duration = 5000) {
+    // Clear any existing timeout
+    if (typeof inspectorFocusTimeout !== 'undefined') {
+        clearTimeout(inspectorFocusTimeout);
+    }
+    
+    // Get or create the focus message area
+    let focusArea = document.getElementById('inspector-focus-message');
+    
+    if (!focusArea && inspectorPanel) {
+        focusArea = document.createElement('div');
+        focusArea.id = 'inspector-focus-message';
+        focusArea.style.display = 'none';
+        inspectorPanel.appendChild(focusArea);
+    }
+    
+    if (focusArea) {
+        focusArea.textContent = message;
+        focusArea.style.display = 'block';
+        
+        // Auto-hide after duration if > 0
+        if (duration > 0) {
+            inspectorFocusTimeout = setTimeout(() => {
+                focusArea.style.display = 'none';
+                focusArea.textContent = '';
+            }, duration);
+        }
+    }
+}
 
 export function clearInspectorFocusMessage() {
-     clearTimeout(inspectorFocusTimeout);
-     const focusArea = document.getElementById('inspector-focus-message');
-     if (focusArea) {
-         focusArea.style.display = 'none';
-         focusArea.textContent = '';
-     }
-     // If element doesn't exist, create it for future use
-     else if (inspectorPanel) {
-         const newFocusArea = document.createElement('div');
-         newFocusArea.id = 'inspector-focus-message';
-         newFocusArea.style.display = 'none';
-         inspectorPanel.appendChild(newFocusArea);
-     }
+    // Check if inspectorFocusTimeout is defined before clearing it
+    if (typeof inspectorFocusTimeout !== 'undefined') {
+        clearTimeout(inspectorFocusTimeout);
+    }
+    
+    const focusArea = document.getElementById('inspector-focus-message');
+    if (focusArea) {
+        focusArea.style.display = 'none';
+        focusArea.textContent = '';
+    }
+    // If element doesn't exist, create it for future use
+    else if (inspectorPanel) {
+        const newFocusArea = document.createElement('div');
+        newFocusArea.id = 'inspector-focus-message';
+        newFocusArea.style.display = 'none';
+        inspectorPanel.appendChild(newFocusArea);
+    }
 }
 
 // Media support functions for the Inspector Panel
