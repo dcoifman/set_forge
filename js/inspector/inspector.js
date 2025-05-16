@@ -2336,20 +2336,6 @@ function renderPhaseLevelAnalytics(phaseBar, chartCanvas, metricsContainer) {
 
 // Helper functions for analytics
 
-// Calculate weekly loads from daily loads
-function calculateWeeklyLoads(dailyLoads) {
-    const weeklyLoads = [];
-    const daysPerWeek = 7;
-    
-    for (let i = 0; i < dailyLoads.length; i += daysPerWeek) {
-        const weekLoads = dailyLoads.slice(i, i + daysPerWeek);
-        const totalWeekLoad = weekLoads.reduce((sum, load) => sum + load, 0);
-        weeklyLoads.push(totalWeekLoad);
-    }
-    
-    return weeklyLoads;
-}
-
 // Calculate week-to-week load changes (as a description)
 function calculateWeekToWeekLoadChanges(weeklyLoads) {
     if (weeklyLoads.length < 2) return 'Not enough data';
