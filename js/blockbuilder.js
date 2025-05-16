@@ -252,8 +252,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (gdapForm) {
         gdapForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            await handleGDAPFormSubmit(); // Make it async if PPO becomes async
-            gdapModal.classList.remove('is-visible'); // Use the same class mechanism as elsewhere
+            
+            // Close the modal first to allow overlay to show
+            gdapModal.classList.remove('is-visible');
+            
+            // Then run the GDAP generation process
+            await handleGDAPFormSubmit();
+            
+            // Show success notification explicitly
+            if (typeof showToast === 'function') {
+                showToast('GDAP program generated successfully!', 'success');
+            }
         });
     }
 
@@ -262,6 +271,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Create an array to track generated cards
         const generatedCards = [];
+        
+        console.log("GDAP form submitted - starting generation process");
         
         // Show the generation animation overlay
         const generationOverlay = document.getElementById('gdapGenerationOverlay');
@@ -335,9 +346,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Switch to the block builder view (but keep overlay visible)
         showView('builder');
+        
+        console.log("GDAP: Switched to builder view");
 
         // Add generating class to trigger animation
         document.body.classList.add('gdap-program-generating');
+        console.log("GDAP: Added gdap-program-generating class to body");
         
         // --- Clear and Regenerate Calendar ---
         if (window.BlockBuilder && typeof window.BlockBuilder.clearCalendar === 'function') {
@@ -5401,8 +5415,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 populateGDAPModalForEditing(activeGDAPInstance);
                 gdapModal.style.display = 'flex';
             } else {
-                if (typeof Toast !== 'undefined' && Toast.show) Toast.show("No active GDAP goal to edit.", "info");
-                else alert("No active GDAP goal to edit.");
+                if (typeof showToast === 'function') {
+                    showToast("No active GDAP goal to edit.", "info");
+                } else {
+                    alert("No active GDAP goal to edit.");
+                }
             }
         });
     }
@@ -5574,8 +5591,15 @@ document.addEventListener('DOMContentLoaded', () => {
         isEditingGDAP = false;
         if (typeof saveStateToLocalStorage === 'function') saveStateToLocalStorage();
         if (typeof updateAnalytics === 'function') updateAnalytics();
-        if (typeof Toast !== 'undefined' && Toast.show) Toast.show('GDAP program regenerated!', 'success');
-        else alert('GDAP program regenerated!');
+        // Use the imported showToast function directly
+        if (typeof showToast === 'function') {
+            showToast('GDAP program regenerated!', 'success');
+        } else {
+            // Fallback to alert if showToast is not available
+            console.warn('showToast function not available for notification');
+            alert('GDAP program regenerated!');
+        }
+        
         gdapModal.style.display = 'none';
     }
 
