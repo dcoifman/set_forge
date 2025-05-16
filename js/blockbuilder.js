@@ -263,6 +263,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Create an array to track generated cards
         const generatedCards = [];
         
+        // Show the generation animation overlay
+        const generationOverlay = document.getElementById('gdapGenerationOverlay');
+        generationOverlay.classList.add('is-visible');
+        
         // Create goal instance from form
         const goalInstance = {
             id: `gdap-${Date.now()}`,
@@ -272,6 +276,12 @@ document.addEventListener('DOMContentLoaded', () => {
             periodizationModelName: formData.get('periodizationModel') || null,
             targetExercises: []
         };
+        
+        // Update overlay message with goal type
+        const generationMessage = document.querySelector('.gdap-generation-message');
+        if (generationMessage) {
+            generationMessage.textContent = `Creating a ${goalInstance.timeframeWeeks}-week ${goalInstance.overallGoalType} program for ${goalInstance.athleteLevel} athletes...`;
+        }
         
         // Collect target exercises
         for (let i = 1; i <= exerciseSlotCount; i++) {
@@ -299,22 +309,36 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (goalInstance.targetExercises.length === 0) {
             alert("Please select at least one primary target exercise.");
+            generationOverlay.classList.remove('is-visible'); // Hide overlay on error
             return;
         }
 
         console.log('GDAP Goal Instance Created:', goalInstance);
 
+        // Artificial delay for dramatic effect (minimum 1.5 seconds)
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
         // --- Main Pathway Calculation ---
         const pathwaysData = ProgressionPathwayOrchestrator.calculateGoalDrivenPathways(goalInstance);
 
         if (!pathwaysData || pathwaysData.length === 0) {
             alert("Could not generate pathways with the provided inputs.");
+            generationOverlay.classList.remove('is-visible'); // Hide overlay on error
             return;
         }
 
-        // Switch to the block builder view
+        // Update the overlay progress
+        const progressFill = document.querySelector('.gdap-progress-fill');
+        if (progressFill) {
+            progressFill.style.width = '75%';
+        }
+        
+        // Switch to the block builder view (but keep overlay visible)
         showView('builder');
 
+        // Add generating class to trigger animation
+        document.body.classList.add('gdap-program-generating');
+        
         // --- Clear and Regenerate Calendar ---
         if (window.BlockBuilder && typeof window.BlockBuilder.clearCalendar === 'function') {
             window.BlockBuilder.clearCalendar();
@@ -337,6 +361,8 @@ document.addEventListener('DOMContentLoaded', () => {
              generateCalendarGrid(goalInstance.timeframeWeeks);
         } else {
             alert("Error: Could not generate calendar grid.");
+            generationOverlay.classList.remove('is-visible'); // Hide overlay on error
+            document.body.classList.remove('gdap-program-generating');
             return;
         }
         
@@ -366,7 +392,41 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Store accessory suggestions per day for the Inspector ---
         const accessorySuggestionsByDayId = {}; // e.g., { "week-0-day-0": [suggestions] }
         
+        // Update the overlay progress to 100%
+        if (progressFill) {
+            progressFill.style.width = '100%';
+        }
+        
+        // Allow some time for the progress to be visible
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Hide the generation overlay
+        generationOverlay.classList.remove('is-visible');
+        
         // --- Populate Block with Primary Workout Cards ---
+        let cardEntryDelay = 100; // Starting delay for staggered animation
+        
+        // Function to create and animate a card with delay
+        const createAndAnimateCard = (cardConfig, targetCell, delay) => {
+            const card = createWorkoutCard(cardConfig.name, cardConfig.detailsString, cardConfig.options);
+            
+            // Add classes for animation
+            card.classList.add('gdap-card-entry');
+            
+            if (targetCell) {
+                targetCell.appendChild(card);
+                
+                // Animate after a delay
+                setTimeout(() => {
+                    card.classList.add('animate-in');
+                }, delay);
+                
+                // Return the card for reference
+                return card;
+            }
+            return null;
+        };
+        
         pathwaysData.forEach(weeklyTarget => {
             // Weekly target contains exercises (primaries) and suggestedAccessories
             
@@ -383,19 +443,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (targetCell) {
                     // Create workout card with exercise details for primary exercise
-                    const card = createWorkoutCard(exTarget.name, exTarget.detailsString, {
-                        exerciseId: exTarget.exerciseId,
-                        load: exTarget.load, 
-                        sets: exTarget.sets,
-                        reps: exTarget.reps,
-                        primaryTarget: true,
-                        targetExercise: true,
-                        isPrimary: true
-                    });
-
-                    if (targetCell) {
-                        targetCell.appendChild(card);
-                        
+                    const cardConfig = {
+                        name: exTarget.exerciseName,
+                        detailsString: exTarget.detailsString,
+                        options: {
+                            exerciseId: exTarget.exerciseId,
+                            load: exTarget.load, 
+                            sets: exTarget.sets,
+                            reps: exTarget.reps,
+                            primaryTarget: true,
+                            targetExercise: true,
+                            isPrimary: true
+                        }
+                    };
+                    
+                    const card = createAndAnimateCard(cardConfig, targetCell, cardEntryDelay);
+                    cardEntryDelay += 100; // Increment delay for staggered effect
+                    
+                    if (card) {
                         // Store card reference in cards array for later access
                         generatedCards.push(card);
                     
@@ -407,32 +472,36 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.log(`Adding ${dayAccessories.length} accessory exercises to ${cellDay} of Week ${cellWeek}`);
                             
                             dayAccessories.forEach(accessory => {
-                                const accessoryCard = createWorkoutCard(accessory.name, accessory.detailsString || `${accessory.sets}x${accessory.reps}`, {
-                                    exerciseId: accessory.exerciseId,
-                                    load: accessory.load || '',
-                                    sets: accessory.sets || 3,
-                                    reps: accessory.reps || 10,
-                                    primaryTarget: false,
-                                    targetExercise: false,
-                                    isPrimary: false,
-                                    isAccessory: true
-                                });
+                                const accessoryConfig = {
+                                    name: accessory.exerciseName,
+                                    detailsString: accessory.detailsString || `${accessory.sets}x${accessory.reps}`,
+                                    options: {
+                                        exerciseId: accessory.exerciseId,
+                                        load: accessory.load || '',
+                                        sets: accessory.sets || 3,
+                                        reps: accessory.reps || 10,
+                                        primaryTarget: false,
+                                        targetExercise: false,
+                                        isPrimary: false,
+                                        isAccessory: true
+                                    }
+                                };
                                 
-                                if (targetCell) {
-                                    targetCell.appendChild(accessoryCard);
+                                const accessoryCard = createAndAnimateCard(accessoryConfig, targetCell, cardEntryDelay);
+                                cardEntryDelay += 100; // Increment delay for each card
+                                
+                                if (accessoryCard) {
                                     generatedCards.push(accessoryCard);
                                 }
                             });
                         }
-                    } else {
-                        console.warn(`Could not find target cell for week ${cellWeek}, day ${cellDay}`);
                     }
                 } else {
                     console.warn(`GDAP: Target cell not found for ${exTarget.name} on ${cellDay} of Week ${cellWeek}.`);
                 }
             });
 
-            // Process accessory suggestions
+            // Process accessory suggestions for this week
             // Group by day for this week
             const daySuggestionsByDayPref = {};
             weeklyTarget.suggestedAccessories.forEach(accSugg => {
@@ -450,23 +519,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Find the cell using the proper selector
                 const targetCell = document.querySelector(`.day-cell[data-week='${weekNumber}'][data-day='${dayCapitalized}']`);
+                
                 if (targetCell) {
-                    // Get the cell's id attribute - if it doesn't have one, use a consistent format
-                    const cellId = targetCell.id || `week-${weekNumber}-day-${dayCapitalized}`;
+                    // Generate a dayId that matches the normal grid ID format
+                    const dayIdNormalized = convertToDayId(weekNumber, dayPref);
                     
-                    // Initialize array for this cell if needed
-                    if (!accessorySuggestionsByDayId[cellId]) {
-                        accessorySuggestionsByDayId[cellId] = [];
+                    if (dayIdNormalized) {
+                        // Store the suggestions for this day
+                        accessorySuggestionsByDayId[dayIdNormalized] = [...suggestions];
                     }
-                    
-                    // Add all suggestions for this day
-                    accessorySuggestionsByDayId[cellId].push(...suggestions);
-                } else {
-                    console.warn(`Could not find day cell for accessory suggestions on ${dayCapitalized} of Week ${weekNumber}`);
                 }
             }
         });
 
+        // After all cards are created, remove the generating class 
+        setTimeout(() => {
+            document.body.classList.remove('gdap-program-generating');
+            
+            // Display a success toast
+            if (typeof showToast === 'function') {
+                showToast(`Created your ${goalInstance.overallGoalType} program!`, 'success');
+            }
+        }, cardEntryDelay + 1000); // Give time for all card animations to complete
+        
         // Store accessory suggestions in the work canvas for inspector access
         const workCanvas = document.getElementById('work-canvas');
         if (workCanvas) {
@@ -487,15 +562,11 @@ document.addEventListener('DOMContentLoaded', () => {
             window.Analytics.update();
         }
         
-        // --- Show Success Message ---
-        if (typeof Toast !== 'undefined' && Toast.show) {
-            Toast.show('Goal-driven program generated with accessory suggestions!', 'success');
-        } else {
-            alert('Goal-driven program generated with accessory suggestions!');
-        }
-        
         // Add event listeners to day cells for the Inspector to display accessory suggestions
         setupAccessorySuggestionListeners();
+        
+        // Initial population of accessory suggestions in the inspector (if cell is already selected)
+        updateInspectorContents(); // Refresh inspector to show content for any currently selected cell
     }
     
     // Function to set up event listeners for accessory suggestions
@@ -1868,6 +1939,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // <<<--- END ADDED EVENT LISTENERS --- >>>
 
     // --- Helper Functions Now Defined INSIDE DOMContentLoaded ---
+
+    /**
+     * Converts a week number and day preference to a standardized dayId format
+     * @param {number} weekNumber - The week number (1-based)
+     * @param {string} dayPref - The day preference (e.g., 'mon', 'tue')
+     * @returns {string} The standardized dayId format (e.g., 'week-0-day-0')
+     */
+    function convertToDayId(weekNumber, dayPref) {
+        // Convert 1-based week to 0-based for the dayId format
+        const weekIndex = weekNumber - 1;
+        
+        // Convert day abbreviation to day index (0 = Monday, 1 = Tuesday, etc.)
+        const dayMap = {
+            'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 'sat': 5, 'sun': 6
+        };
+        
+        const dayIndex = dayMap[dayPref.toLowerCase()];
+        
+        if (dayIndex === undefined) {
+            console.warn(`Invalid day preference: ${dayPref}`);
+            return null;
+        }
+        
+        return `week-${weekIndex}-day-${dayIndex}`;
+    }
 
     /**
      * Creates a workout card DOM element.
