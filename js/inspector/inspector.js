@@ -15,7 +15,7 @@ import { updateLoadValueExplanation } from '../ui/dom.js';
 import { getSelectionState } from '../ui/selection.js';
 import ForgeAssist from '../forgeassist.js'; // <<< Added ForgeAssist import
 import { getPhaseWeekRange } from '../calendar/indicators.js'; // <-- Added import
-import { getCurrentBlockLoads, calculateWeeklyLoads } from '../state/blockData.js'; // <-- Added import for load calculations
+import { getCurrentBlockLoads } from '../state/blockData.js'; // <-- Added import for load calculations
 
 // DOM References (Inject or query as needed)
 const inspectorPanel = document.getElementById('inspector-panel');
@@ -910,11 +910,11 @@ export function saveWorkoutCardDetails() {
 
 
 export function clearInspectorFocusMessage() {
-     clearTimeout(inspectorFocusTimeout);
+    clearTimeout(inspectorFocusTimeout);
      const focusArea = document.getElementById('inspector-focus-message');
-     if (focusArea) {
-         focusArea.style.display = 'none';
-         focusArea.textContent = '';
+    if (focusArea) {
+            focusArea.style.display = 'none';
+            focusArea.textContent = '';
      }
      // If element doesn't exist, create it for future use
      else if (inspectorPanel) {
