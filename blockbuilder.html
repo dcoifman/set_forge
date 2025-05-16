@@ -1017,6 +1017,7 @@
             getExerciseById: function(id) { 
                 console.log("Fallback ExerciseLibrary.getExerciseById called", id); 
                 // Return a dummy exercise object instead of null
+                // This prevents errors when the system tries to access properties
                 return {
                     id: id,
                     name: id.replace('ex_', '').split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
@@ -1033,7 +1034,12 @@
                         baseLoad: 70,
                         baseReps: 8,
                         baseSets: 3
-                    }
+                    },
+                    // Add additional properties that might be accessed
+                    videoUrl: '',
+                    equipment: ['bodyweight'],
+                    tags: ['temporary'],
+                    metadata: {}
                 };
             },
             getExercises: function() { 

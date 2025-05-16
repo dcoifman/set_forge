@@ -30,7 +30,9 @@ body.show-builder .block-builder-container {
     display: flex;
     flex-direction: column;
     transform: translateY(0);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.5s ease-out;
+    min-height: calc(100vh - 61px); /* Adjust for header height */
+    position: relative; /* Needed for sticky child */
 }
 
 body.show-hub .block-builder-container {
@@ -38,19 +40,21 @@ body.show-hub .block-builder-container {
     visibility: hidden;
     display: none;
     transform: translateY(20px);
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out, visibility 0.3s ease-out;
 }
 
 body.show-builder #block-builder-hub {
     display: none;
     opacity: 0;
     visibility: hidden;
+    transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
 }
 
 body.show-hub #block-builder-hub {
     opacity: 1;
     visibility: visible;
     display: block;
-    transition: opacity 0.5s ease-out;
+    transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
 }
 
 .gdap-program-generating .work-canvas {
@@ -81,12 +85,14 @@ body.show-hub #block-builder-hub {
     justify-content: center;
     flex-direction: column;
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
-    transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
 }
 
 .gdap-generation-overlay.is-visible {
     opacity: 1;
+    visibility: visible;
     pointer-events: auto;
 }
 
@@ -4730,3 +4736,21 @@ body.show-hub #back-to-hub-btn {
         grid-template-columns: 1fr;
     }
 }
+
+/* ... existing code ... */
+
+/* For direct DOM style manipulation backup */
+#block-builder-hub.force-hidden {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+.block-builder-container.force-visible {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+}
+
+/* ... existing code ... */

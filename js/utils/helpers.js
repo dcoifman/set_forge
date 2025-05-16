@@ -7,7 +7,13 @@ export function getStructuredDetails(cardElement) {
         loadType: cardElement.dataset.loadType || 'rpe', // Default to RPE
         loadValue: cardElement.dataset.loadValue || '',
         rest: cardElement.dataset.rest || '',
-        notes: cardElement.dataset.notes || '' // Simple notes field
+        notes: cardElement.dataset.notes || '', // Simple notes field
+        // Add additional context properties
+        isGDAP: cardElement.dataset.goalDriven === 'true' || cardElement.hasAttribute('data-source-goal-id'),
+        isModelDriven: cardElement.dataset.modelDriven === 'true' || cardElement.hasAttribute('data-source-model-id'),
+        exerciseId: cardElement.dataset.exerciseId || '',
+        sourceModelId: cardElement.dataset.sourceModelId || '',
+        sourceGoalId: cardElement.dataset.sourceGoalId || ''
     };
 
     // Fallback: Try to parse old details string if dataset is empty

@@ -276,9 +276,27 @@ document.addEventListener('DOMContentLoaded', () => {
             // Then run the GDAP generation process
             await handleGDAPFormSubmit();
             
+            // Force the builder view to be visible with direct DOM manipulation as backup
+            const hubElement = document.getElementById('block-builder-hub');
+            const builderElement = document.querySelector('.block-builder-container');
+            
+            if (hubElement) {
+                hubElement.classList.add('force-hidden');
+                hubElement.style.display = 'none';
+            }
+            
+            if (builderElement) {
+                builderElement.classList.add('force-visible');
+                builderElement.style.display = 'flex';
+                builderElement.style.visibility = 'visible';
+                builderElement.style.opacity = '1';
+            }
+            
             // Show success notification explicitly
             if (typeof showToast === 'function') {
                 showToast('GDAP program generated successfully!', 'success');
+            } else {
+                console.warn('showToast function not available');
             }
         });
     }
@@ -293,7 +311,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Show the generation animation overlay
         const generationOverlay = document.getElementById('gdapGenerationOverlay');
-        generationOverlay.classList.add('is-visible');
+        if (generationOverlay) {
+            generationOverlay.classList.add('is-visible');
+        } else {
+            console.error("Generation overlay element not found");
+        }
         
         // Create goal instance from form
         const goalInstance = {
@@ -362,21 +384,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Switch to the block builder view (but keep overlay visible)
-        // Force direct view switching instead of using showView to avoid any issues
+        // Force direct view switching with multiple methods for redundancy
         document.body.classList.add('show-builder');
         document.body.classList.remove('show-hub');
         
-        // Directly manipulate the containers
         const hubContainer = document.getElementById('block-builder-hub');
         const blockBuilderContainer = document.querySelector('.block-builder-container');
-        const backToHubBtn = document.getElementById('back-to-hub-btn');
         
         if (hubContainer) hubContainer.style.display = 'none';
-        if (blockBuilderContainer) blockBuilderContainer.style.display = 'flex';
-        if (backToHubBtn) backToHubBtn.style.display = 'inline';
+        if (blockBuilderContainer) {
+            blockBuilderContainer.style.display = 'flex';
+            blockBuilderContainer.style.visibility = 'visible';
+            blockBuilderContainer.style.opacity = '1';
+        }
         
-        console.log("GDAP: Directly forced builder view");
-
+        // Debugging log to track view state
+        console.log("GDAP: Forcing builder view - Class list:", document.body.classList);
+        console.log("GDAP: Builder container display:", blockBuilderContainer ? blockBuilderContainer.style.display : 'element not found');
+        
         // Add generating class to trigger animation
         document.body.classList.add('gdap-program-generating');
         console.log("GDAP: Added gdap-program-generating class to body");
@@ -611,9 +636,42 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             document.body.classList.remove('gdap-program-generating');
             
+            // Ensure we're still in builder view
+            document.body.classList.add('show-builder');
+            document.body.classList.remove('show-hub');
+            
+            // Extra check for DOM visibility
+            const builderElement = document.querySelector('.block-builder-container');
+            const hubElement = document.getElementById('block-builder-hub');
+            
+            if (builderElement && builderElement.style.display !== 'flex') {
+                console.log("GDAP: Re-forcing builder container visibility");
+                builderElement.style.display = 'flex';
+                builderElement.style.visibility = 'visible';
+                builderElement.style.opacity = '1';
+                builderElement.classList.add('force-visible');
+            }
+            
+            if (hubElement && hubElement.style.display !== 'none') {
+                console.log("GDAP: Re-forcing hub container to be hidden");
+                hubElement.style.display = 'none';
+                hubElement.style.visibility = 'hidden';
+                hubElement.style.opacity = '0';
+                hubElement.classList.add('force-hidden');
+            }
+            
+            // Hide the generation overlay
+            const generationOverlay = document.getElementById('gdapGenerationOverlay');
+            if (generationOverlay) {
+                generationOverlay.classList.remove('is-visible');
+            }
+            
             // Display a success toast
             if (typeof showToast === 'function') {
                 showToast(`Created your ${goalInstance.overallGoalType} program!`, 'success');
+            } else {
+                console.warn('showToast function not available');
+                alert(`Created your ${goalInstance.overallGoalType} program!`);
             }
         }, cardEntryDelay + 1000); // Give time for all card animations to complete
         
@@ -2967,54 +3025,78 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cardLoad = parseInt(cardElement.dataset.load || '0', 10);
 
                 // Update title and details content
-                if (inspectorTitle) inspectorTitle.textContent = `Edit: ${structuredDetails.name}`;
+                if (inspectorTitle) {
+                    // Add origin indicator for GDAP or model-driven exercises
+                    let titlePrefix = '';
+                    if (structuredDetails.isGDAP) {
+                        titlePrefix = '[GDAP] ';
+                    } else if (structuredDetails.isModelDriven) {
+                        titlePrefix = '[Model] ';
+                    }
+                    inspectorTitle.textContent = `Edit: ${titlePrefix}${structuredDetails.name}`;
+                }
+                
+                // Highlight GDAP or model status if applicable
+                let statusHtml = '';
+                if (structuredDetails.isGDAP) {
+                    statusHtml = `<div style="margin-bottom: 10px; padding: 8px; background-color: rgba(255, 112, 59, 0.1); border-left: 3px solid var(--accent-color); font-size: 0.9rem;">
+                        <strong>Goal-Driven Exercise:</strong> This exercise is part of your goal-driven program.
+                    </div>`;
+                } else if (structuredDetails.isModelDriven) {
+                    const modelType = cardElement.dataset.modelType || 'Custom';
+                    statusHtml = `<div style="margin-bottom: 10px; padding: 8px; background-color: rgba(58, 123, 213, 0.1); border-left: 3px solid #3a7bd5; font-size: 0.9rem;">
+                        <strong>${modelType} Model Exercise:</strong> This exercise is generated by a periodization model.
+                    </div>`;
+                }
 
                 detailsTabContent.innerHTML = `
                     <p><small>Location: Week ${week}, ${day}</small></p>
                     <p><small>Est. Load Contribution: ${cardLoad} units</small></p>
+                    ${statusHtml}
                     <hr class="detail-separator">
                     <div class="form-group full-width">
-                       <label for="inspector-exercise-name">Exercise Name</label>
-                       <input type="text" id="inspector-exercise-name" value="${structuredDetails.name}">
+                        <label for="inspector-exercise-name">Exercise Name</label>
+                        <input type="text" id="inspector-exercise-name" value="${structuredDetails.name}">
                     </div>
                     <div class="structured-inputs" style="display: flex; flex-wrap: wrap; gap: 0 1rem;">
-                       <div style="display: flex; gap: 1rem; width: 100%; margin-bottom: 1rem;">
-                           <div class="form-group" style="flex: 1;">
-                               <label for="inspector-sets">Sets</label>
-                               <input type="number" id="inspector-sets" value="${structuredDetails.sets}" min="1">
-                           </div>
-                           <div class="form-group" style="flex: 1;">
-                               <label for="inspector-reps">Reps</label>
-                               <input type="text" id="inspector-reps" value="${structuredDetails.reps}" placeholder="e.g., 5 or 8-12">
-                           </div>
-                       </div>
-                       <div class="form-group" style="flex-basis: 50%; flex-grow: 1;">
-                           <label for="inspector-load-type">Load Type</label>
-                           <select id="inspector-load-type">
-                               <option value="rpe" ${structuredDetails.loadType === 'rpe' ? 'selected' : ''}>RPE</option>
-                               <option value="percent" ${structuredDetails.loadType === 'percent' ? 'selected' : ''}>% 1RM</option>
-                               <option value="weight" ${structuredDetails.loadType === 'weight' ? 'selected' : ''}>Weight (kg)</option>
-                               <option value="text" ${structuredDetails.loadType === 'text' ? 'selected' : ''}>Text</option>
-                           </select>
-                       </div>
-                       <div class="form-group" style="flex-basis: calc(50% - 1rem); flex-grow: 1;">
-                           <label for="inspector-load-value">Load Value</label>
-                           <input type="text" id="inspector-load-value" value="${structuredDetails.loadValue}" placeholder="e.g., 8 or 75">
-                           <div id="load-value-explanation" style="font-size: 0.75rem; color: var(--text-color); margin-top: 4px; min-height: 1em;"></div>
-                       </div>
-                       <div class="form-group" style="flex-basis: 100%;">
-                           <label for="inspector-rest">Rest</label>
-                           <input type="text" id="inspector-rest" value="${structuredDetails.rest}" placeholder="e.g., 90s or 2m">
-                       </div>
-                    </div>
-                    <div class="form-group full-width">
-                       <label for="inspector-notes">Notes</label>
-                       <textarea id="inspector-notes" rows="3">${structuredDetails.notes}</textarea>
-                    </div>
-                    <hr class="detail-separator">
-                    <button id="save-card-details" class="cta-button primary-cta">Save Details</button>
-                    <button id="delete-card" class="cta-button secondary-cta" style="margin-top: 10px; background-color: #555;">Delete Card</button>
-               `;
+                        <div style="display: flex; gap: 1rem; width: 100%; margin-bottom: 1rem;">
+                            <div class="form-group" style="flex: 1;">
+                                <label for="inspector-sets">Sets</label>
+                                <input type="number" id="inspector-sets" value="${structuredDetails.sets}" min="1">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="inspector-reps">Reps</label>
+                                <input type="text" id="inspector-reps" value="${structuredDetails.reps}">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 1rem; width: 100%; margin-bottom: 1rem;">
+                            <div class="form-group" style="flex-basis: calc(50% - 1rem); flex-grow: 1;">
+                                <label for="inspector-load-type">Load Type</label>
+                                <select id="inspector-load-type">
+                                   <option value="rpe" ${structuredDetails.loadType === 'rpe' ? 'selected' : ''}>RPE (Rate of Perceived Exertion)</option>
+                                   <option value="percent" ${structuredDetails.loadType === 'percent' ? 'selected' : ''}>Percentage (%)</option>
+                                   <option value="weight" ${structuredDetails.loadType === 'weight' ? 'selected' : ''}>Weight (kg)</option>
+                                   <option value="text" ${structuredDetails.loadType === 'text' ? 'selected' : ''}>Text</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex-basis: calc(50% - 1rem); flex-grow: 1;">
+                                <label for="inspector-load-value">Load Value</label>
+                                <input type="text" id="inspector-load-value" value="${structuredDetails.loadValue}" placeholder="e.g., 8 or 75">
+                                <div id="load-value-explanation" style="font-size: 0.75rem; color: var(--text-color); margin-top: 4px; min-height: 1em;"></div>
+                            </div>
+                            <div class="form-group" style="flex-basis: 100%;">
+                                <label for="inspector-rest">Rest</label>
+                                <input type="text" id="inspector-rest" value="${structuredDetails.rest}" placeholder="e.g., 90s or 2m">
+                            </div>
+                        </div>
+                        <div class="form-group full-width">
+                           <label for="inspector-notes">Notes</label>
+                           <textarea id="inspector-notes" rows="3">${structuredDetails.notes}</textarea>
+                        </div>
+                        <hr class="detail-separator">
+                        <button id="save-card-details" class="cta-button primary-cta">Save Details</button>
+                        <button id="delete-card" class="cta-button secondary-cta" style="margin-top: 10px; background-color: #555;">Delete Card</button>
+                   `;
                 // Add listeners
                 document.getElementById('save-card-details')?.addEventListener('click', saveWorkoutCardDetails); 
                 document.getElementById('delete-card')?.addEventListener('click', () => {

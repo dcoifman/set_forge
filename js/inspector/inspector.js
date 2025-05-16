@@ -552,8 +552,10 @@ function updateAccessorySuggestions(container) {
         return;
     }
     
-    // Check if day has GDAP exercises
-    const hasGDAPExercises = selectedElement.querySelector('.workout-card[data-is-gdap="true"]');
+    // Check if day has GDAP exercises - Fix to use the correct data attribute
+    // The correct attribute is data-goal-driven='true', not data-is-gdap
+    const hasGDAPExercises = selectedElement.querySelector('.workout-card[data-goal-driven="true"]') || 
+                            selectedElement.querySelector('.workout-card[data-source-goal-id]');
     
     if (!hasGDAPExercises) {
         container.innerHTML = '<p>This day has no primary GDAP exercises. Add a GDAP exercise to see accessory suggestions.</p>';
@@ -879,7 +881,7 @@ export function saveWorkoutCardDetails() {
              else detailsString += loadValueInput.value;
         }
 
-        if (restInput.value) detailsString += ` (${restInput.value} rest)`;
+         if (restInput.value) detailsString += ` (${restInput.value} rest)`;
 
         const detailsElement = selectedElement.querySelector('.exercise-details') || selectedElement.querySelector('.details');
         if (detailsElement) {
@@ -903,7 +905,7 @@ export function saveWorkoutCardDetails() {
         estimatedLoad += sets * reps * 5;
         if (loadTypeSelect.value === 'rpe' && loadVal > 7) estimatedLoad *= (1 + (loadVal - 7) * 0.15);
         if (loadTypeSelect.value === 'percent' && loadVal > 70) estimatedLoad *= (1 + (loadVal - 70) * 0.015);
-        if (loadTypeSelect.value === 'weight') estimatedLoad = Math.max(estimatedLoad, loadVal * sets * reps * 0.5);
+         if (loadTypeSelect.value === 'weight') estimatedLoad = Math.max(estimatedLoad, loadVal * sets * reps * 0.5);
         if (nameInput.value.toLowerCase().includes('squat') || nameInput.value.toLowerCase().includes('deadlift')) estimatedLoad *= 1.2;
         if (nameInput.value.toLowerCase().includes('press')) estimatedLoad *= 0.8;
         selectedElement.dataset.load = Math.round(estimatedLoad);
@@ -948,11 +950,11 @@ export function saveWorkoutCardDetails() {
 
 
 export function clearInspectorFocusMessage() {
-    clearTimeout(inspectorFocusTimeout);
+     clearTimeout(inspectorFocusTimeout);
      const focusArea = document.getElementById('inspector-focus-message');
-    if (focusArea) {
-            focusArea.style.display = 'none';
-            focusArea.textContent = '';
+     if (focusArea) {
+         focusArea.style.display = 'none';
+         focusArea.textContent = '';
      }
      // If element doesn't exist, create it for future use
      else if (inspectorPanel) {
